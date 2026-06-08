@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Organizador — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #1F4E79;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img { height: 40px; }
+    header a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    header a:hover { opacity: 1; }
+    .container {
+      max-width: 580px;
+      margin: 40px auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .card h1 {
+      font-size: 24px;
+      color: #1F4E79;
+      margin-bottom: 6px;
+    }
+    .card p.subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .form-group { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+    label span.required { color: #E8622A; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      transition: border-color 0.2s;
+      background: #fff;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1F4E79;
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #1F4E79;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #163d62; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .msg {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .info-box {
+      background: #EBF3FB;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #1F4E79;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .info-box strong { display: block; margin-bottom: 4px; }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin: 24px 0 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+    }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #999;
+      font-size: 13px;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Agenda Run">
+  <a href="index.html">← Voltar ao Circuito</a>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Quero incluir meu evento</h1>
+    <p class="subtitle">Preencha o formulário abaixo. Entraremos em contato em até 48 horas.</p>
+
+    <div class="info-box">
+      <strong>📋 Critérios de seleção</strong>
+      Apenas eventos que seguem as normas da CBAT (Confederação Brasileira de Atletismo) são aceitos no Circuito Agenda Run. Nossa equipe analisa cada solicitação antes da aprovação.
+    </div>
+
+    <form id="formOrganizador">
+      <div class="section-title">Dados do responsável</div>
+
+      <div class="form-group">
+        <label>Nome do responsável <span class="required">*</span></label>
+        <input type="text" id="nome_contato" placeholder="Seu nome completo" required>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>E-mail <span class="required">*</span></label>
+          <input type="email" id="email" placeholder="contato@empresa.com" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp <span class="required">*</span></label>
+          <input type="tel" id="telefone" placeholder="(11) 99999-9999" required>
+        </div>
+      </div>
+
+      <div class="section-title">Dados da empresa / evento</div>
+
+      <div class="form-group">
+        <label>Nome da empresa ou organização</label>
+        <input type="text" id="nome_empresa" placeholder="Nome da sua empresa ou organização">
+      </div>
+
+      <div class="form-group">
+        <label>Site ou redes sociais</label>
+        <input type="url" id="site" placeholder="https://seusite.com.br ou @perfil">
+      </div>
+
+      <div class="form-group">
+        <label>Conte sobre seu evento <span class="required">*</span></label>
+        <textarea id="mensagem" placeholder="Descreva brevemente seu evento: nome, distâncias, data prevista, cidade, edições anteriores..." required></textarea>
+      </div>
+
+      <button type="submit" class="btn" id="btnSubmit">Enviar solicitação</button>
+    </form>
+
+    <div id="msg" class="msg"></div>
+  </div>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a> · Temporada 2026
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  document.getElementById('formOrganizador').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit');
+    const msg = document.getElementById('msg');
+    msg.className = 'msg';
+    msg.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const dados = {
+      nome_contato: document.getElementById('nome_contato').value.trim(),
+      email: document.getElementById('email').value.trim().toLowerCase(),
+      telefone: document.getElementById('telefone').value.trim(),
+      nome_empresa: document.getElementById('nome_empresa').value.trim() || null,
+      site: document.getElementById('site').value.trim() || null,
+      mensagem: document.getElementById('mensagem').value.trim(),
+    };
+
+    const { error } = await client.from('organizadores').insert([dados]);
+
+    if (error) {
+      if (error.code === '23505') {
+        msg.textContent = 'Este e-mail já enviou uma solicitação. Entraremos em contato em breve!';
+        msg.className = 'msg error';
+      } else {
+        msg.textContent = 'Erro ao enviar: ' + error.message;
+        msg.className = 'msg error';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Enviar solicitação';
+    } else {
+      msg.textContent = '✅ Solicitação recebida! Entraremos em contato em até 48 horas no e-mail ' + dados.email + '.';
+      msg.className = 'msg success';
+      document.getElementById('formOrganizador').reset();
+      btn.textContent = 'Solicitação enviada!';
+    }
+  });
+</script>
+</body>
+</html>

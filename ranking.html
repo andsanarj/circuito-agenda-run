@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #1F4E79;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img { height: 40px; }
+    header a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    header a:hover { opacity: 1; }
+    .hero {
+      background: linear-gradient(135deg, #1F4E79 0%, #0d2d4a 100%);
+      color: #fff;
+      text-align: center;
+      padding: 48px 24px 40px;
+    }
+    .hero h1 { font-size: 32px; margin-bottom: 8px; }
+    .hero p { opacity: 0.8; font-size: 15px; }
+    .temporada-badge {
+      display: inline-block;
+      background: #E8622A;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px;
+      width: 100%;
+      flex: 1;
+    }
+    .filtros {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filtros select, .filtros input {
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .filtros input { flex: 1; min-width: 200px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    .stat-card .num {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1F4E79;
+    }
+    .stat-card .label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .ranking-table {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .ranking-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ranking-header h2 { font-size: 16px; color: #333; }
+    .ranking-header span { font-size: 13px; color: #999; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    td {
+      padding: 14px 16px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 14px;
+      color: #333;
+    }
+    tr:hover td { background: #f8fafc; }
+    .pos {
+      font-weight: 800;
+      font-size: 16px;
+      color: #1F4E79;
+      width: 40px;
+    }
+    .pos.gold { color: #d4a000; }
+    .pos.silver { color: #888; }
+    .pos.bronze { color: #b87333; }
+    .nome-corredor { font-weight: 600; }
+    .cidade { color: #888; font-size: 13px; }
+    .pontos {
+      font-weight: 800;
+      font-size: 18px;
+      color: #E8622A;
+    }
+    .eventos-count {
+      background: #EBF3FB;
+      color: #1F4E79;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .sexo-badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .sexo-m { background: #dbeafe; color: #1e40af; }
+    .sexo-f { background: #fce7f3; color: #9d174d; }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+    .loading .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #eee;
+      border-top-color: #1F4E79;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { color: #555; margin-bottom: 8px; }
+    .btn-cadastro {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 24px;
+      background: #E8622A;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .atualizado {
+      text-align: right;
+      font-size: 12px;
+      color: #bbb;
+      padding: 12px 20px;
+    }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #999;
+      font-size: 13px;
+    }
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      th.hide-mobile, td.hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Agenda Run">
+  <a href="index.html">← Voltar ao Circuito</a>
+</header>
+
+<div class="hero">
+  <div class="temporada-badge">Temporada 2026</div>
+  <h1>🏆 Ranking Geral</h1>
+  <p>Grande São Paulo · Atualizado após cada evento pontuável</p>
+</div>
+
+<div class="container">
+
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="num" id="totalCorredores">—</div>
+      <div class="label">Corredores cadastrados</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="totalEventos">—</div>
+      <div class="label">Eventos realizados</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="totalPontos">—</div>
+      <div class="label">Pontos distribuídos</div>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <input type="text" id="busca" placeholder="🔍 Buscar corredor...">
+    <select id="filtroSexo">
+      <option value="">Todos</option>
+      <option value="M">Masculino</option>
+      <option value="F">Feminino</option>
+    </select>
+  </div>
+
+  <div class="ranking-table">
+    <div class="ranking-header">
+      <h2>Classificação geral</h2>
+      <span id="contagem">carregando...</span>
+    </div>
+
+    <div id="tabelaContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        Carregando ranking...
+      </div>
+    </div>
+
+    <div class="atualizado" id="atualizado"></div>
+  </div>
+
+  <div style="text-align:center; margin-top: 28px;">
+    <a href="cadastro_corredor.html" class="btn-cadastro">Ainda não está no ranking? Cadastre-se grátis →</a>
+  </div>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a> · Grande São Paulo · Temporada 2026
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let dadosCompletos = [];
+
+  async function carregarRanking() {
+    const { data, error } = await client
+      .from('ranking_geral')
+      .select('*')
+      .order('total_pontos', { ascending: false });
+
+    if (error) {
+      document.getElementById('tabelaContainer').innerHTML =
+        '<div class="empty"><div class="icon">⚠️</div><h3>Erro ao carregar ranking</h3><p>' + error.message + '</p></div>';
+      return;
+    }
+
+    dadosCompletos = data || [];
+    renderizar(dadosCompletos);
+
+    // Stats
+    const { count: totalCorredores } = await client.from('corredores').select('*', { count: 'exact', head: true });
+    const { count: totalEventos } = await client.from('eventos').select('*', { count: 'exact', head: true }).eq('status', 'aprovado');
+    const totalPts = dadosCompletos.reduce((s, r) => s + (r.total_pontos || 0), 0);
+
+    document.getElementById('totalCorredores').textContent = totalCorredores || 0;
+    document.getElementById('totalEventos').textContent = totalEventos || 0;
+    document.getElementById('totalPontos').textContent = totalPts;
+    document.getElementById('atualizado').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+  }
+
+  function renderizar(dados) {
+    document.getElementById('contagem').textContent = dados.length + ' corredor' + (dados.length !== 1 ? 'es' : '');
+
+    if (dados.length === 0) {
+      document.getElementById('tabelaContainer').innerHTML =
+        `<div class="empty">
+          <div class="icon">🏁</div>
+          <h3>O ranking ainda está vazio</h3>
+          <p>Seja o primeiro corredor do Circuito Agenda Run!</p>
+          <a href="cadastro_corredor.html" class="btn-cadastro">Fazer meu cadastro grátis</a>
+        </div>`;
+      return;
+    }
+
+    let html = `<table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Corredor</th>
+          <th class="hide-mobile">Cidade</th>
+          <th class="hide-mobile">Sexo</th>
+          <th>Eventos</th>
+          <th>Pontos</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    dados.forEach((r, i) => {
+      const pos = r.posicao || (i + 1);
+      const posClass = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : '';
+      const posIcon = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+      html += `<tr>
+        <td><span class="pos ${posClass}">${posIcon}</span></td>
+        <td><span class="nome-corredor">${r.nome}</span></td>
+        <td class="hide-mobile"><span class="cidade">${r.cidade || '—'}</span></td>
+        <td class="hide-mobile"><span class="sexo-badge ${r.sexo === 'M' ? 'sexo-m' : 'sexo-f'}">${r.sexo === 'M' ? 'Masc' : 'Fem'}</span></td>
+        <td><span class="eventos-count">${r.eventos_participados || 0} evento${r.eventos_participados !== 1 ? 's' : ''}</span></td>
+        <td><span class="pontos">${r.total_pontos || 0}</span></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tabelaContainer').innerHTML = html;
+  }
+
+  // Filtros
+  function aplicarFiltros() {
+    const busca = document.getElementById('busca').value.toLowerCase();
+    const sexo = document.getElementById('filtroSexo').value;
+    const filtrado = dadosCompletos.filter(r => {
+      const matchBusca = !busca || r.nome.toLowerCase().includes(busca) || (r.cidade || '').toLowerCase().includes(busca);
+      const matchSexo = !sexo || r.sexo === sexo;
+      return matchBusca && matchSexo;
+    });
+    renderizar(filtrado);
+  }
+
+  document.getElementById('busca').addEventListener('input', aplicarFiltros);
+  document.getElementById('filtroSexo').addEventListener('change', aplicarFiltros);
+
+  carregarRanking();
+</script>
+</body>
+</html>
