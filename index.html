@@ -149,6 +149,36 @@
     font-weight: 700; text-decoration: none;
   }
 
+  /* ── NAV ── */
+  nav {
+    background: #0d2d4a;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  nav .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  nav .nav-logo img { height: 32px; }
+  nav .nav-logo span { color: #fff; font-weight: 700; font-size: 15px; }
+  nav .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  nav .nav-links a {
+    color: #a8c8e8;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    transition: background 0.2s, color 0.2s;
+  }
+  nav .nav-links a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  nav .nav-links a.btn-nav {
+    background: #E8622A;
+    color: #fff;
+    font-weight: 700;
+  }
+  nav .nav-links a.btn-nav:hover { background: #c94f1f; }
+
   /* ── FOOTER ── */
   footer { background: #1a1a1a; color: #888; text-align: center; padding: 32px 20px; font-size: 0.85rem; }
   footer a { color: #4CBFCB; text-decoration: none; }
@@ -161,6 +191,19 @@
 </head>
 <body>
 
+<!-- ══ NAV ══════════════════════════════════════════════════════ -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div class="nav-links">
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="cadastro_organizador.html">Para organizadores</a>
+    <a href="cadastro_corredor.html" class="btn-nav">Cadastre-se grátis</a>
+  </div>
+</nav>
+
 <!-- ══ HERO ══════════════════════════════════════════════════════ -->
 <section class="hero">
   <div class="hero-inner">
@@ -172,7 +215,7 @@
       Acumule pontos em corridas selecionadas da Grande São Paulo e dispute
       o ranking da temporada 2026.
     </p>
-    <a href="#cadastro" class="btn-primary">Faça seu pré-cadastro — é grátis</a>
+    <a href="cadastro_corredor.html" class="btn-primary">Faça seu pré-cadastro — é grátis</a>
     <p class="hero-note">Estreia: Em breve · Grande São Paulo</p>
   </div>
 </section>
@@ -232,7 +275,7 @@
       O calendário oficial de eventos pontuáveis da Grande São Paulo será divulgado
       em breve. Faça seu pré-cadastro para ser o primeiro a saber quando os eventos forem confirmados.
     </p>
-    <a href="#cadastro" class="btn-secondary">Avise-me quando sair o calendário</a>
+    <a href="cadastro_corredor.html" class="btn-secondary">Avise-me quando sair o calendário</a>
   </div>
 </section>
 
@@ -252,7 +295,7 @@
     <div class="ranking-row"><span class="rank-pos">3°</span><span class="rank-name">Carlos Santos</span><span class="rank-pts">35 pts</span></div>
     <div class="ranking-cta">
       <p>O ranking real será publicado após o primeiro evento.</p>
-      <a href="#cadastro" class="btn-primary" style="font-size:0.9rem; padding:12px 28px;">Garanta sua vaga no ranking</a>
+      <a href="ranking.html" class="btn-primary" style="font-size:0.9rem; padding:12px 28px;">Ver ranking completo →</a>
     </div>
   </div>
 </section>
@@ -281,7 +324,7 @@
       <p>Participantes que pontuam voltam — e trazem outros corredores.</p>
     </div>
   </div>
-  <a href="mailto:agendarun@agendarun.com.br?subject=Quero incluir meu evento no Circuito Agenda Run" class="btn-white">
+  <a href="cadastro_organizador.html" class="btn-white">
     Quero incluir meu evento →
   </a>
 </section>
@@ -294,8 +337,7 @@
     garanta seu perfil antes do lançamento em agosto/2026.
   </p>
   <div style="text-align:center;">
-    <!-- SUBSTITUIR pelo link do seu Google Forms -->
-    <a href="SEU_LINK_DO_GOOGLE_FORMS_AQUI" class="btn-primary" style="font-size:1.1rem; padding:18px 48px;">
+    <a href="cadastro_corredor.html" class="btn-primary" style="font-size:1.1rem; padding:18px 48px;">
       Cadastrar agora — é grátis
     </a>
     <p style="margin-top:16px; font-size:0.85rem; color:#777;">
