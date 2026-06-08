@@ -169,6 +169,8 @@
       sessaoAtiva = session;
       // Ocultar campos de senha pois conta já existe
       document.getElementById('blocoSenha').style.display = 'none';
+      document.getElementById('senha').required = false;
+      document.getElementById('senha2').required = false;
       document.getElementById('email').value = session.user.email;
       document.getElementById('email').disabled = true;
       document.getElementById('btnSubmit').textContent = 'Completar meu cadastro';
