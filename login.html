@@ -66,6 +66,13 @@
     <h1>Área do Corredor</h1>
     <p class="subtitle">Entre para ver seu perfil e acompanhar seus pontos</p>
 
+    <div id="avisoJaLogado" style="display:none; background:#e6f9f0; border-radius:8px; padding:14px 16px; font-size:14px; color:#1a7a4a; margin-bottom:20px; text-align:center;">
+      Você já está logado.<br>
+      <a href="perfil.html" style="color:#1F4E79; font-weight:700; text-decoration:none;">Ir para meu perfil →</a>
+      &nbsp;·&nbsp;
+      <a href="#" onclick="client.auth.signOut().then(()=>location.reload())" style="color:#E8622A; font-weight:600; text-decoration:none;">Sair da conta</a>
+    </div>
+
     <div class="tabs">
       <div class="tab active" id="tabLogin" onclick="mostrarAba('login')">Entrar</div>
       <div class="tab" id="tabRecuperar" onclick="mostrarAba('recuperar')">Esqueci a senha</div>
@@ -117,9 +124,11 @@
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Redirecionar se já estiver logado
+  // Se já estiver logado, mostrar opção de ir ao perfil ou sair
   client.auth.getSession().then(({ data: { session } }) => {
-    if (session) window.location.href = 'perfil.html';
+    if (session) {
+      document.getElementById('avisoJaLogado').style.display = 'block';
+    }
   });
 
   function mostrarAba(aba) {
