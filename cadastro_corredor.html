@@ -7,153 +7,75 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      background: #1F4E79;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    header img { height: 40px; }
-    header a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-    header a:hover { opacity: 1; }
-    .container {
-      max-width: 560px;
-      margin: 40px auto;
-      padding: 0 20px;
-      width: 100%;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    }
-    .card h1 {
-      font-size: 24px;
-      color: #1F4E79;
-      margin-bottom: 6px;
-    }
-    .card p.subtitle {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 28px;
-    }
-    .form-group {
-      margin-bottom: 18px;
-    }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #444;
-      margin-bottom: 6px;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header a.nav-link { color: #a8c8e8; text-decoration: none; font-size: 14px; }
+    header a.nav-link:hover { color: #fff; }
+    .container { max-width: 560px; margin: 40px auto; padding: 0 20px; width: 100%; }
+    .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    .card h1 { font-size: 24px; color: #1F4E79; margin-bottom: 6px; }
+    .card p.subtitle { color: #666; font-size: 14px; margin-bottom: 28px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
     label span.required { color: #E8622A; }
     input, select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 15px;
-      color: #333;
-      transition: border-color 0.2s;
-      background: #fff;
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 15px; color: #333; transition: border-color 0.2s; background: #fff;
     }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #1F4E79;
+    input:focus, select:focus { outline: none; border-color: #1F4E79; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .input-prefix { position: relative; }
+    .input-prefix span {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: #999; font-size: 15px;
     }
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    .input-prefix input { padding-left: 26px; }
     .btn {
-      width: 100%;
-      padding: 14px;
-      background: #E8622A;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
+      width: 100%; padding: 14px; background: #E8622A; color: #fff;
+      border: none; border-radius: 8px; font-size: 16px; font-weight: 700;
+      cursor: pointer; margin-top: 8px; transition: background 0.2s;
     }
     .btn:hover { background: #c94f1f; }
     .btn:disabled { background: #aaa; cursor: not-allowed; }
-    .msg {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      display: none;
-    }
+    .msg { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 14px; display: none; }
     .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
     .msg.error { background: #fdecea; color: #b00020; display: block; }
-    .divider {
-      border: none;
-      border-top: 1px solid #eee;
-      margin: 24px 0;
-    }
-    .info-pontos {
-      background: #EBF3FB;
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-size: 13px;
-      color: #1F4E79;
-      margin-bottom: 24px;
-    }
+    .info-pontos { background: #EBF3FB; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #1F4E79; margin-bottom: 24px; }
     .info-pontos strong { display: block; margin-bottom: 4px; }
-    footer {
-      text-align: center;
-      padding: 24px;
-      color: #999;
-      font-size: 13px;
-      margin-top: auto;
-    }
+    .section-sep { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin: 20px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+    .login-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+    .login-link a { color: #1F4E79; font-weight: 600; text-decoration: none; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
   </style>
 </head>
 <body>
-
 <header>
-  <img src="logo.png" alt="Agenda Run">
-  <a href="index.html">← Voltar ao Circuito</a>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <a href="login.html" class="nav-link">Já tenho conta → Entrar</a>
 </header>
 
 <div class="container">
   <div class="card">
     <h1>Cadastro de Corredor</h1>
-    <p class="subtitle">Gratuito. Entre para o Circuito Agenda Run e dispute o ranking da temporada 2026.</p>
+    <p class="subtitle">Gratuito. Entre para o Circuito e dispute o ranking da temporada 2026.</p>
 
     <div class="info-pontos">
       <strong>🏆 Como funciona a pontuação</strong>
-      Inscrição no evento: 5pts · Participação: 5pts · Finalização: 5pts · Máximo por prova: 15 pontos
+      Inscrição: 5pts · Participação: 5pts · Finalização: 5pts · Máximo por prova: 15 pontos
     </div>
 
     <form id="formCorredor">
+      <div class="section-sep">Dados pessoais</div>
+
       <div class="form-group">
         <label>Nome completo <span class="required">*</span></label>
         <input type="text" id="nome" placeholder="Seu nome completo" required>
-      </div>
-
-      <div class="form-group">
-        <label>E-mail <span class="required">*</span></label>
-        <input type="email" id="email" placeholder="seu@email.com" required>
       </div>
 
       <div class="row-2">
@@ -165,11 +87,6 @@
           <label>Cidade <span class="required">*</span></label>
           <input type="text" id="cidade" placeholder="São Paulo" required>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Instagram</label>
-        <input type="text" id="instagram" placeholder="@seuperfil">
       </div>
 
       <div class="row-2">
@@ -187,10 +104,40 @@
         </div>
       </div>
 
-      <button type="submit" class="btn" id="btnSubmit">Fazer meu cadastro — é grátis</button>
+      <div class="form-group">
+        <label>Instagram</label>
+        <div class="input-prefix">
+          <span>@</span>
+          <input type="text" id="instagram" placeholder="seuperfil">
+        </div>
+      </div>
+
+      <div class="section-sep">Acesso à conta</div>
+
+      <div class="form-group">
+        <label>E-mail <span class="required">*</span></label>
+        <input type="email" id="email" placeholder="seu@email.com" required>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>Senha <span class="required">*</span></label>
+          <input type="password" id="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label>Confirmar senha <span class="required">*</span></label>
+          <input type="password" id="senha2" placeholder="Repita a senha" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="btnSubmit">Criar minha conta — é grátis</button>
     </form>
 
     <div id="msg" class="msg"></div>
+
+    <div class="login-link">
+      Já tem conta? <a href="login.html">Faça login aqui</a>
+    </div>
   </div>
 </div>
 
@@ -209,37 +156,54 @@
     const msg = document.getElementById('msg');
     msg.className = 'msg';
     msg.textContent = '';
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
 
-    const dados = {
+    const senha = document.getElementById('senha').value;
+    const senha2 = document.getElementById('senha2').value;
+    if (senha !== senha2) {
+      msg.textContent = 'As senhas não coincidem.';
+      msg.className = 'msg error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Criando conta...';
+
+    const email = document.getElementById('email').value.trim().toLowerCase();
+
+    // 1. Criar conta no Supabase Auth
+    const { data: authData, error: authError } = await client.auth.signUp({ email, password: senha });
+
+    if (authError) {
+      msg.textContent = 'Erro: ' + authError.message;
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = 'Criar minha conta — é grátis';
+      return;
+    }
+
+    // 2. Inserir perfil na tabela corredores
+    const { error: dbError } = await client.from('corredores').insert([{
+      user_id: authData.user.id,
       nome: document.getElementById('nome').value.trim(),
-      email: document.getElementById('email').value.trim().toLowerCase(),
+      email: email,
       telefone: document.getElementById('telefone').value.trim() || null,
       cidade: document.getElementById('cidade').value.trim(),
       sexo: document.getElementById('sexo').value,
       data_nascimento: document.getElementById('data_nascimento').value || null,
       instagram: document.getElementById('instagram').value.trim().replace(/^@/, '') || null,
-    };
+    }]);
 
-    const { error } = await client.from('corredores').insert([dados]);
-
-    if (error) {
-      if (error.code === '23505') {
-        msg.textContent = 'Este e-mail já está cadastrado no Circuito. Você já está na lista!';
-        msg.className = 'msg error';
-      } else {
-        msg.textContent = 'Erro ao cadastrar: ' + error.message;
-        msg.className = 'msg error';
-      }
+    if (dbError) {
+      msg.textContent = 'Conta criada, mas erro ao salvar perfil: ' + dbError.message;
+      msg.className = 'msg error';
       btn.disabled = false;
-      btn.textContent = 'Fazer meu cadastro — é grátis';
-    } else {
-      msg.textContent = '✅ Cadastro realizado! Bem-vindo ao Circuito Agenda Run, ' + dados.nome.split(' ')[0] + '!';
-      msg.className = 'msg success';
-      document.getElementById('formCorredor').reset();
-      btn.textContent = 'Cadastro realizado!';
+      btn.textContent = 'Criar minha conta — é grátis';
+      return;
     }
+
+    msg.textContent = '✅ Conta criada! Redirecionando para seu perfil...';
+    msg.className = 'msg success';
+    setTimeout(() => { window.location.href = 'perfil.html'; }, 1500);
   });
 </script>
 </body>

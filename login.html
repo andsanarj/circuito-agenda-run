@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .container { max-width: 420px; margin: 60px auto; padding: 0 20px; width: 100%; flex: 1; }
+    .card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    .card-logo { text-align: center; margin-bottom: 24px; }
+    .card-logo img { height: 56px; border-radius: 12px; }
+    h1 { font-size: 22px; color: #1F4E79; margin-bottom: 6px; text-align: center; }
+    .subtitle { color: #888; font-size: 14px; margin-bottom: 28px; text-align: center; }
+    .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 24px; }
+    .tab {
+      flex: 1; padding: 10px; text-align: center; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: #999;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab.active { color: #1F4E79; border-color: #1F4E79; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 15px; color: #333; transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: #1F4E79; }
+    .btn {
+      width: 100%; padding: 13px; background: #1F4E79; color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 4px; transition: background 0.2s;
+    }
+    .btn:hover { background: #163d62; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .btn-orange { background: #E8622A; }
+    .btn-orange:hover { background: #c94f1f; }
+    .msg { margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .forgot { text-align: right; margin-top: 6px; }
+    .forgot a { font-size: 13px; color: #1F4E79; text-decoration: none; }
+    .cadastro-link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+    .cadastro-link a { color: #E8622A; font-weight: 600; text-decoration: none; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-logo"><img src="logo.png" alt="Agenda Run"></div>
+    <h1>Área do Corredor</h1>
+    <p class="subtitle">Entre para ver seu perfil e acompanhar seus pontos</p>
+
+    <div class="tabs">
+      <div class="tab active" id="tabLogin" onclick="mostrarAba('login')">Entrar</div>
+      <div class="tab" id="tabRecuperar" onclick="mostrarAba('recuperar')">Esqueci a senha</div>
+    </div>
+
+    <!-- ABA LOGIN -->
+    <div id="abaLogin">
+      <form id="formLogin">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="loginSenha" placeholder="Sua senha" required>
+          <div class="forgot"><a href="#" onclick="mostrarAba('recuperar'); return false;">Esqueci minha senha</a></div>
+        </div>
+        <button type="submit" class="btn" id="btnLogin">Entrar</button>
+      </form>
+      <div id="msgLogin" class="msg"></div>
+      <div class="cadastro-link">
+        Ainda não tem conta? <a href="cadastro_corredor.html">Cadastre-se grátis</a>
+      </div>
+    </div>
+
+    <!-- ABA RECUPERAR SENHA -->
+    <div id="abaRecuperar" style="display:none;">
+      <form id="formRecuperar">
+        <div class="form-group">
+          <label>E-mail da sua conta</label>
+          <input type="email" id="recuperarEmail" placeholder="seu@email.com" required>
+        </div>
+        <button type="submit" class="btn btn-orange" id="btnRecuperar">Enviar link de recuperação</button>
+      </form>
+      <div id="msgRecuperar" class="msg"></div>
+      <div class="cadastro-link" style="margin-top:16px;">
+        <a href="#" onclick="mostrarAba('login'); return false;">← Voltar para o login</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Redirecionar se já estiver logado
+  client.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = 'perfil.html';
+  });
+
+  function mostrarAba(aba) {
+    document.getElementById('abaLogin').style.display = aba === 'login' ? 'block' : 'none';
+    document.getElementById('abaRecuperar').style.display = aba === 'recuperar' ? 'block' : 'none';
+    document.getElementById('tabLogin').className = 'tab' + (aba === 'login' ? ' active' : '');
+    document.getElementById('tabRecuperar').className = 'tab' + (aba === 'recuperar' ? ' active' : '');
+  }
+
+  // LOGIN
+  document.getElementById('formLogin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const msg = document.getElementById('msgLogin');
+    msg.className = 'msg';
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    const { error } = await client.auth.signInWithPassword({
+      email: document.getElementById('loginEmail').value.trim().toLowerCase(),
+      password: document.getElementById('loginSenha').value,
+    });
+
+    if (error) {
+      msg.textContent = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    } else {
+      msg.textContent = '✅ Login realizado! Redirecionando...';
+      msg.className = 'msg success';
+      setTimeout(() => { window.location.href = 'perfil.html'; }, 1000);
+    }
+  });
+
+  // RECUPERAR SENHA
+  document.getElementById('formRecuperar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnRecuperar');
+    const msg = document.getElementById('msgRecuperar');
+    msg.className = 'msg';
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const { error } = await client.auth.resetPasswordForEmail(
+      document.getElementById('recuperarEmail').value.trim().toLowerCase(),
+      { redirectTo: 'https://circuito.agendarun.com.br/perfil.html' }
+    );
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = 'Enviar link de recuperação';
+    } else {
+      msg.textContent = '✅ Link enviado! Verifique seu e-mail.';
+      msg.className = 'msg success';
+      btn.textContent = 'Link enviado!';
+    }
+  });
+</script>
+</body>
+</html>

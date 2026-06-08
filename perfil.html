@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Perfil — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header .nav-right { display: flex; align-items: center; gap: 12px; }
+    header .nav-right span { color: #a8c8e8; font-size: 14px; }
+    header .btn-sair {
+      background: rgba(255,255,255,0.15); color: #fff; border: none;
+      padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    header .btn-sair:hover { background: rgba(255,255,255,0.25); }
+    .container { max-width: 640px; margin: 40px auto; padding: 0 20px; width: 100%; flex: 1; }
+
+    /* Pontos card */
+    .pontos-card {
+      background: linear-gradient(135deg, #1F4E79, #0d2d4a);
+      border-radius: 14px; padding: 28px 32px; color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+    }
+    .pontos-card .info h2 { font-size: 20px; margin-bottom: 4px; }
+    .pontos-card .info p { color: #a8c8e8; font-size: 14px; }
+    .pontos-card .pts { text-align: right; }
+    .pontos-card .pts .num { font-size: 48px; font-weight: 900; color: #4CBFCB; line-height: 1; }
+    .pontos-card .pts .label { font-size: 13px; color: #a8c8e8; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat { background: #fff; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+    .stat .num { font-size: 24px; font-weight: 800; color: #1F4E79; }
+    .stat .label { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* Perfil card */
+    .card { background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-title {
+      font-size: 16px; font-weight: 700; color: #1F4E79;
+      margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .btn-edit {
+      background: none; border: 1px solid #1F4E79; color: #1F4E79;
+      padding: 5px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-edit:hover { background: #EBF3FB; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+    input, select {
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 15px; color: #333; background: #f8fafc;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    input:disabled, select:disabled { color: #555; cursor: default; }
+    input:not(:disabled), select:not(:disabled) { background: #fff; }
+    input:not(:disabled):focus, select:not(:disabled):focus { outline: none; border-color: #1F4E79; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .input-prefix { position: relative; }
+    .input-prefix span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; }
+    .input-prefix input { padding-left: 26px; }
+    .btn-save {
+      width: 100%; padding: 13px; background: #E8622A; color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 8px; transition: background 0.2s; display: none;
+    }
+    .btn-save:hover { background: #c94f1f; }
+    .btn-save:disabled { background: #aaa; cursor: not-allowed; }
+    .msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+
+    /* Histórico */
+    .historico-vazio { text-align: center; padding: 32px; color: #aaa; }
+    .historico-vazio .icon { font-size: 36px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { color: #888; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 8px 12px; text-align: left; }
+    td { padding: 12px; border-top: 1px solid #f0f0f0; }
+    .pts-badge { background: #EBF3FB; color: #1F4E79; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 13px; }
+    .ranking-link { text-align: center; margin-top: 16px; }
+    .ranking-link a { color: #1F4E79; font-size: 14px; font-weight: 600; text-decoration: none; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+    .loading { text-align: center; padding: 60px; color: #888; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div class="nav-right">
+    <span id="headerNome"></span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div class="container" id="conteudo" style="display:none;">
+
+  <!-- Card de pontos -->
+  <div class="pontos-card">
+    <div class="info">
+      <h2 id="nomeCorreder">Carregando...</h2>
+      <p>Temporada 2026 · Grande São Paulo</p>
+    </div>
+    <div class="pts">
+      <div class="num" id="totalPontos">0</div>
+      <div class="label">pontos</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="num" id="posicaoRanking">—</div>
+      <div class="label">Posição no ranking</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="eventosParticipados">0</div>
+      <div class="label">Eventos</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="melhorPontuacao">0</div>
+      <div class="label">Melhor pontuação</div>
+    </div>
+  </div>
+
+  <!-- Dados pessoais -->
+  <div class="card">
+    <div class="card-title">
+      Dados pessoais
+      <button class="btn-edit" onclick="toggleEdicao()">✏️ Editar</button>
+    </div>
+    <form id="formPerfil">
+      <div class="form-group">
+        <label>Nome completo</label>
+        <input type="text" id="nome" disabled>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="email" disabled>
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" id="telefone" disabled>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" id="cidade" disabled>
+        </div>
+        <div class="form-group">
+          <label>Instagram</label>
+          <div class="input-prefix">
+            <span>@</span>
+            <input type="text" id="instagram" disabled>
+          </div>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="sexo" disabled>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data de nascimento</label>
+          <input type="date" id="data_nascimento" disabled>
+        </div>
+      </div>
+      <button type="submit" class="btn-save" id="btnSalvar">Salvar alterações</button>
+    </form>
+    <div id="msgPerfil" class="msg"></div>
+  </div>
+
+  <!-- Histórico de eventos -->
+  <div class="card">
+    <div class="card-title">Histórico de eventos</div>
+    <div id="historico">
+      <div class="loading">Carregando histórico...</div>
+    </div>
+    <div class="ranking-link">
+      <a href="ranking.html">Ver ranking completo →</a>
+    </div>
+  </div>
+
+</div>
+
+<div id="loading" class="loading">Carregando seu perfil...</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let modoEdicao = false;
+
+  async function init() {
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    // Buscar dados do corredor
+    const { data: corredor } = await client
+      .from('corredores')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!corredor) { window.location.href = 'login.html'; return; }
+
+    // Preencher campos
+    document.getElementById('nomeCorreder').textContent = corredor.nome.split(' ')[0];
+    document.getElementById('headerNome').textContent = corredor.nome.split(' ')[0];
+    document.getElementById('nome').value = corredor.nome || '';
+    document.getElementById('email').value = corredor.email || '';
+    document.getElementById('telefone').value = corredor.telefone || '';
+    document.getElementById('cidade').value = corredor.cidade || '';
+    document.getElementById('instagram').value = corredor.instagram || '';
+    document.getElementById('sexo').value = corredor.sexo || 'M';
+    document.getElementById('data_nascimento').value = corredor.data_nascimento || '';
+
+    // Buscar pontos e posição
+    const { data: rankingData } = await client
+      .from('ranking_geral')
+      .select('*')
+      .eq('id', corredor.id)
+      .single();
+
+    if (rankingData) {
+      document.getElementById('totalPontos').textContent = rankingData.total_pontos || 0;
+      document.getElementById('posicaoRanking').textContent = rankingData.posicao ? rankingData.posicao + 'º' : '—';
+      document.getElementById('eventosParticipados').textContent = rankingData.eventos_participados || 0;
+    }
+
+    // Buscar histórico de eventos
+    const { data: historico } = await client
+      .from('resultados')
+      .select('*, eventos(nome, data, cidade)')
+      .eq('corredor_id', corredor.id)
+      .order('created_at', { ascending: false });
+
+    renderHistorico(historico || []);
+
+    // Melhor pontuação
+    if (historico && historico.length > 0) {
+      const melhor = Math.max(...historico.map(r => r.pontos || 0));
+      document.getElementById('melhorPontuacao').textContent = melhor;
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+  }
+
+  function renderHistorico(historico) {
+    const div = document.getElementById('historico');
+    if (historico.length === 0) {
+      div.innerHTML = `<div class="historico-vazio"><div class="icon">🏁</div><p>Nenhum evento ainda.<br>Participe do primeiro evento pontuável!</p></div>`;
+      return;
+    }
+    let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Inscrição</th><th>Participação</th><th>Finalização</th><th>Pontos</th></tr></thead><tbody>`;
+    historico.forEach(r => {
+      const data = r.eventos?.data ? new Date(r.eventos.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      html += `<tr>
+        <td>${r.eventos?.nome || '—'}</td>
+        <td>${data}</td>
+        <td>${r.inscrito ? '✅' : '—'}</td>
+        <td>${r.participou ? '✅' : '—'}</td>
+        <td>${r.finalizou ? '✅' : '—'}</td>
+        <td><span class="pts-badge">${r.pontos || 0} pts</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    div.innerHTML = html;
+  }
+
+  function toggleEdicao() {
+    modoEdicao = !modoEdicao;
+    const campos = ['nome', 'telefone', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
+    campos.forEach(id => { document.getElementById(id).disabled = !modoEdicao; });
+    document.getElementById('btnSalvar').style.display = modoEdicao ? 'block' : 'none';
+    document.querySelector('.btn-edit').textContent = modoEdicao ? '✕ Cancelar' : '✏️ Editar';
+    if (!modoEdicao) document.getElementById('msgPerfil').className = 'msg';
+  }
+
+  document.getElementById('formPerfil').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSalvar');
+    const msg = document.getElementById('msgPerfil');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const { data: { session } } = await client.auth.getSession();
+    const { error } = await client.from('corredores').update({
+      nome: document.getElementById('nome').value.trim(),
+      telefone: document.getElementById('telefone').value.trim() || null,
+      cidade: document.getElementById('cidade').value.trim(),
+      instagram: document.getElementById('instagram').value.trim().replace(/^@/, '') || null,
+      sexo: document.getElementById('sexo').value,
+      data_nascimento: document.getElementById('data_nascimento').value || null,
+    }).eq('user_id', session.user.id);
+
+    if (error) {
+      msg.textContent = 'Erro ao salvar: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = '✅ Perfil atualizado com sucesso!';
+      msg.className = 'msg success';
+      document.getElementById('nomeCorreder').textContent = document.getElementById('nome').value.split(' ')[0];
+      document.getElementById('headerNome').textContent = document.getElementById('nome').value.split(' ')[0];
+      toggleEdicao();
+    }
+    btn.disabled = false;
+    btn.textContent = 'Salvar alterações';
+  });
+
+  async function sair() {
+    await client.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  init();
+</script>
+</body>
+</html>
