@@ -221,7 +221,7 @@
       .eq('user_id', session.user.id)
       .single();
 
-    if (!corredor) { window.location.href = 'login.html'; return; }
+    if (!corredor) { window.location.href = 'cadastro_corredor.html'; return; }
 
     // Preencher campos
     document.getElementById('nomeCorreder').textContent = corredor.nome.split(' ')[0];
