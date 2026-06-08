@@ -114,19 +114,26 @@
 
       <div class="section-sep">Acesso à conta</div>
 
+      <div id="avisoLogado" style="display:none; background:#fff8e1; border-radius:8px; padding:12px 14px; font-size:13px; color:#7a5c00; margin-bottom:16px;">
+        ⚠️ Você já tem uma conta. Preencha seus dados abaixo para completar o cadastro.
+        <br><a href="#" onclick="fazerLogout(); return false;" style="color:#E8622A; font-weight:600;">Não é você? Sair da conta</a>
+      </div>
+
       <div class="form-group">
         <label>E-mail <span class="required">*</span></label>
         <input type="email" id="email" placeholder="seu@email.com" required>
       </div>
 
-      <div class="row-2">
-        <div class="form-group">
-          <label>Senha <span class="required">*</span></label>
-          <input type="password" id="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
-        </div>
-        <div class="form-group">
-          <label>Confirmar senha <span class="required">*</span></label>
-          <input type="password" id="senha2" placeholder="Repita a senha" required>
+      <div id="blocoSenha">
+        <div class="row-2">
+          <div class="form-group">
+            <label>Senha <span class="required">*</span></label>
+            <input type="password" id="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+          </div>
+          <div class="form-group">
+            <label>Confirmar senha <span class="required">*</span></label>
+            <input type="password" id="senha2" placeholder="Repita a senha" required>
+          </div>
         </div>
       </div>
 
@@ -150,40 +157,75 @@
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  async function fazerLogout() {
+    await client.auth.signOut();
+    window.location.reload();
+  }
+
+  // Verificar se usuário já está logado (perfil incompleto)
+  let sessaoAtiva = null;
+  client.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      sessaoAtiva = session;
+      // Ocultar campos de senha pois conta já existe
+      document.getElementById('blocoSenha').style.display = 'none';
+      document.getElementById('email').value = session.user.email;
+      document.getElementById('email').disabled = true;
+      document.getElementById('btnSubmit').textContent = 'Completar meu cadastro';
+      document.getElementById('avisoLogado').style.display = 'block';
+    }
+  });
+
   document.getElementById('formCorredor').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('msg');
     msg.className = 'msg';
     msg.textContent = '';
-
-    const senha = document.getElementById('senha').value;
-    const senha2 = document.getElementById('senha2').value;
-    if (senha !== senha2) {
-      msg.textContent = 'As senhas não coincidem.';
-      msg.className = 'msg error';
-      return;
-    }
-
     btn.disabled = true;
-    btn.textContent = 'Criando conta...';
 
     const email = document.getElementById('email').value.trim().toLowerCase();
 
-    // 1. Criar conta no Supabase Auth
-    const { data: authData, error: authError } = await client.auth.signUp({ email, password: senha });
+    let userId;
 
-    if (authError) {
-      msg.textContent = 'Erro: ' + authError.message;
-      msg.className = 'msg error';
-      btn.disabled = false;
-      btn.textContent = 'Criar minha conta — é grátis';
-      return;
+    if (sessaoAtiva) {
+      // Usuário já autenticado — só salvar perfil
+      userId = sessaoAtiva.user.id;
+      btn.textContent = 'Salvando...';
+    } else {
+      // Novo usuário — criar conta
+      const senha = document.getElementById('senha').value;
+      const senha2 = document.getElementById('senha2').value;
+      if (senha !== senha2) {
+        msg.textContent = 'As senhas não coincidem.';
+        msg.className = 'msg error';
+        btn.disabled = false;
+        return;
+      }
+      btn.textContent = 'Criando conta...';
+      const { data: authData, error: authError } = await client.auth.signUp({ email, password: senha });
+      if (authError) {
+        msg.textContent = 'Erro: ' + authError.message;
+        msg.className = 'msg error';
+        btn.disabled = false;
+        btn.textContent = 'Criar minha conta — é grátis';
+        return;
+      }
+      // Fazer login imediatamente para ativar a sessão antes do insert
+      const { error: loginError } = await client.auth.signInWithPassword({ email, password: senha });
+      if (loginError) {
+        msg.textContent = 'Conta criada, mas erro ao ativar sessão: ' + loginError.message;
+        msg.className = 'msg error';
+        btn.disabled = false;
+        btn.textContent = 'Criar minha conta — é grátis';
+        return;
+      }
+      userId = authData.user.id;
     }
 
-    // 2. Inserir perfil na tabela corredores
+    // Inserir perfil na tabela corredores
     const { error: dbError } = await client.from('corredores').insert([{
-      user_id: authData.user.id,
+      user_id: userId,
       nome: document.getElementById('nome').value.trim(),
       email: email,
       telefone: document.getElementById('telefone').value.trim() || null,
@@ -194,14 +236,14 @@
     }]);
 
     if (dbError) {
-      msg.textContent = 'Conta criada, mas erro ao salvar perfil: ' + dbError.message;
+      msg.textContent = 'Erro ao salvar perfil: ' + dbError.message;
       msg.className = 'msg error';
       btn.disabled = false;
-      btn.textContent = 'Criar minha conta — é grátis';
+      btn.textContent = sessaoAtiva ? 'Completar meu cadastro' : 'Criar minha conta — é grátis';
       return;
     }
 
-    msg.textContent = '✅ Conta criada! Redirecionando para seu perfil...';
+    msg.textContent = '✅ Cadastro realizado! Redirecionando para seu perfil...';
     msg.className = 'msg success';
     setTimeout(() => { window.location.href = 'perfil.html'; }, 1500);
   });
