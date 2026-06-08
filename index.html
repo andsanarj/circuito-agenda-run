@@ -194,6 +194,7 @@
     .steps, .pts-cards, .org-benefits { flex-direction: column; align-items: center; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -203,11 +204,11 @@
     <img src="logo.png" alt="Agenda Run">
     <span>Circuito Agenda Run</span>
   </a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="ranking.html">🏆 Ranking</a>
     <a href="cadastro_organizador.html">Para organizadores</a>
-    <a href="login.html" class="btn-login">Entrar</a>
-    <a href="cadastro_corredor.html" class="btn-nav">Cadastre-se grátis</a>
+    <a href="login.html" class="btn-login" id="btnEntrar">Entrar</a>
+    <a href="cadastro_corredor.html" class="btn-nav" id="btnCadastro">Cadastre-se grátis</a>
   </div>
 </nav>
 
@@ -363,5 +364,37 @@
   <p style="margin-top:8px;">Grande São Paulo · Temporada 2026 · Eventos homologados pela CBAT</p>
 </footer>
 
+<script>
+  const _sb = supabase.createClient(
+    'https://tbveeaupcmpltncjwfgt.supabase.co',
+    'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD'
+  );
+
+  _sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+
+    const { data: corredor } = await _sb
+      .from('corredores')
+      .select('nome')
+      .eq('user_id', session.user.id)
+      .single();
+
+    const primeiroNome = corredor?.nome?.split(' ')[0] || 'Corredor';
+
+    document.getElementById('btnEntrar').style.display = 'none';
+    document.getElementById('btnCadastro').style.display = 'none';
+
+    const navLinks = document.getElementById('navLinks');
+    navLinks.insertAdjacentHTML('beforeend', `
+      <a href="perfil.html" class="btn-login">👤 ${primeiroNome}</a>
+      <a href="#" class="btn-nav" onclick="sairNav(); return false;">Sair</a>
+    `);
+  });
+
+  async function sairNav() {
+    await _sb.auth.signOut();
+    window.location.reload();
+  }
+</script>
 </body>
 </html>
