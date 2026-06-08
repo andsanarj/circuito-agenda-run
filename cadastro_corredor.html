@@ -167,6 +167,11 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label>Instagram</label>
+        <input type="text" id="instagram" placeholder="@seuperfil">
+      </div>
+
       <div class="row-2">
         <div class="form-group">
           <label>Sexo <span class="required">*</span></label>
@@ -214,6 +219,7 @@
       cidade: document.getElementById('cidade').value.trim(),
       sexo: document.getElementById('sexo').value,
       data_nascimento: document.getElementById('data_nascimento').value || null,
+      instagram: document.getElementById('instagram').value.trim().replace(/^@/, '') || null,
     };
 
     const { error } = await client.from('corredores').insert([dados]);
