@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header .right { display: flex; align-items: center; gap: 12px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-sair:hover { background: rgba(255,255,255,0.25); }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    h2 { font-size: 18px; color: #1F4E79; margin-bottom: 4px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    .card-header h2 { margin: 0; }
+    .badge-count { background: #E8622A; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 14px; color: #333; }
+    textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #1F4E79; }
+    .btn { padding: 9px 18px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-primary { background: #1F4E79; color: #fff; }
+    .btn-primary:hover { background: #163d62; }
+    .btn-orange { background: #E8622A; color: #fff; }
+    .btn-orange:hover { background: #c94f1f; }
+    .btn-green { background: #1a7a4a; color: #fff; }
+    .btn-green:hover { background: #145e39; }
+    .btn-red { background: #b00020; color: #fff; }
+    .btn-red:hover { background: #8a0018; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-gray:hover { background: #e0e8f0; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .tag-pendente  { background: #fff8e1; color: #b07800; }
+    .tag-aprovado  { background: #e6f9f0; color: #1a7a4a; }
+    .tag-rejeitado { background: #fdecea; color: #b00020; }
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .acesso-negado { text-align: center; padding: 80px 20px; }
+    .acesso-negado h2 { color: #b00020; margin-bottom: 12px; }
+    .link-resultado { color: #1F4E79; font-size: 12px; text-decoration: none; }
+    .link-resultado:hover { text-decoration: underline; }
+    .rejeicao-form { display: none; margin-top: 8px; }
+    .rejeicao-form.aberta { display: block; }
+    .rejeicao-form textarea { font-size: 13px; min-height: 52px; }
+    .rejeicao-form .btns { display: flex; gap: 8px; margin-top: 6px; }
+    .corredor-info strong { display: block; }
+    .corredor-info span { font-size: 11px; color: #888; }
+    .resultado-detalhe { font-size: 12px; color: #555; }
+    .resultado-detalhe .campo { margin-bottom: 2px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div class="right">
+    <span class="badge-admin">⚙️ Admin</span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;">
+  <p style="color:#888;">Verificando acesso...</p>
+</div>
+
+<div id="painelAdmin" style="display:none;">
+<div class="container">
+
+  <!-- ── VALIDAÇÕES PENDENTES ───────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>✅ Validação de Resultados</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Revise cada submissão antes de aprovar. Confira o link oficial para validar as informações.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge-count" id="countPendentes">0 pendentes</span>
+        <button class="btn btn-gray btn-sm" onclick="carregarPendentes()">🔄 Atualizar</button>
+      </div>
+    </div>
+    <div id="tabelaPendentes">
+      <div class="empty">Carregando...</div>
+    </div>
+    <div id="msgValidacao" class="msg"></div>
+  </div>
+
+  <!-- ── HISTÓRICO DE VALIDAÇÕES ────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📊 Histórico de Validações</h2>
+      <button class="btn btn-gray btn-sm" onclick="carregarHistorico()">🔄 Atualizar</button>
+    </div>
+    <div id="tabelaHistorico">
+      <div class="empty">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- ── EVENTOS ────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🏁 Eventos</h2>
+    </div>
+    <form id="formEvento" style="margin-bottom:20px;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome do evento *</label>
+          <input type="text" id="evNome" placeholder="Ex: Corrida He-Man 2026" required>
+        </div>
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" id="evData" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Distância</label>
+          <input type="text" id="evDistancia" placeholder="Ex: 5K, 10K, 21K">
+        </div>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" id="evCidade" placeholder="São Paulo">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>URL dos resultados oficiais (RunKing ou site da corrida)</label>
+        <input type="url" id="evUrlResult" placeholder="https://resultados.runking.com.br/ponto-org/nome-da-corrida">
+      </div>
+      <button type="submit" class="btn btn-primary" id="btnSalvarEvento">+ Adicionar Evento</button>
+    </form>
+    <div id="msgEvento" class="msg"></div>
+
+    <table id="tabelaEventos">
+      <thead><tr><th>#</th><th>Nome</th><th>Data</th><th>Dist.</th><th>Resultados</th><th>Submissões</th></tr></thead>
+      <tbody id="corpoEventos"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL  = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY  = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL   = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Verificar acesso ─────────────────────────────────────────
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `
+        <h2 style="color:#b00020;">🔒 Acesso Negado</h2>
+        <p style="margin:12px 0;">Esta página é exclusiva para o administrador.</p>
+        <a href="login.html" style="color:#1F4E79; font-weight:700;">Fazer login</a>
+      `;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('painelAdmin').style.display = 'block';
+    await Promise.all([carregarPendentes(), carregarHistorico(), carregarEventos()]);
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  // ── VALIDAÇÕES PENDENTES ─────────────────────────────────────
+  async function carregarPendentes() {
+    const { data } = await sb
+      .from('resultados')
+      .select('id, numero_peito, participou, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
+      .eq('status', 'pendente')
+      .order('created_at', { ascending: true });
+
+    document.getElementById('countPendentes').textContent = `${(data || []).length} pendente${(data || []).length !== 1 ? 's' : ''}`;
+
+    const div = document.getElementById('tabelaPendentes');
+    if (!data || data.length === 0) {
+      div.innerHTML = '<div class="empty">✅ Nenhuma submissão pendente!</div>';
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Corredor</th>
+            <th>Evento</th>
+            <th>Dados informados</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    data.forEach(r => {
+      const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const insta = r.corredores?.instagram ? `@${r.corredores.instagram}` : '';
+      const enviado = new Date(r.created_at).toLocaleString('pt-BR');
+
+      html += `
+        <tr id="row-${r.id}">
+          <td class="corredor-info">
+            <strong>${r.corredores?.nome || '?'}</strong>
+            <span>${r.corredores?.email || ''}</span>
+            ${insta ? `<span>${insta}</span>` : ''}
+          </td>
+          <td>
+            <strong>${r.eventos?.nome || '?'}</strong><br>
+            <span style="font-size:11px; color:#888;">${dataEv} · ${r.eventos?.distancia || ''}</span>
+          </td>
+          <td class="resultado-detalhe">
+            <div class="campo">🏷️ <strong>Peito:</strong> ${r.numero_peito || '—'}</div>
+            <div class="campo">🏁 <strong>Finalizou:</strong> ${r.finalizou ? 'Sim' : 'Não'}</div>
+            ${r.tempo ? `<div class="campo">⏱️ <strong>Tempo:</strong> ${r.tempo}</div>` : ''}
+            ${r.posicao_geral ? `<div class="campo">🥇 <strong>Posição:</strong> ${r.posicao_geral}º geral</div>` : ''}
+            ${r.categoria ? `<div class="campo">👤 <strong>Categoria:</strong> ${r.categoria}</div>` : ''}
+            ${r.url_resultado ? `<div class="campo">🔗 <a href="${r.url_resultado}" target="_blank" class="link-resultado">Ver resultado oficial ↗</a></div>` : ''}
+            <div class="campo" style="color:#aaa; margin-top:4px;">Enviado em ${enviado}</div>
+          </td>
+          <td style="min-width:160px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.finalizou})">
+                ✅ Aprovar
+              </button>
+              <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">
+                ❌ Rejeitar
+              </button>
+            </div>
+            <div class="rejeicao-form" id="rejeicao-${r.id}">
+              <textarea id="motivo-${r.id}" placeholder="Explique o motivo da rejeição..."></textarea>
+              <div class="btns">
+                <button class="btn btn-red btn-sm" onclick="rejeitar('${r.id}')">Confirmar rejeição</button>
+                <button class="btn btn-gray btn-sm" onclick="toggleRejeicao('${r.id}')">Cancelar</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += '</tbody></table>';
+    div.innerHTML = html;
+  }
+
+  function toggleRejeicao(id) {
+    const form = document.getElementById(`rejeicao-${id}`);
+    form.classList.toggle('aberta');
+  }
+
+  async function aprovar(resultadoId, finalizou) {
+    const msg = document.getElementById('msgValidacao');
+
+    // Calcular pontos: inscrito (5) + participou (5) + finalizou (5 se aplicável)
+    const pontos = 5 + 5 + (finalizou ? 5 : 0);
+
+    const { error } = await sb.from('resultados').update({
+      status: 'aprovado',
+      pontos,
+      validado_em: new Date().toISOString(),
+      motivo_rejeicao: null,
+    }).eq('id', resultadoId);
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = `✅ Resultado aprovado! ${pontos} pontos atribuídos.`;
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await Promise.all([carregarPendentes(), carregarHistorico()]);
+    }
+  }
+
+  async function rejeitar(resultadoId) {
+    const motivo = document.getElementById(`motivo-${resultadoId}`).value.trim();
+    const msg = document.getElementById('msgValidacao');
+
+    if (!motivo) {
+      alert('Informe o motivo da rejeição para que o corredor possa corrigir.');
+      return;
+    }
+
+    const { error } = await sb.from('resultados').update({
+      status: 'rejeitado',
+      pontos: 0,
+      motivo_rejeicao: motivo,
+      validado_em: new Date().toISOString(),
+    }).eq('id', resultadoId);
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = '❌ Resultado rejeitado. O corredor será notificado para corrigir.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await Promise.all([carregarPendentes(), carregarHistorico()]);
+    }
+  }
+
+  // ── HISTÓRICO ────────────────────────────────────────────────
+  async function carregarHistorico() {
+    const { data } = await sb
+      .from('resultados')
+      .select('id, pontos, tempo, status, validado_em, motivo_rejeicao, corredores(nome), eventos(nome, data)')
+      .in('status', ['aprovado', 'rejeitado'])
+      .order('validado_em', { ascending: false })
+      .limit(50);
+
+    const div = document.getElementById('tabelaHistorico');
+    if (!data || data.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhuma validação realizada ainda.</div>';
+      return;
+    }
+
+    const tagMap = {
+      aprovado:  '<span class="tag tag-aprovado">✅ Aprovado</span>',
+      rejeitado: '<span class="tag tag-rejeitado">❌ Rejeitado</span>',
+    };
+
+    let html = `
+      <table>
+        <thead><tr><th>Corredor</th><th>Evento</th><th>Status</th><th>Pts</th><th>Validado em</th><th>Obs.</th></tr></thead>
+        <tbody>
+    `;
+    data.forEach(r => {
+      const dataVal = r.validado_em ? new Date(r.validado_em).toLocaleString('pt-BR') : '—';
+      html += `<tr>
+        <td>${r.corredores?.nome || '?'}</td>
+        <td>${r.eventos?.nome || '?'}</td>
+        <td>${tagMap[r.status] || r.status}</td>
+        <td><strong>${r.pontos || 0}</strong></td>
+        <td style="font-size:11px;">${dataVal}</td>
+        <td style="font-size:12px; color:#888;">${r.motivo_rejeicao || '—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    div.innerHTML = html;
+  }
+
+  // ── EVENTOS ──────────────────────────────────────────────────
+  async function carregarEventos() {
+    const { data } = await sb
+      .from('eventos')
+      .select('id, nome, data, distancia, cidade, url_runking')
+      .order('data', { ascending: false });
+
+    const tbody = document.getElementById('corpoEventos');
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum evento cadastrado.</td></tr>';
+      return;
+    }
+
+    // Contar submissões por evento
+    const { data: counts } = await sb
+      .from('resultados')
+      .select('evento_id, status');
+
+    const contPorEvento = {};
+    (counts || []).forEach(r => {
+      if (!contPorEvento[r.evento_id]) contPorEvento[r.evento_id] = { total: 0, pendentes: 0 };
+      contPorEvento[r.evento_id].total++;
+      if (r.status === 'pendente') contPorEvento[r.evento_id].pendentes++;
+    });
+
+    tbody.innerHTML = data.map(ev => {
+      const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const cnt = contPorEvento[ev.id] || { total: 0, pendentes: 0 };
+      return `
+        <tr>
+          <td>${ev.id}</td>
+          <td><strong>${ev.nome}</strong></td>
+          <td>${dataFmt}</td>
+          <td>${ev.distancia || '—'}</td>
+          <td>${ev.url_runking
+            ? `<a href="${ev.url_runking}" target="_blank" class="link-resultado">Ver ↗</a>`
+            : '—'}</td>
+          <td>
+            ${cnt.total} submissão(ões)
+            ${cnt.pendentes > 0 ? `<span class="tag tag-pendente">${cnt.pendentes} pendente${cnt.pendentes > 1 ? 's' : ''}</span>` : ''}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('formEvento').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSalvarEvento');
+    const msg = document.getElementById('msgEvento');
+    btn.disabled = true;
+
+    const { error } = await sb.from('eventos').insert([{
+      nome: document.getElementById('evNome').value.trim(),
+      data: document.getElementById('evData').value || null,
+      distancia: document.getElementById('evDistancia').value.trim() || null,
+      cidade: document.getElementById('evCidade').value.trim() || null,
+      url_runking: document.getElementById('evUrlResult').value.trim() || null,
+      ativo: true,
+    }]);
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = '✅ Evento adicionado! Corredores já podem visualizar e registrar participação.';
+      msg.className = 'msg success';
+      document.getElementById('formEvento').reset();
+      await carregarEventos();
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+    }
+    btn.disabled = false;
+  });
+</script>
+</body>
+</html>

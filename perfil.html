@@ -14,21 +14,12 @@
     header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
     header .nav-right { display: flex; align-items: center; gap: 12px; }
     header .nav-right span { color: #a8c8e8; font-size: 14px; }
-    header .btn-sair {
-      background: rgba(255,255,255,0.15); color: #fff; border: none;
-      padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
-      transition: background 0.2s;
-    }
+    header .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
     header .btn-sair:hover { background: rgba(255,255,255,0.25); }
     .container { max-width: 640px; margin: 40px auto; padding: 0 20px; width: 100%; flex: 1; }
 
     /* Pontos card */
-    .pontos-card {
-      background: linear-gradient(135deg, #1F4E79, #0d2d4a);
-      border-radius: 14px; padding: 28px 32px; color: #fff;
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
-    }
+    .pontos-card { background: linear-gradient(135deg, #1F4E79, #0d2d4a); border-radius: 14px; padding: 28px 32px; color: #fff; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
     .pontos-card .info h2 { font-size: 20px; margin-bottom: 4px; }
     .pontos-card .info p { color: #a8c8e8; font-size: 14px; }
     .pontos-card .pts { text-align: right; }
@@ -39,53 +30,82 @@
     .stat .num { font-size: 24px; font-weight: 800; color: #1F4E79; }
     .stat .label { font-size: 12px; color: #888; margin-top: 2px; }
 
-    /* Perfil card */
-    .card { background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    .card-title {
-      font-size: 16px; font-weight: 700; color: #1F4E79;
-      margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .btn-edit {
-      background: none; border: 1px solid #1F4E79; color: #1F4E79;
-      padding: 5px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
-      transition: background 0.2s;
-    }
+    /* Cards */
+    .card { background: #fff; border-radius: 12px; padding: 28px 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-title { font-size: 16px; font-weight: 700; color: #1F4E79; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    .btn-edit { background: none; border: 1px solid #1F4E79; color: #1F4E79; padding: 5px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
     .btn-edit:hover { background: #EBF3FB; }
+
+    /* Formulário */
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
-    input, select {
-      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 15px; color: #333; background: #f8fafc;
-      transition: border-color 0.2s, background 0.2s;
-    }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; color: #333; background: #f8fafc; transition: border-color 0.2s, background 0.2s; }
+    textarea { resize: vertical; min-height: 72px; font-family: inherit; }
     input:disabled, select:disabled { color: #555; cursor: default; }
     input:not(:disabled), select:not(:disabled) { background: #fff; }
-    input:not(:disabled):focus, select:not(:disabled):focus { outline: none; border-color: #1F4E79; }
+    input:not(:disabled):focus, select:not(:disabled):focus, textarea:focus { outline: none; border-color: #1F4E79; background: #fff; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .input-prefix { position: relative; }
     .input-prefix span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; }
     .input-prefix input { padding-left: 26px; }
-    .btn-save {
-      width: 100%; padding: 13px; background: #E8622A; color: #fff;
-      border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
-      cursor: pointer; margin-top: 8px; transition: background 0.2s; display: none;
-    }
+    .btn-save { width: 100%; padding: 13px; background: #E8622A; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.2s; display: none; }
     .btn-save:hover { background: #c94f1f; }
     .btn-save:disabled { background: #aaa; cursor: not-allowed; }
     .msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; }
     .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
     .msg.error { background: #fdecea; color: #b00020; display: block; }
 
+    /* Eventos */
+    .evento-item { border: 1px solid #e8edf2; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .evento-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; gap: 12px; flex-wrap: wrap; }
+    .evento-info { flex: 1; }
+    .evento-info .ev-nome { font-weight: 700; color: #1F4E79; font-size: 15px; }
+    .evento-info .ev-meta { font-size: 12px; color: #888; margin-top: 3px; }
+    .evento-acao { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .tag-pendente  { background: #fff8e1; color: #b07800; }
+    .tag-aprovado  { background: #e6f9f0; color: #1a7a4a; }
+    .tag-rejeitado { background: #fdecea; color: #b00020; }
+    .tag-nova      { background: #EBF3FB; color: #1F4E79; }
+    .btn-registrar { background: #E8622A; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-registrar:hover { background: #c94f1f; }
+    .btn-editar { background: #1F4E79; color: #fff; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-editar:hover { background: #163d62; }
+
+    /* Formulário inline de resultado */
+    .resultado-form { border-top: 1px solid #f0f0f0; background: #fafbfc; padding: 20px; display: none; }
+    .resultado-form.aberto { display: block; }
+    .resultado-form h4 { font-size: 14px; color: #1F4E79; font-weight: 700; margin-bottom: 16px; }
+    .resultado-form .form-group { margin-bottom: 14px; }
+    .resultado-form label { font-size: 11px; }
+    .resultado-form input, .resultado-form select, .resultado-form textarea { font-size: 14px; padding: 9px 12px; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; cursor: pointer; }
+    .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+    .checkbox-row span { font-size: 14px; color: #333; }
+    .campos-finalizacao { display: none; }
+    .campos-finalizacao.visivel { display: block; }
+    .motivo-rejeicao { background: #fdecea; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #b00020; margin-bottom: 14px; }
+    .btn-submit { background: #1F4E79; color: #fff; border: none; padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-submit:hover { background: #163d62; }
+    .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+    .btn-cancelar-form { background: none; border: none; color: #888; font-size: 13px; cursor: pointer; padding: 11px 16px; }
+    .btn-cancelar-form:hover { color: #333; }
+    .form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .msg-form { margin-top: 10px; padding: 10px 14px; border-radius: 7px; font-size: 13px; display: none; }
+    .msg-form.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg-form.error { background: #fdecea; color: #b00020; display: block; }
+    .info-pontos-form { background: #EBF3FB; border-radius: 7px; padding: 10px 14px; font-size: 12px; color: #1F4E79; margin-bottom: 14px; }
+
     /* Histórico */
     .historico-vazio { text-align: center; padding: 32px; color: #aaa; }
     .historico-vazio .icon { font-size: 36px; margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { color: #888; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 8px 12px; text-align: left; }
-    td { padding: 12px; border-top: 1px solid #f0f0f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 8px 12px; text-align: left; }
+    td { padding: 10px 12px; border-top: 1px solid #f0f0f0; }
     .pts-badge { background: #EBF3FB; color: #1F4E79; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 13px; }
     .ranking-link { text-align: center; margin-top: 16px; }
     .ranking-link a { color: #1F4E79; font-size: 14px; font-weight: 600; text-decoration: none; }
+    .empty-eventos { text-align: center; padding: 24px; color: #aaa; font-size: 14px; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     .loading { text-align: center; padding: 60px; color: #888; }
   </style>
@@ -129,6 +149,21 @@
     <div class="stat">
       <div class="num" id="melhorPontuacao">0</div>
       <div class="label">Melhor pontuação</div>
+    </div>
+  </div>
+
+  <!-- ── MINHAS CORRIDAS ──────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      🏁 Minhas Corridas
+      <span style="font-size:12px; color:#888; font-weight:400;">Registre sua participação após o evento</span>
+    </div>
+    <div class="info-pontos-form" style="margin-bottom:0;">
+      <strong>Como funciona:</strong> selecione a corrida que participou, preencha seus dados oficiais e aguarde a validação do administrador. Após aprovação, seus pontos são somados ao ranking.
+    </div>
+    <br>
+    <div id="listaEventos">
+      <div class="loading" style="padding:20px;">Carregando eventos...</div>
     </div>
   </div>
 
@@ -186,9 +221,9 @@
 
   <!-- Histórico de eventos -->
   <div class="card">
-    <div class="card-title">Histórico de eventos</div>
+    <div class="card-title">Histórico de pontuações</div>
     <div id="historico">
-      <div class="loading">Carregando histórico...</div>
+      <div class="loading" style="padding:20px;">Carregando histórico...</div>
     </div>
     <div class="ranking-link">
       <a href="ranking.html">Ver ranking completo →</a>
@@ -209,12 +244,12 @@
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let modoEdicao = false;
+  let corredorIdGlobal = null;
 
   async function init() {
     const { data: { session } } = await client.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
 
-    // Buscar dados do corredor
     const { data: corredor } = await client
       .from('corredores')
       .select('*')
@@ -223,7 +258,9 @@
 
     if (!corredor) { window.location.href = 'cadastro_corredor.html'; return; }
 
-    // Preencher campos
+    corredorIdGlobal = corredor.id;
+
+    // Preencher campos do perfil
     document.getElementById('nomeCorreder').textContent = corredor.nome.split(' ')[0];
     document.getElementById('headerNome').textContent = corredor.nome.split(' ')[0];
     document.getElementById('nome').value = corredor.nome || '';
@@ -234,7 +271,7 @@
     document.getElementById('sexo').value = corredor.sexo || 'M';
     document.getElementById('data_nascimento').value = corredor.data_nascimento || '';
 
-    // Buscar pontos e posição
+    // Buscar ranking
     const { data: rankingData } = await client
       .from('ranking_geral')
       .select('*')
@@ -247,40 +284,245 @@
       document.getElementById('eventosParticipados').textContent = rankingData.eventos_participados || 0;
     }
 
-    // Buscar histórico de eventos
-    const { data: historico } = await client
-      .from('resultados')
-      .select('*, eventos(nome, data, cidade)')
-      .eq('corredor_id', corredor.id)
-      .order('created_at', { ascending: false });
-
-    renderHistorico(historico || []);
-
-    // Melhor pontuação
-    if (historico && historico.length > 0) {
-      const melhor = Math.max(...historico.map(r => r.pontos || 0));
-      document.getElementById('melhorPontuacao').textContent = melhor;
-    }
+    // Carregar eventos e histórico em paralelo
+    await Promise.all([
+      carregarEventos(corredor.id),
+      carregarHistorico(corredor.id),
+    ]);
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('conteudo').style.display = 'block';
   }
 
+  // ── EVENTOS ────────────────────────────────────────────────
+  async function carregarEventos(corredorId) {
+    const [{ data: eventos }, { data: meuResultados }] = await Promise.all([
+      client.from('eventos').select('id, nome, data, distancia, cidade').order('data', { ascending: false }),
+      client.from('resultados').select('*').eq('corredor_id', corredorId),
+    ]);
+
+    const mapa = {};
+    (meuResultados || []).forEach(r => { mapa[r.evento_id] = r; });
+
+    const div = document.getElementById('listaEventos');
+
+    if (!eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty-eventos">Nenhum evento cadastrado ainda. Volte em breve! 🏃</div>';
+      return;
+    }
+
+    div.innerHTML = eventos.map(ev => {
+      const meuRes = mapa[ev.id] || null;
+      const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const meta = [dataFmt, ev.distancia, ev.cidade].filter(Boolean).join(' · ');
+
+      let tagHtml = '';
+      let acaoHtml = '';
+
+      if (!meuRes) {
+        tagHtml = '';
+        acaoHtml = `<button class="btn-registrar" onclick="abrirForm(${ev.id}, null)">+ Registrar resultado</button>`;
+      } else if (meuRes.status === 'pendente') {
+        tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
+        acaoHtml = '';
+      } else if (meuRes.status === 'aprovado') {
+        tagHtml = `<span class="tag tag-aprovado">✅ Aprovado · ${meuRes.pontos || 0} pts</span>`;
+        acaoHtml = '';
+      } else if (meuRes.status === 'rejeitado') {
+        tagHtml = '<span class="tag tag-rejeitado">❌ Rejeitado</span>';
+        acaoHtml = `<button class="btn-editar" onclick="abrirForm(${ev.id}, '${meuRes.id}')">Corrigir →</button>`;
+      }
+
+      const formAberto = meuRes && meuRes.status === 'rejeitado' ? '' : '';
+
+      return `
+        <div class="evento-item" id="ev-item-${ev.id}">
+          <div class="evento-header">
+            <div class="evento-info">
+              <div class="ev-nome">${ev.nome}</div>
+              <div class="ev-meta">${meta}</div>
+            </div>
+            <div class="evento-acao">
+              ${tagHtml}
+              ${acaoHtml}
+            </div>
+          </div>
+          <div class="resultado-form ${formAberto}" id="form-ev-${ev.id}">
+            ${renderFormResultado(ev.id, meuRes)}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderFormResultado(eventoId, resultado) {
+    const r = resultado || {};
+    const isRejeitado = r.status === 'rejeitado';
+    const motivoHtml = isRejeitado && r.motivo_rejeicao
+      ? `<div class="motivo-rejeicao">❌ <strong>Motivo da rejeição:</strong> ${r.motivo_rejeicao}</div>`
+      : '';
+    const checked = r.finalizou ? 'checked' : '';
+    const camposVisiveis = r.finalizou ? 'visivel' : '';
+
+    return `
+      <h4>${isRejeitado ? '✏️ Corrigir resultado' : '📋 Registrar minha participação'}</h4>
+      ${motivoHtml}
+      <div class="info-pontos-form">
+        🏆 <strong>Inscrição:</strong> 5 pts &nbsp;·&nbsp; <strong>Participação:</strong> 5 pts &nbsp;·&nbsp; <strong>Finalização:</strong> 5 pts &nbsp;·&nbsp; <em>Máx 15 pts por evento (após validação)</em>
+      </div>
+      <div class="form-group">
+        <label>Número de peito *</label>
+        <input type="text" id="peito-${eventoId}" placeholder="Ex: 478" value="${r.numero_peito || ''}" required>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="finalizou-${eventoId}" ${checked} onchange="toggleCamposFinalizacao(${eventoId})">
+        <span>Conclui a corrida (tenho tempo oficial)</span>
+      </label>
+      <div class="campos-finalizacao ${camposVisiveis}" id="campos-fin-${eventoId}">
+        <div class="row-2" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Tempo oficial</label>
+            <input type="text" id="tempo-${eventoId}" placeholder="Ex: 00:28:45" value="${r.tempo || ''}">
+          </div>
+          <div class="form-group">
+            <label>Posição geral</label>
+            <input type="number" id="posicao-${eventoId}" placeholder="Ex: 45" min="1" value="${r.posicao_geral || ''}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Categoria (da sua faixa etária)</label>
+          <input type="text" id="categoria-${eventoId}" placeholder="Ex: M4044, F3539" value="${r.categoria || ''}">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label>Link do resultado oficial * <span style="color:#888; font-weight:400;">(RunKing ou site da corrida)</span></label>
+        <input type="url" id="urlresult-${eventoId}" placeholder="https://resultados.runking.com.br/..." value="${r.url_resultado || ''}" required>
+      </div>
+      <div class="form-group">
+        <label>Observações <span style="color:#888; font-weight:400;">(opcional)</span></label>
+        <textarea id="obs-${eventoId}" placeholder="Alguma informação adicional para o validador...">${r.observacao || ''}</textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-submit" id="btn-submit-${eventoId}" onclick="submitResultado(${eventoId}, ${r.id ? `'${r.id}'` : 'null'})">
+          ${isRejeitado ? 'Reenviar para validação' : 'Enviar para validação'}
+        </button>
+        <button class="btn-cancelar-form" onclick="fecharForm(${eventoId})">Cancelar</button>
+      </div>
+      <div class="msg-form" id="msg-form-${eventoId}"></div>
+    `;
+  }
+
+  function abrirForm(eventoId, resultadoId) {
+    const form = document.getElementById(`form-ev-${eventoId}`);
+    form.classList.add('aberto');
+    // Rolar até o formulário
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function fecharForm(eventoId) {
+    document.getElementById(`form-ev-${eventoId}`).classList.remove('aberto');
+  }
+
+  function toggleCamposFinalizacao(eventoId) {
+    const checked = document.getElementById(`finalizou-${eventoId}`).checked;
+    const campos = document.getElementById(`campos-fin-${eventoId}`);
+    if (checked) { campos.classList.add('visivel'); } else { campos.classList.remove('visivel'); }
+  }
+
+  async function submitResultado(eventoId, resultadoId) {
+    const btn = document.getElementById(`btn-submit-${eventoId}`);
+    const msg = document.getElementById(`msg-form-${eventoId}`);
+    msg.className = 'msg-form';
+
+    const peito = document.getElementById(`peito-${eventoId}`).value.trim();
+    const urlResult = document.getElementById(`urlresult-${eventoId}`).value.trim();
+    const finalizou = document.getElementById(`finalizou-${eventoId}`).checked;
+    const tempo = document.getElementById(`tempo-${eventoId}`).value.trim() || null;
+    const posicao = parseInt(document.getElementById(`posicao-${eventoId}`).value) || null;
+    const categoria = document.getElementById(`categoria-${eventoId}`).value.trim() || null;
+
+    if (!peito) {
+      msg.textContent = 'Preencha o número de peito.';
+      msg.className = 'msg-form error';
+      return;
+    }
+    if (!urlResult) {
+      msg.textContent = 'Cole o link do resultado oficial da corrida.';
+      msg.className = 'msg-form error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const dados = {
+      corredor_id: corredorIdGlobal,
+      evento_id: eventoId,
+      inscrito: true,
+      participou: true,
+      finalizou,
+      numero_peito: peito,
+      tempo: finalizou ? tempo : null,
+      posicao_geral: finalizou ? posicao : null,
+      categoria,
+      url_resultado: urlResult,
+      status: 'pendente',
+      pontos: 0, // pontos só são computados após aprovação do admin
+      motivo_rejeicao: null,
+    };
+
+    let error;
+    if (resultadoId) {
+      ({ error } = await client.from('resultados').update(dados).eq('id', resultadoId));
+    } else {
+      ({ error } = await client.from('resultados').insert([dados]));
+    }
+
+    if (error) {
+      msg.textContent = 'Erro ao enviar: ' + error.message;
+      msg.className = 'msg-form error';
+      btn.disabled = false;
+      btn.textContent = 'Enviar para validação';
+    } else {
+      msg.textContent = '✅ Enviado! Aguarde a validação do administrador. Seus pontos serão computados após aprovação.';
+      msg.className = 'msg-form success';
+      btn.textContent = 'Enviado ✓';
+      // Recarregar lista de eventos após 2s
+      setTimeout(() => carregarEventos(corredorIdGlobal), 2000);
+    }
+  }
+
+  // ── HISTÓRICO ──────────────────────────────────────────────
+  async function carregarHistorico(corredorId) {
+    const { data: historico } = await client
+      .from('resultados')
+      .select('*, eventos(nome, data, cidade)')
+      .eq('corredor_id', corredorId)
+      .order('created_at', { ascending: false });
+
+    renderHistorico(historico || []);
+
+    if (historico && historico.length > 0) {
+      const melhor = Math.max(...historico.map(r => r.pontos || 0));
+      document.getElementById('melhorPontuacao').textContent = melhor;
+    }
+  }
+
   function renderHistorico(historico) {
     const div = document.getElementById('historico');
     if (historico.length === 0) {
-      div.innerHTML = `<div class="historico-vazio"><div class="icon">🏁</div><p>Nenhum evento ainda.<br>Participe do primeiro evento pontuável!</p></div>`;
+      div.innerHTML = `<div class="historico-vazio"><div class="icon">🏁</div><p>Nenhum evento ainda.<br>Registre sua primeira corrida acima!</p></div>`;
       return;
     }
-    let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Inscrição</th><th>Participação</th><th>Finalização</th><th>Pontos</th></tr></thead><tbody>`;
+    const statusLabel = { pendente: '⏳ Pendente', aprovado: '✅ Aprovado', rejeitado: '❌ Rejeitado' };
+    let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Status</th><th>Pts</th></tr></thead><tbody>`;
     historico.forEach(r => {
-      const data = r.eventos?.data ? new Date(r.eventos.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const data = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const st = r.status || 'pendente';
       html += `<tr>
-        <td>${r.eventos?.nome || '—'}</td>
+        <td><strong>${r.eventos?.nome || '—'}</strong>${r.tempo ? `<br><span style="font-size:11px;color:#888;">${r.tempo}${r.posicao_geral ? ' · ' + r.posicao_geral + 'º geral' : ''}</span>` : ''}</td>
         <td>${data}</td>
-        <td>${r.inscrito ? '✅' : '—'}</td>
-        <td>${r.participou ? '✅' : '—'}</td>
-        <td>${r.finalizou ? '✅' : '—'}</td>
+        <td>${statusLabel[st] || st}</td>
         <td><span class="pts-badge">${r.pontos || 0} pts</span></td>
       </tr>`;
     });
@@ -288,6 +530,7 @@
     div.innerHTML = html;
   }
 
+  // ── EDIÇÃO DE PERFIL ───────────────────────────────────────
   function toggleEdicao() {
     modoEdicao = !modoEdicao;
     const campos = ['nome', 'telefone', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
