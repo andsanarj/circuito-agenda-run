@@ -162,20 +162,32 @@
     window.location.reload();
   }
 
-  // Verificar se usuário já está logado (perfil incompleto)
+  // Verificar se usuário já está logado
   let sessaoAtiva = null;
-  client.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      sessaoAtiva = session;
-      // Ocultar campos de senha pois conta já existe
-      document.getElementById('blocoSenha').style.display = 'none';
-      document.getElementById('senha').required = false;
-      document.getElementById('senha2').required = false;
-      document.getElementById('email').value = session.user.email;
-      document.getElementById('email').disabled = true;
-      document.getElementById('btnSubmit').textContent = 'Completar meu cadastro';
-      document.getElementById('avisoLogado').style.display = 'block';
+  client.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    sessaoAtiva = session;
+
+    // Verificar se já tem perfil completo → redirecionar para perfil
+    const { data: corredor } = await client
+      .from('corredores')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (corredor) {
+      window.location.href = 'perfil.html';
+      return;
     }
+
+    // Logado mas sem perfil → mostrar formulário para completar
+    document.getElementById('blocoSenha').style.display = 'none';
+    document.getElementById('senha').required = false;
+    document.getElementById('senha2').required = false;
+    document.getElementById('email').value = session.user.email;
+    document.getElementById('email').disabled = true;
+    document.getElementById('btnSubmit').textContent = 'Completar meu cadastro';
+    document.getElementById('avisoLogado').style.display = 'block';
   });
 
   document.getElementById('formCorredor').addEventListener('submit', async (e) => {
@@ -214,7 +226,7 @@
         return;
       }
       // Fazer login imediatamente para ativar a sessão antes do insert
-      const { error: loginError } = await client.auth.signInWithPassword({ email, password: senha });
+      const { data: loginData, error: loginError } = await client.auth.signInWithPassword({ email, password: senha });
       if (loginError) {
         msg.textContent = 'Conta criada, mas erro ao ativar sessão: ' + loginError.message;
         msg.className = 'msg error';
@@ -222,7 +234,15 @@
         btn.textContent = 'Criar minha conta — é grátis';
         return;
       }
-      userId = authData.user.id;
+      // Pegar ID da sessão ativa (mais confiável — authData.user pode vir nulo)
+      userId = loginData?.user?.id || authData?.user?.id;
+      if (!userId) {
+        msg.textContent = 'Erro ao obter ID do usuário. Tente novamente ou contate o suporte.';
+        msg.className = 'msg error';
+        btn.disabled = false;
+        btn.textContent = 'Criar minha conta — é grátis';
+        return;
+      }
     }
 
     // Inserir perfil na tabela corredores
