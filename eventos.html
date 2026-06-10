@@ -188,7 +188,7 @@
       } else if (passado) {
         botao = `<button class="btn-passado" disabled>Evento encerrado</button>`;
       } else {
-        botao = `<button class="btn-participar" onclick="entrarNaLista(${ev.id}, this)">+ Quero participar</button>`;
+        botao = `<button class="btn-participar" onclick="entrarNaLista('${ev.id}', this)">+ Quero participar</button>`;
       }
 
       return `
