@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: color 0.2s; }
+    header nav a:hover { color: #fff; }
+    header nav a.ativo { color: #fff; font-weight: 600; }
+    .btn-login-nav { background: rgba(255,255,255,0.15); color: #fff !important; padding: 7px 16px !important; border-radius: 20px !important; font-weight: 600 !important; }
+    .btn-login-nav:hover { background: rgba(255,255,255,0.25) !important; }
+
+    /* Hero da página */
+    .page-hero { background: linear-gradient(135deg, #1F4E79, #0d2d4a); color: #fff; padding: 40px 24px 36px; text-align: center; }
+    .page-hero h1 { font-size: 28px; margin-bottom: 8px; }
+    .page-hero p { color: #a8c8e8; font-size: 15px; }
+
+    /* Container */
+    .container { max-width: 860px; margin: 32px auto; padding: 0 20px; flex: 1; }
+
+    /* Aviso login */
+    .aviso-login { background: #EBF3FB; border-radius: 10px; padding: 14px 18px; font-size: 14px; color: #1F4E79; margin-bottom: 24px; text-align: center; }
+    .aviso-login a { color: #E8622A; font-weight: 700; text-decoration: none; }
+
+    /* Cards de evento */
+    .evento-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; overflow: hidden; display: flex; align-items: stretch; }
+    .evento-card .barra { width: 6px; background: #1F4E79; flex-shrink: 0; }
+    .evento-card.passado .barra { background: #ccc; }
+    .evento-card .corpo { flex: 1; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .evento-info .ev-nome { font-size: 17px; font-weight: 700; color: #1F4E79; margin-bottom: 6px; }
+    .evento-info .ev-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-chip { display: inline-flex; align-items: center; gap: 4px; background: #f0f4f8; color: #555; font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+    .evento-acao { flex-shrink: 0; text-align: right; }
+    .btn-participar { background: #E8622A; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .btn-participar:hover { background: #c94f1f; }
+    .btn-na-lista { background: #e6f9f0; color: #1a7a4a; border: 2px solid #1a7a4a; padding: 9px 20px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: default; white-space: nowrap; }
+    .btn-passado { background: #f0f4f8; color: #aaa; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: default; white-space: nowrap; }
+    .btn-login-evt { background: #1F4E79; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .btn-login-evt:hover { background: #163d62; }
+    .link-perfil { display: block; font-size: 12px; color: #888; margin-top: 6px; text-decoration: none; }
+    .link-perfil:hover { color: #1F4E79; }
+
+    /* Status badges */
+    .tag-status { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; margin-top: 6px; }
+    .tag-pendente  { background: #fff8e1; color: #b07800; }
+    .tag-aprovado  { background: #e6f9f0; color: #1a7a4a; }
+    .tag-rejeitado { background: #fdecea; color: #b00020; }
+
+    .empty { text-align: center; padding: 48px; color: #aaa; font-size: 15px; }
+    .loading { text-align: center; padding: 48px; color: #888; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="eventos.html" class="ativo">📅 Eventos</a>
+    <a href="perfil.html" id="linkPerfil" style="display:none;">👤 <span id="navNome">Perfil</span></a>
+    <a href="login.html" id="linkLogin" class="btn-login-nav">Entrar</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <h1>📅 Eventos da Temporada 2026</h1>
+  <p>Selecione os eventos que você vai participar e acompanhe tudo pelo seu perfil.</p>
+</div>
+
+<div class="container">
+  <div id="avisoLogin" class="aviso-login" style="display:none;">
+    <a href="login.html">Faça login</a> ou <a href="cadastro_corredor.html">cadastre-se grátis</a> para adicionar eventos à sua lista e registrar seus resultados.
+  </div>
+
+  <div id="listaEventos" class="loading">Carregando eventos...</div>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a> · Temporada 2026
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let corredorId = null;
+  let sessionAtiva = null;
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    sessionAtiva = session;
+
+    if (session) {
+      // Buscar dados do corredor
+      const { data: corredor } = await sb
+        .from('corredores')
+        .select('id, nome')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (corredor) {
+        corredorId = corredor.id;
+        document.getElementById('navNome').textContent = corredor.nome.split(' ')[0];
+        document.getElementById('linkPerfil').style.display = 'inline';
+        document.getElementById('linkLogin').style.display = 'none';
+      }
+    } else {
+      document.getElementById('avisoLogin').style.display = 'block';
+    }
+
+    await carregarEventos();
+  }
+
+  async function carregarEventos() {
+    // Buscar todos os eventos
+    const { data: eventos } = await sb
+      .from('eventos')
+      .select('id, nome, data, distancia, cidade, url_runking')
+      .order('data', { ascending: false });
+
+    // Buscar inscrições do corredor (se logado)
+    let mapaResultados = {};
+    if (corredorId) {
+      const { data: resultados } = await sb
+        .from('resultados')
+        .select('id, evento_id, status, pontos')
+        .eq('corredor_id', corredorId);
+      (resultados || []).forEach(r => { mapaResultados[r.evento_id] = r; });
+    }
+
+    const div = document.getElementById('listaEventos');
+
+    if (!eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhum evento cadastrado ainda. Volte em breve! 🏃</div>';
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    div.innerHTML = eventos.map(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const dataFmt = dataEv ? dataEv.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+      const passado = dataEv && dataEv < hoje;
+      const resultado = mapaResultados[ev.id] || null;
+
+      // Chips de meta info
+      const chips = [
+        dataFmt ? `📅 ${dataFmt}` : null,
+        ev.distancia ? `🏃 ${ev.distancia}` : null,
+        ev.cidade ? `📍 ${ev.cidade}` : null,
+      ].filter(Boolean).map(t => `<span class="meta-chip">${t}</span>`).join('');
+
+      // Badge de status se já inscrito
+      const statusMap = { na_lista: '', pendente: '<span class="tag-status tag-pendente">⏳ Resultado pendente</span>', aprovado: `<span class="tag-status tag-aprovado">✅ Aprovado · ${resultado?.pontos || 0} pts</span>`, rejeitado: '<span class="tag-status tag-rejeitado">❌ Resultado rejeitado</span>' };
+      const statusBadge = resultado ? (statusMap[resultado.status] || '') : '';
+
+      // Botão de ação
+      let botao = '';
+      if (!sessionAtiva) {
+        botao = `<a href="login.html" class="btn-login-evt">Entrar para participar</a>`;
+      } else if (!corredorId) {
+        botao = `<a href="cadastro_corredor.html" class="btn-login-evt">Completar cadastro</a>`;
+      } else if (resultado) {
+        if (resultado.status === 'na_lista') {
+          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
+                   <a href="perfil.html" class="link-perfil">Registrar resultado →</a>`;
+        } else {
+          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
+                   <a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
+        }
+      } else if (passado) {
+        botao = `<button class="btn-passado" disabled>Evento encerrado</button>`;
+      } else {
+        botao = `<button class="btn-participar" onclick="entrarNaLista(${ev.id}, this)">+ Quero participar</button>`;
+      }
+
+      return `
+        <div class="evento-card ${passado && !resultado ? 'passado' : ''}">
+          <div class="barra"></div>
+          <div class="corpo">
+            <div class="evento-info">
+              <div class="ev-nome">${ev.nome}</div>
+              <div class="ev-meta">${chips}</div>
+              ${statusBadge}
+            </div>
+            <div class="evento-acao">
+              ${botao}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function entrarNaLista(eventoId, btn) {
+    if (!corredorId) { window.location.href = 'login.html'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Adicionando...';
+
+    const { error } = await sb.from('resultados').insert([{
+      corredor_id: corredorId,
+      evento_id: eventoId,
+      inscrito: true,
+      status: 'na_lista',
+      pontos: 0,
+    }]);
+
+    if (error) {
+      btn.textContent = 'Erro, tente novamente';
+      btn.disabled = false;
+      console.error(error.message);
+    } else {
+      await carregarEventos(); // recarrega para mostrar o botão atualizado
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
