@@ -319,7 +319,7 @@
 
       if (r.status === 'na_lista') {
         tagHtml = '<span class="tag tag-nova">📋 Na sua lista</span>';
-        acaoHtml = `<button class="btn-registrar" onclick="abrirForm(${ev.id}, '${r.id}')">Registrar resultado</button>`;
+        acaoHtml = `<button class="btn-registrar" onclick="abrirForm('${ev.id}', '${r.id}')">Registrar resultado</button>`;
       } else if (r.status === 'pendente') {
         tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
         acaoHtml = '';
@@ -328,7 +328,7 @@
         acaoHtml = '';
       } else if (r.status === 'rejeitado') {
         tagHtml = '<span class="tag tag-rejeitado">❌ Rejeitado</span>';
-        acaoHtml = `<button class="btn-editar" onclick="abrirForm(${ev.id}, '${r.id}')">Corrigir →</button>`;
+        acaoHtml = `<button class="btn-editar" onclick="abrirForm('${ev.id}', '${r.id}')">Corrigir →</button>`;
       }
 
       return `
@@ -371,7 +371,7 @@
         <input type="text" id="peito-${eventoId}" placeholder="Ex: 478" value="${r.numero_peito || ''}" required>
       </div>
       <label class="checkbox-row">
-        <input type="checkbox" id="finalizou-${eventoId}" ${checked} onchange="toggleCamposFinalizacao(${eventoId})">
+        <input type="checkbox" id="finalizou-${eventoId}" ${checked} onchange="toggleCamposFinalizacao('${eventoId}')">
         <span>Conclui a corrida (tenho tempo oficial)</span>
       </label>
       <div class="campos-finalizacao ${camposVisiveis}" id="campos-fin-${eventoId}">
@@ -399,10 +399,10 @@
         <textarea id="obs-${eventoId}" placeholder="Alguma informação adicional para o validador...">${r.observacao || ''}</textarea>
       </div>
       <div class="form-actions">
-        <button class="btn-submit" id="btn-submit-${eventoId}" onclick="submitResultado(${eventoId}, ${r.id ? `'${r.id}'` : 'null'})">
+        <button class="btn-submit" id="btn-submit-${eventoId}" onclick="submitResultado('${eventoId}', ${r.id ? `'${r.id}'` : 'null'})">
           ${isRejeitado ? 'Reenviar para validação' : 'Enviar para validação'}
         </button>
-        <button class="btn-cancelar-form" onclick="fecharForm(${eventoId})">Cancelar</button>
+        <button class="btn-cancelar-form" onclick="fecharForm('${eventoId}')">Cancelar</button>
       </div>
       <div class="msg-form" id="msg-form-${eventoId}"></div>
     `;
@@ -454,16 +454,12 @@
     const dados = {
       corredor_id: corredorIdGlobal,
       evento_id: eventoId,
-      inscrito: true,
-      participou: true,
-      finalizou,
       numero_peito: peito,
       tempo: finalizou ? tempo : null,
       posicao_geral: finalizou ? posicao : null,
       categoria,
       url_resultado: urlResult,
       status: 'pendente',
-      pontos: 0, // pontos só são computados após aprovação do admin
       motivo_rejeicao: null,
     };
 
