@@ -46,6 +46,16 @@
     td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
     tr:last-child td { border-bottom: none; }
     .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    /* Tag input de distâncias */
+    .tag-input-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid #ddd; border-radius: 7px; padding: 7px 10px; background: #fff; cursor: text; min-height: 42px; }
+    .tag-input-box:focus-within { border-color: #1F4E79; }
+    .dist-tag { display: inline-flex; align-items: center; gap: 5px; background: #1F4E79; color: #fff; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .dist-tag button { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+    .dist-tag button:hover { color: #fff; }
+    .tag-input-box input { border: none; outline: none; font-size: 14px; min-width: 80px; flex: 1; padding: 2px 0; background: transparent; }
+    .dist-sugestoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .dist-sugestao { background: #f0f4f8; border: 1px solid #ddd; color: #444; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; transition: background 0.15s; }
+    .dist-sugestao:hover { background: #EBF3FB; border-color: #1F4E79; color: #1F4E79; }
     .tag-pendente  { background: #fff8e1; color: #b07800; }
     .tag-aprovado  { background: #e6f9f0; color: #1a7a4a; }
     .tag-rejeitado { background: #fdecea; color: #b00020; }
@@ -135,14 +145,20 @@
       <div class="form-row">
         <div class="form-group">
           <label>Distância(s) da prova</label>
-          <div style="border:1px solid #ddd; border-radius:7px; padding:10px 14px; background:#fff; display:flex; flex-wrap:wrap; gap:10px;">
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="3K"> 3K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="5K"> 5K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="7K"> 7K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="10K"> 10K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="15K"> 15K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="21K"> 21K</label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="42K"> 42K</label>
+          <div class="tag-input-box" id="distBox" onclick="document.getElementById('distInput').focus()">
+            <input type="text" id="distInput" placeholder="Digite e pressione Enter..."
+              onkeydown="adicionarDist(event)" autocomplete="off">
+          </div>
+          <div class="dist-sugestoes">
+            <span class="dist-sugestao" onclick="adicionarDistValor('3K')">3K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('5K')">5K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('7K')">7K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('8K')">8K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('10K')">10K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('12K')">12K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('15K')">15K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('21K')">21K</span>
+            <span class="dist-sugestao" onclick="adicionarDistValor('42K')">42K</span>
           </div>
         </div>
         <div class="form-group">
@@ -170,6 +186,47 @@
 <footer>Circuito Agenda Run · Painel Administrativo</footer>
 
 <script>
+  // ── Tag input de distâncias ─────────────────────────────────
+  const distancias = [];
+
+  function adicionarDist(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = e.target.value.trim().toUpperCase().replace(/\s/g, '');
+      if (val) adicionarDistValor(val);
+      e.target.value = '';
+    } else if (e.key === 'Backspace' && e.target.value === '' && distancias.length) {
+      removerDist(distancias[distancias.length - 1]);
+    }
+  }
+
+  function adicionarDistValor(val) {
+    val = val.trim().toUpperCase();
+    if (!val || distancias.includes(val)) return;
+    distancias.push(val);
+    renderTags();
+    document.getElementById('distInput').value = '';
+    document.getElementById('distInput').focus();
+  }
+
+  function removerDist(val) {
+    const idx = distancias.indexOf(val);
+    if (idx > -1) distancias.splice(idx, 1);
+    renderTags();
+  }
+
+  function renderTags() {
+    const box = document.getElementById('distBox');
+    const input = document.getElementById('distInput');
+    box.querySelectorAll('.dist-tag').forEach(t => t.remove());
+    distancias.forEach(d => {
+      const tag = document.createElement('span');
+      tag.className = 'dist-tag';
+      tag.innerHTML = `${d} <button type="button" onclick="removerDist('${d}')" title="Remover">×</button>`;
+      box.insertBefore(tag, input);
+    });
+  }
+
   const SUPABASE_URL  = 'https://tbveeaupcmpltncjwfgt.supabase.co';
   const SUPABASE_KEY  = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const ADMIN_EMAIL   = 'agendarun1@gmail.com';
@@ -422,7 +479,7 @@
     const { error } = await sb.from('eventos').insert([{
       nome: document.getElementById('evNome').value.trim(),
       data: document.getElementById('evData').value || null,
-      distancia: Array.from(document.querySelectorAll('.cb-dist:checked')).map(cb => cb.value).join(', ') || null,
+      distancia: distancias.join(', ') || null,
       cidade: document.getElementById('evCidade').value.trim() || null,
       url_runking: document.getElementById('evUrlResult').value.trim() || null,
       ativo: true,
@@ -435,6 +492,7 @@
       msg.textContent = '✅ Evento adicionado! Corredores já podem visualizar e registrar participação.';
       msg.className = 'msg success';
       document.getElementById('formEvento').reset();
+      distancias.length = 0; renderTags();
       await carregarEventos();
       setTimeout(() => { msg.className = 'msg'; }, 4000);
     }
