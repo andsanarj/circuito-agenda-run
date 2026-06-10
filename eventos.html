@@ -224,7 +224,7 @@
     }]);
 
     if (error) {
-      btn.textContent = 'Erro, tente novamente';
+      btn.textContent = 'Erro: ' + error.message;
       btn.disabled = false;
       console.error(error.message);
     } else {
