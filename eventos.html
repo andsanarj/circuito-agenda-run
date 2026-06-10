@@ -218,9 +218,7 @@
     const { error } = await sb.from('resultados').insert([{
       corredor_id: corredorId,
       evento_id: eventoId,
-      inscrito: true,
       status: 'na_lista',
-      pontos: 0,
     }]);
 
     if (error) {
