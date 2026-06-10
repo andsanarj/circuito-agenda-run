@@ -156,14 +156,10 @@
   <div class="card">
     <div class="card-title">
       🏁 Minhas Corridas
-      <span style="font-size:12px; color:#888; font-weight:400;">Registre sua participação após o evento</span>
+      <a href="eventos.html" style="font-size:13px; color:#E8622A; font-weight:600; text-decoration:none;">+ Adicionar evento →</a>
     </div>
-    <div class="info-pontos-form" style="margin-bottom:0;">
-      <strong>Como funciona:</strong> selecione a corrida que participou, preencha seus dados oficiais e aguarde a validação do administrador. Após aprovação, seus pontos são somados ao ranking.
-    </div>
-    <br>
     <div id="listaEventos">
-      <div class="loading" style="padding:20px;">Carregando eventos...</div>
+      <div class="loading" style="padding:20px;">Carregando...</div>
     </div>
   </div>
 
@@ -294,46 +290,46 @@
     document.getElementById('conteudo').style.display = 'block';
   }
 
-  // ── EVENTOS ────────────────────────────────────────────────
+  // ── EVENTOS (só os que o corredor adicionou à lista) ─────────
   async function carregarEventos(corredorId) {
-    const [{ data: eventos }, { data: meuResultados }] = await Promise.all([
-      client.from('eventos').select('id, nome, data, distancia, cidade').order('data', { ascending: false }),
-      client.from('resultados').select('*').eq('corredor_id', corredorId),
-    ]);
-
-    const mapa = {};
-    (meuResultados || []).forEach(r => { mapa[r.evento_id] = r; });
+    const { data: meuResultados } = await client
+      .from('resultados')
+      .select('*, eventos(id, nome, data, distancia, cidade)')
+      .eq('corredor_id', corredorId)
+      .order('created_at', { ascending: false });
 
     const div = document.getElementById('listaEventos');
 
-    if (!eventos || eventos.length === 0) {
-      div.innerHTML = '<div class="empty-eventos">Nenhum evento cadastrado ainda. Volte em breve! 🏃</div>';
+    if (!meuResultados || meuResultados.length === 0) {
+      div.innerHTML = `<div class="empty-eventos">
+        Você ainda não adicionou nenhuma corrida.<br>
+        <a href="eventos.html" style="color:#E8622A; font-weight:700; text-decoration:none;">Ver eventos disponíveis →</a>
+      </div>`;
       return;
     }
 
-    div.innerHTML = eventos.map(ev => {
-      const meuRes = mapa[ev.id] || null;
+    div.innerHTML = meuResultados.map(r => {
+      const ev = r.eventos;
+      if (!ev) return '';
       const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const meta = [dataFmt, ev.distancia, ev.cidade].filter(Boolean).join(' · ');
 
       let tagHtml = '';
       let acaoHtml = '';
 
-      if (!meuRes) {
-        tagHtml = '';
-        acaoHtml = `<button class="btn-registrar" onclick="abrirForm(${ev.id}, null)">+ Registrar resultado</button>`;
-      } else if (meuRes.status === 'pendente') {
+      if (r.status === 'na_lista') {
+        tagHtml = '<span class="tag tag-nova">📋 Na sua lista</span>';
+        acaoHtml = `<button class="btn-registrar" onclick="abrirForm(${ev.id}, '${r.id}')">Registrar resultado</button>`;
+      } else if (r.status === 'pendente') {
         tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
         acaoHtml = '';
-      } else if (meuRes.status === 'aprovado') {
-        tagHtml = `<span class="tag tag-aprovado">✅ Aprovado · ${meuRes.pontos || 0} pts</span>`;
+      } else if (r.status === 'aprovado') {
+        tagHtml = `<span class="tag tag-aprovado">✅ Aprovado · ${r.pontos || 0} pts</span>`;
         acaoHtml = '';
-      } else if (meuRes.status === 'rejeitado') {
+      } else if (r.status === 'rejeitado') {
         tagHtml = '<span class="tag tag-rejeitado">❌ Rejeitado</span>';
-        acaoHtml = `<button class="btn-editar" onclick="abrirForm(${ev.id}, '${meuRes.id}')">Corrigir →</button>`;
+        acaoHtml = `<button class="btn-editar" onclick="abrirForm(${ev.id}, '${r.id}')">Corrigir →</button>`;
       }
-
-      const formAberto = meuRes && meuRes.status === 'rejeitado' ? '' : '';
 
       return `
         <div class="evento-item" id="ev-item-${ev.id}">
@@ -347,8 +343,8 @@
               ${acaoHtml}
             </div>
           </div>
-          <div class="resultado-form ${formAberto}" id="form-ev-${ev.id}">
-            ${renderFormResultado(ev.id, meuRes)}
+          <div class="resultado-form" id="form-ev-${ev.id}">
+            ${renderFormResultado(ev.id, r)}
           </div>
         </div>
       `;
