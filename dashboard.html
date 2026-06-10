@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel — Circuito Agenda Run</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    header { background: #1F4E79; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: color 0.2s; }
+    header nav a:hover { color: #fff; }
+    header nav a.ativo { color: #fff; font-weight: 600; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff !important; padding: 7px 16px !important; border-radius: 20px !important; font-weight: 600 !important; border: none; cursor: pointer; font-size: 14px; }
+    .btn-sair:hover { background: rgba(255,255,255,0.25) !important; }
+
+    /* Hero do corredor */
+    .hero { background: linear-gradient(135deg, #1F4E79 0%, #0d2d4a 100%); color: #fff; padding: 32px 24px 28px; }
+    .hero-inner { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .hero-saudacao { font-size: 13px; color: #a8c8e8; margin-bottom: 6px; }
+    .hero-nome { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+    .hero-sub { font-size: 14px; color: #a8c8e8; }
+    .hero-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-stat { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 22px; text-align: center; min-width: 90px; }
+    .hero-stat .val { font-size: 28px; font-weight: 900; color: #4CBFCB; line-height: 1; }
+    .hero-stat .lbl { font-size: 11px; color: #a8c8e8; margin-top: 4px; }
+
+    /* Layout grid */
+    .page { max-width: 1040px; margin: 28px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; flex: 1; }
+    @media (max-width: 760px) { .page { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden; }
+    .card-head { padding: 18px 22px 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .card-head h3 { font-size: 15px; font-weight: 700; color: #1F4E79; }
+    .card-head a { font-size: 13px; color: #E8622A; font-weight: 600; text-decoration: none; }
+    .card-head a:hover { text-decoration: underline; }
+    .card-body { padding: 0 22px 18px; }
+
+    /* Ranking */
+    .ranking-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ranking-table th { color: #aaa; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 10px 8px 6px; text-align: left; }
+    .ranking-table td { padding: 10px 8px; border-top: 1px solid #f5f5f5; }
+    .ranking-table tr.eu td { background: #EBF3FB; font-weight: 700; }
+    .ranking-table tr.eu td:first-child { border-radius: 6px 0 0 6px; }
+    .ranking-table tr.eu td:last-child { border-radius: 0 6px 6px 0; }
+    .pos-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 800; background: #f0f4f8; color: #555; }
+    .pos-1 { background: #FFD700; color: #7a5800; }
+    .pos-2 { background: #C0C0C0; color: #444; }
+    .pos-3 { background: #CD7F32; color: #fff; }
+    .pts-chip { background: #EBF3FB; color: #1F4E79; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 12px; }
+
+    /* Próximas corridas */
+    .evento-item { padding: 14px 0; border-bottom: 1px solid #f5f5f5; display: flex; gap: 14px; align-items: flex-start; }
+    .evento-item:last-child { border-bottom: none; }
+    .ev-date-box { background: #1F4E79; color: #fff; border-radius: 8px; padding: 8px 10px; text-align: center; min-width: 48px; flex-shrink: 0; }
+    .ev-date-box .dia { font-size: 20px; font-weight: 800; line-height: 1; }
+    .ev-date-box .mes { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; }
+    .ev-info { flex: 1; }
+    .ev-nome { font-weight: 700; color: #222; font-size: 14px; margin-bottom: 5px; }
+    .ev-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ev-chip { background: #f0f4f8; color: #555; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+    .ev-acao { flex-shrink: 0; }
+    .btn-lista { background: #E8622A; color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-lista:hover { background: #c94f1f; }
+    .btn-na-lista { background: #e6f9f0; color: #1a7a4a; border: 2px solid #1a7a4a; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+    /* Minhas corridas */
+    .corrida-item { padding: 13px 0; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; gap: 12px; }
+    .corrida-item:last-child { border-bottom: none; }
+    .corrida-info { flex: 1; }
+    .corrida-nome { font-weight: 700; font-size: 14px; color: #1F4E79; }
+    .corrida-meta { font-size: 12px; color: #888; margin-top: 2px; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .tag-lista    { background: #EBF3FB; color: #1F4E79; }
+    .tag-pendente { background: #fff8e1; color: #b07800; }
+    .tag-aprovado { background: #e6f9f0; color: #1a7a4a; }
+    .tag-rejeitado{ background: #fdecea; color: #b00020; }
+
+    .empty { text-align: center; padding: 28px; color: #bbb; font-size: 13px; }
+    .loading { text-align: center; padding: 28px; color: #aaa; font-size: 13px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="dashboard.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="dashboard.html" class="ativo">🏠 Painel</a>
+    <a href="eventos.html">📅 Eventos</a>
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="perfil.html">👤 Perfil</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-saudacao">Bem-vindo de volta,</div>
+      <div class="hero-nome" id="heroNome">…</div>
+      <div class="hero-sub">Temporada 2026 · Grande São Paulo</div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="val" id="heroPontos">0</div>
+        <div class="lbl">pontos</div>
+      </div>
+      <div class="hero-stat">
+        <div class="val" id="heroPosicao">—</div>
+        <div class="lbl">posição</div>
+      </div>
+      <div class="hero-stat">
+        <div class="val" id="heroEventos">0</div>
+        <div class="lbl">corridas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Coluna principal -->
+  <div>
+
+    <!-- Próximas corridas -->
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-head">
+        <h3>📅 Próximas Corridas</h3>
+        <a href="eventos.html">Ver todos →</a>
+      </div>
+      <div class="card-body">
+        <div id="proximasEventos" class="loading">Carregando...</div>
+      </div>
+    </div>
+
+    <!-- Minhas corridas -->
+    <div class="card">
+      <div class="card-head">
+        <h3>🏁 Minhas Corridas</h3>
+        <a href="perfil.html">Gerenciar →</a>
+      </div>
+      <div class="card-body">
+        <div id="minhasCorridas" class="loading">Carregando...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Coluna lateral: ranking -->
+  <div>
+    <div class="card" style="position:sticky; top:20px;">
+      <div class="card-head">
+        <h3>🏆 Ranking Geral</h3>
+        <a href="ranking.html">Completo →</a>
+      </div>
+      <div class="card-body">
+        <div id="rankingLateral" class="loading">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a> · Temporada 2026
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let corredorId = null;
+
+  async function sair() {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: corredor } = await sb
+      .from('corredores')
+      .select('id, nome')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!corredor) { window.location.href = 'cadastro_corredor.html'; return; }
+
+    corredorId = corredor.id;
+    const primeiroNome = corredor.nome.split(' ')[0];
+    document.getElementById('heroNome').textContent = corredor.nome;
+    document.title = primeiroNome + ' — Circuito Agenda Run';
+
+    await Promise.all([
+      carregarRanking(corredor.id),
+      carregarProximasEventos(corredor.id),
+      carregarMinhasCorridas(corredor.id),
+    ]);
+  }
+
+  async function carregarRanking(meuId) {
+    const { data } = await sb
+      .from('ranking_geral')
+      .select('id, nome, total_pontos, posicao, eventos_participados')
+      .order('posicao', { ascending: true })
+      .limit(15);
+
+    const div = document.getElementById('rankingLateral');
+    if (!data || data.length === 0) {
+      div.innerHTML = '<div class="empty">Ranking ainda vazio.</div>';
+      return;
+    }
+
+    // Encontrar dados do corredor atual
+    const eu = data.find(r => r.id === meuId);
+    if (eu) {
+      document.getElementById('heroPontos').textContent = eu.total_pontos || 0;
+      document.getElementById('heroPosicao').textContent = eu.posicao ? eu.posicao + 'º' : '—';
+      document.getElementById('heroEventos').textContent = eu.eventos_participados || 0;
+    }
+
+    // Se minha posição está fora do top 15, buscar separado
+    let exibirEu = data.some(r => r.id === meuId);
+
+    let html = '<table class="ranking-table"><thead><tr><th>#</th><th>Corredor</th><th>Pts</th></tr></thead><tbody>';
+    data.forEach(r => {
+      const sou = r.id === meuId;
+      const posCls = r.posicao <= 3 ? `pos-${r.posicao}` : '';
+      html += `<tr class="${sou ? 'eu' : ''}">
+        <td><span class="pos-badge ${posCls}">${r.posicao}</span></td>
+        <td>${sou ? '👉 ' : ''}${r.nome.split(' ')[0]} ${r.nome.split(' ').slice(-1)[0]}</td>
+        <td><span class="pts-chip">${r.total_pontos}</span></td>
+      </tr>`;
+    });
+
+    // Separador se eu não estiver no top 15
+    if (!exibirEu && eu) {
+      html += `<tr><td colspan="3" style="text-align:center; color:#bbb; padding:4px; font-size:11px;">· · ·</td></tr>`;
+      html += `<tr class="eu">
+        <td><span class="pos-badge">${eu.posicao}</span></td>
+        <td>👉 Você</td>
+        <td><span class="pts-chip">${eu.total_pontos}</span></td>
+      </tr>`;
+    }
+
+    html += '</tbody></table>';
+    div.innerHTML = html;
+  }
+
+  async function carregarProximasEventos(corredorIdParam) {
+    const hoje = new Date().toISOString().split('T')[0];
+
+    const { data: eventos } = await sb
+      .from('eventos')
+      .select('id, nome, data, distancia, cidade')
+      .gte('data', hoje)
+      .order('data', { ascending: true })
+      .limit(5);
+
+    // Buscar inscrições do corredor
+    let naLista = new Set();
+    if (corredorIdParam) {
+      const { data: resultados } = await sb
+        .from('resultados')
+        .select('evento_id')
+        .eq('corredor_id', corredorIdParam);
+      (resultados || []).forEach(r => naLista.add(r.evento_id));
+    }
+
+    const div = document.getElementById('proximasEventos');
+    if (!eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhuma corrida próxima cadastrada ainda.</div>';
+      return;
+    }
+
+    div.innerHTML = eventos.map(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const dia = dataEv ? dataEv.getDate().toString().padStart(2, '0') : '—';
+      const mes = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '';
+      const chips = [ev.distancia, ev.cidade].filter(Boolean).map(t => `<span class="ev-chip">${t}</span>`).join('');
+      const jaInscrito = naLista.has(ev.id);
+
+      const botao = jaInscrito
+        ? `<span class="btn-na-lista">✓ Na lista</span>`
+        : `<button class="btn-lista" onclick="entrarNaLista('${ev.id}', this)">+ Participar</button>`;
+
+      return `
+        <div class="evento-item">
+          <div class="ev-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div></div>
+          <div class="ev-info">
+            <div class="ev-nome">${ev.nome}</div>
+            <div class="ev-chips">${chips}</div>
+          </div>
+          <div class="ev-acao">${botao}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function carregarMinhasCorridas(corredorIdParam) {
+    const { data } = await sb
+      .from('resultados')
+      .select('id, status, pontos, eventos(nome, data, distancia, cidade)')
+      .eq('corredor_id', corredorIdParam)
+      .order('created_at', { ascending: false });
+
+    const div = document.getElementById('minhasCorridas');
+    if (!data || data.length === 0) {
+      div.innerHTML = `<div class="empty">Você ainda não adicionou nenhuma corrida.<br><a href="eventos.html" style="color:#E8622A; font-weight:700; text-decoration:none;">Ver eventos disponíveis →</a></div>`;
+      return;
+    }
+
+    const tagMap = {
+      na_lista:  '<span class="tag tag-lista">📋 Na lista</span>',
+      pendente:  '<span class="tag tag-pendente">⏳ Aguardando validação</span>',
+      aprovado:  null, // montado dinamicamente com pontos
+      rejeitado: '<span class="tag tag-rejeitado">❌ Rejeitado</span>',
+    };
+
+    div.innerHTML = data.map(r => {
+      const ev = r.eventos;
+      if (!ev) return '';
+      const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const meta = [dataFmt, ev.distancia, ev.cidade].filter(Boolean).join(' · ');
+      const tag = r.status === 'aprovado'
+        ? `<span class="tag tag-aprovado">✅ ${r.pontos || 0} pts</span>`
+        : (tagMap[r.status] || `<span class="tag">${r.status}</span>`);
+
+      return `
+        <div class="corrida-item">
+          <div class="corrida-info">
+            <div class="corrida-nome">${ev.nome}</div>
+            <div class="corrida-meta">${meta}</div>
+          </div>
+          ${tag}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function entrarNaLista(eventoId, btn) {
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    const { error } = await sb.from('resultados').insert([{
+      corredor_id: corredorId,
+      evento_id: eventoId,
+      status: 'na_lista',
+    }]);
+
+    if (error) {
+      btn.textContent = 'Erro';
+      btn.disabled = false;
+    } else {
+      btn.outerHTML = '<span class="btn-na-lista">✓ Na lista</span>';
+      await carregarMinhasCorridas(corredorId);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
