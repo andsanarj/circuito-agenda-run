@@ -134,8 +134,16 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Distância</label>
-          <input type="text" id="evDistancia" placeholder="Ex: 5K, 10K, 21K">
+          <label>Distância(s) da prova</label>
+          <div style="border:1px solid #ddd; border-radius:7px; padding:10px 14px; background:#fff; display:flex; flex-wrap:wrap; gap:10px;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="3K"> 3K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="5K"> 5K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="7K"> 7K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="10K"> 10K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="15K"> 15K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="21K"> 21K</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:#333; font-weight:400; cursor:pointer;"><input type="checkbox" class="cb-dist" value="42K"> 42K</label>
+          </div>
         </div>
         <div class="form-group">
           <label>Cidade</label>
@@ -414,7 +422,7 @@
     const { error } = await sb.from('eventos').insert([{
       nome: document.getElementById('evNome').value.trim(),
       data: document.getElementById('evData').value || null,
-      distancia: document.getElementById('evDistancia').value.trim() || null,
+      distancia: Array.from(document.querySelectorAll('.cb-dist:checked')).map(cb => cb.value).join(', ') || null,
       cidade: document.getElementById('evCidade').value.trim() || null,
       url_runking: document.getElementById('evUrlResult').value.trim() || null,
       ativo: true,
