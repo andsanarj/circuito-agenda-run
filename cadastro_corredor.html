@@ -112,6 +112,31 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label>Distâncias preferidas</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <input type="text" id="distCadInput" placeholder="Ex: 10K, Meia..." maxlength="10"
+            style="flex:1;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarDistCad();}">
+          <button type="button" onclick="adicionarDistCad()"
+            style="background:#1F4E79; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            + Adicionar
+          </button>
+        </div>
+        <div id="distCadTagBox" style="display:flex; flex-wrap:wrap; gap:6px; min-height:28px;"></div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+          <span onclick="adicionarDistCadValor('3K')"  style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">3K</span>
+          <span onclick="adicionarDistCadValor('5K')"  style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">5K</span>
+          <span onclick="adicionarDistCadValor('7K')"  style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">7K</span>
+          <span onclick="adicionarDistCadValor('8K')"  style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">8K</span>
+          <span onclick="adicionarDistCadValor('10K')" style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">10K</span>
+          <span onclick="adicionarDistCadValor('12K')" style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">12K</span>
+          <span onclick="adicionarDistCadValor('15K')" style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">15K</span>
+          <span onclick="adicionarDistCadValor('21K')" style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">21K</span>
+          <span onclick="adicionarDistCadValor('42K')" style="background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer;">42K</span>
+        </div>
+      </div>
+
       <div class="section-sep">Acesso à conta</div>
 
       <div id="avisoLogado" style="display:none; background:#fff8e1; border-radius:8px; padding:12px 14px; font-size:13px; color:#7a5c00; margin-bottom:16px;">
@@ -153,6 +178,39 @@
 </footer>
 
 <script>
+  // ── Distâncias preferidas (cadastro) ────────────────────────
+  let distCadLista = [];
+
+  function renderDistCadTagBox() {
+    const box = document.getElementById('distCadTagBox');
+    box.innerHTML = distCadLista.map(d =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;background:#1F4E79;color:#fff;font-size:13px;font-weight:700;padding:3px 10px;border-radius:20px;">
+        ${d}
+        <button type="button" onclick="removerDistCad('${d}')" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;line-height:1;padding:0;">×</button>
+      </span>`
+    ).join('');
+  }
+
+  function adicionarDistCad() {
+    const input = document.getElementById('distCadInput');
+    const val = input.value.trim().toUpperCase().replace(/\s/g, '');
+    if (val) adicionarDistCadValor(val);
+    input.value = '';
+    input.focus();
+  }
+
+  function adicionarDistCadValor(val) {
+    val = val.trim().toUpperCase();
+    if (!val || distCadLista.includes(val)) return;
+    distCadLista.push(val);
+    renderDistCadTagBox();
+  }
+
+  function removerDistCad(val) {
+    distCadLista = distCadLista.filter(d => d !== val);
+    renderDistCadTagBox();
+  }
+
   const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -255,6 +313,7 @@
       sexo: document.getElementById('sexo').value,
       data_nascimento: document.getElementById('data_nascimento').value || null,
       instagram: document.getElementById('instagram').value.trim().replace(/^@/, '') || null,
+      distancias_preferidas: distCadLista.join(', ') || null,
     }]);
 
     if (dbError) {

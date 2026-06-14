@@ -106,6 +106,20 @@
     .ranking-link { text-align: center; margin-top: 16px; }
     .ranking-link a { color: #1F4E79; font-size: 14px; font-weight: 600; text-decoration: none; }
     .empty-eventos { text-align: center; padding: 24px; color: #aaa; font-size: 14px; }
+    .dist-chip { background: #EBF3FB; color: #1F4E79; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .dist-chip.vazio { color: #bbb; background: none; font-weight: 400; font-size: 13px; }
+    /* Tag-input de distâncias preferidas */
+    .dist-tag-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid #ddd; border-radius: 8px; padding: 7px 10px; background: #f8fafc; min-height: 44px; }
+    .dist-tag-box.ativo { background: #fff; }
+    .dist-tag-item { display: inline-flex; align-items: center; gap: 5px; background: #1F4E79; color: #fff; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .dist-tag-item button { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+    .dist-tag-item button:hover { color: #fff; }
+    .dist-input-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+    .dist-input-row input { flex: 1; }
+    .dist-input-row button { white-space: nowrap; }
+    .dist-sugestoes-pref { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .dist-sug-btn { background: #f0f4f8; border: 1px solid #ddd; color: #444; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; transition: background 0.15s; }
+    .dist-sug-btn:hover { background: #EBF3FB; border-color: #1F4E79; color: #1F4E79; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     .loading { text-align: center; padding: 60px; color: #888; }
   </style>
@@ -210,6 +224,31 @@
           <input type="date" id="data_nascimento" disabled>
         </div>
       </div>
+      <div class="form-group">
+        <label>Distâncias preferidas</label>
+        <!-- Visualização (modo leitura) -->
+        <div id="distPrefView" style="display:flex; flex-wrap:wrap; gap:6px; padding:6px 0;"></div>
+        <!-- Edição (modo edição) -->
+        <div id="distPrefEdit" style="display:none;">
+          <div class="dist-tag-box ativo" id="distTagBox"></div>
+          <div class="dist-input-row">
+            <input type="text" id="distPrefInput" placeholder="Ex: 5K, 10K, Meia..." maxlength="10"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarDistPref();}">
+            <button type="button" class="btn-save" style="display:inline-block; width:auto; padding:9px 16px; margin:0;" onclick="adicionarDistPref()">+ Adicionar</button>
+          </div>
+          <div class="dist-sugestoes-pref">
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('3K')">3K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('5K')">5K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('7K')">7K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('8K')">8K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('10K')">10K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('12K')">12K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('15K')">15K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('21K')">21K</span>
+            <span class="dist-sug-btn" onclick="adicionarDistPrefValor('42K')">42K</span>
+          </div>
+        </div>
+      </div>
       <button type="submit" class="btn-save" id="btnSalvar">Salvar alterações</button>
     </form>
     <div id="msgPerfil" class="msg"></div>
@@ -266,6 +305,9 @@
     document.getElementById('instagram').value = corredor.instagram || '';
     document.getElementById('sexo').value = corredor.sexo || 'M';
     document.getElementById('data_nascimento').value = corredor.data_nascimento || '';
+
+    // Distâncias preferidas
+    renderDistPref(corredor.distancias_preferidas || '');
 
     // Buscar ranking
     const { data: rankingData } = await client
@@ -523,10 +565,59 @@
   }
 
   // ── EDIÇÃO DE PERFIL ───────────────────────────────────────
+  // ── Distâncias preferidas (tag-input) ──────────────────────
+  let distPrefLista = [];
+
+  function renderDistPref(valor) {
+    distPrefLista = valor ? valor.split(',').map(d => d.trim()).filter(Boolean) : [];
+    // Visualização (modo leitura)
+    const view = document.getElementById('distPrefView');
+    if (distPrefLista.length === 0) {
+      view.innerHTML = '<span class="dist-chip vazio">Nenhuma distância selecionada</span>';
+    } else {
+      view.innerHTML = distPrefLista.map(d => `<span class="dist-chip">${d}</span>`).join('');
+    }
+    // Renderizar tags de edição
+    renderDistTagBox();
+  }
+
+  function renderDistTagBox() {
+    const box = document.getElementById('distTagBox');
+    box.innerHTML = distPrefLista.map(d =>
+      `<span class="dist-tag-item">${d} <button type="button" onclick="removerDistPref('${d}')">×</button></span>`
+    ).join('');
+  }
+
+  function adicionarDistPref() {
+    const input = document.getElementById('distPrefInput');
+    const val = input.value.trim().toUpperCase().replace(/\s/g, '');
+    if (val) adicionarDistPrefValor(val);
+    input.value = '';
+    input.focus();
+  }
+
+  function adicionarDistPrefValor(val) {
+    val = val.trim().toUpperCase();
+    if (!val || distPrefLista.includes(val)) return;
+    distPrefLista.push(val);
+    renderDistTagBox();
+  }
+
+  function removerDistPref(val) {
+    distPrefLista = distPrefLista.filter(d => d !== val);
+    renderDistTagBox();
+  }
+
+  function getDistPrefSelecionadas() {
+    return distPrefLista.join(', ');
+  }
+
   function toggleEdicao() {
     modoEdicao = !modoEdicao;
     const campos = ['nome', 'telefone', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
     campos.forEach(id => { document.getElementById(id).disabled = !modoEdicao; });
+    document.getElementById('distPrefView').style.display = modoEdicao ? 'none' : 'flex';
+    document.getElementById('distPrefEdit').style.display = modoEdicao ? 'block' : 'none';
     document.getElementById('btnSalvar').style.display = modoEdicao ? 'block' : 'none';
     document.querySelector('.btn-edit').textContent = modoEdicao ? '✕ Cancelar' : '✏️ Editar';
     if (!modoEdicao) document.getElementById('msgPerfil').className = 'msg';
@@ -540,6 +631,7 @@
     btn.textContent = 'Salvando...';
 
     const { data: { session } } = await client.auth.getSession();
+    const distSelecionadas = getDistPrefSelecionadas();
     const { error } = await client.from('corredores').update({
       nome: document.getElementById('nome').value.trim(),
       telefone: document.getElementById('telefone').value.trim() || null,
@@ -547,6 +639,7 @@
       instagram: document.getElementById('instagram').value.trim().replace(/^@/, '') || null,
       sexo: document.getElementById('sexo').value,
       data_nascimento: document.getElementById('data_nascimento').value || null,
+      distancias_preferidas: distSelecionadas || null,
     }).eq('user_id', session.user.id);
 
     if (error) {
@@ -557,6 +650,7 @@
       msg.className = 'msg success';
       document.getElementById('nomeCorreder').textContent = document.getElementById('nome').value.split(' ')[0];
       document.getElementById('headerNome').textContent = document.getElementById('nome').value.split(' ')[0];
+      renderDistPref(distSelecionadas);
       toggleEdicao();
     }
     btn.disabled = false;

@@ -76,6 +76,43 @@
     .resultado-detalhe { font-size: 12px; color: #555; }
     .resultado-detalhe .campo { margin-bottom: 2px; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+
+    /* CRM */
+    .crm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .crm-stat { background: #f7f9fb; border-radius: 8px; padding: 14px 16px; text-align: center; }
+    .crm-stat .val { font-size: 22px; font-weight: 800; color: #1F4E79; }
+    .crm-stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
+    .crm-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    .crm-filtros input, .crm-filtros select { padding: 7px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; width: auto; }
+    .crm-filtros input { min-width: 200px; }
+    .crm-card { border: 1px solid #e8edf2; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .crm-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 80px 90px 120px auto; gap: 8px; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.15s; }
+    .crm-row:hover { background: #f7f9fb; }
+    .crm-row .nome { font-weight: 700; color: #1F4E79; font-size: 14px; }
+    .crm-row .sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .crm-detail { display: none; border-top: 1px solid #f0f0f0; background: #fafbfc; padding: 18px 16px; }
+    .crm-detail.aberto { display: block; }
+    .crm-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+    .crm-campo { font-size: 13px; }
+    .crm-campo .ck { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; }
+    .crm-campo a { color: #1F4E79; text-decoration: none; }
+    .crm-campo a:hover { text-decoration: underline; }
+    .btn-wpp { background: #25D366; color: #fff; border: none; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-wpp:hover { background: #1da855; }
+    .crm-notas-area { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; resize: vertical; min-height: 64px; font-family: inherit; margin-bottom: 10px; }
+    .crm-notas-area:focus { outline: none; border-color: #1F4E79; }
+    .crm-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .dist-pref-tag { display: inline-flex; align-items: center; background: #EBF3FB; color: #1F4E79; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+    .msg-crm { font-size: 12px; color: #1a7a4a; padding: 4px 0; display: none; }
+    .msg-crm.vis { display: inline; }
+    .reset-box { background: #fdecea; border: 1px solid #f5c6c6; border-radius: 10px; padding: 20px 22px; }
+    .reset-box h3 { color: #b00020; font-size: 15px; margin-bottom: 6px; }
+    .reset-box p { font-size: 13px; color: #555; margin-bottom: 14px; }
+    @media (max-width: 700px) {
+      .crm-row { grid-template-columns: 1fr 1fr; }
+      .crm-stats { grid-template-columns: repeat(2, 1fr); }
+      .crm-detail-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -96,6 +133,43 @@
 
 <div id="painelAdmin" style="display:none;">
 <div class="container">
+
+  <!-- ── CRM / CORREDORES ─────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>👥 Corredores — CRM</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Gerencie contatos, adicione notas e acompanhe o histórico de cada corredor.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregarCRM()">🔄 Atualizar</button>
+    </div>
+
+    <div class="crm-stats">
+      <div class="crm-stat"><div class="val" id="crmTotal">—</div><div class="lbl">Cadastrados</div></div>
+      <div class="crm-stat"><div class="val" id="crmAtivos">—</div><div class="lbl">Com corridas</div></div>
+      <div class="crm-stat"><div class="val" id="crmNovos">—</div><div class="lbl">Novos (30 dias)</div></div>
+      <div class="crm-stat"><div class="val" id="crmCidades">—</div><div class="lbl">Cidades</div></div>
+    </div>
+
+    <div class="crm-filtros">
+      <input type="text" id="crmBusca" placeholder="🔍 Buscar por nome ou e-mail..." oninput="filtrarCRM()">
+      <select id="crmFiltroCidade" onchange="filtrarCRM()">
+        <option value="">Todas as cidades</option>
+      </select>
+      <select id="crmFiltroDist" onchange="filtrarCRM()">
+        <option value="">Todas as distâncias</option>
+        <option>5K</option><option>10K</option><option>15K</option>
+        <option>21K</option><option>42K</option>
+      </select>
+    </div>
+
+    <!-- Cabeçalho da tabela -->
+    <div style="display:grid; grid-template-columns:2fr 1.5fr 1fr 80px 90px auto; gap:8px; padding:8px 16px; font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.3px;">
+      <span>Corredor</span><span>Contato</span><span>Cidade</span><span>Corridas</span><span>Pontos</span><span></span>
+    </div>
+
+    <div id="listaCRM"><div class="empty">Carregando...</div></div>
+  </div>
 
   <!-- ── VALIDAÇÕES PENDENTES ───────────────────────────────── -->
   <div class="card">
@@ -180,6 +254,22 @@
     </table>
   </div>
 
+  <!-- ── RESET DE TEMPORADA ───────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>⚙️ Configurações da Temporada</h2>
+    </div>
+    <div class="reset-box">
+      <h3>🔄 Resetar Pontuação — Nova Temporada</h3>
+      <p>Arquiva todos os resultados aprovados da temporada atual. Os pontos são zerados no ranking, mas o histórico de cada corredor é preservado. Use apenas ao iniciar uma nova temporada.</p>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="nomeTemporada" placeholder="Ex: Temporada 2027" style="width:220px;">
+        <button class="btn btn-red" onclick="confirmarReset()">🔄 Resetar e iniciar nova temporada</button>
+      </div>
+      <div id="msgReset" class="msg" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -244,10 +334,204 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('painelAdmin').style.display = 'block';
-    await Promise.all([carregarPendentes(), carregarHistorico(), carregarEventos()]);
+    await Promise.all([carregarCRM(), carregarPendentes(), carregarHistorico(), carregarEventos()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  // ── CRM ──────────────────────────────────────────────────────
+  let crmDados = [];
+
+  async function carregarCRM() {
+    const { data: corredores } = await sb
+      .from('corredores')
+      .select('id, nome, email, telefone, cidade, sexo, instagram, created_at, crm_notas, distancias_preferidas')
+      .order('created_at', { ascending: false });
+
+    if (!corredores) return;
+
+    const { data: resumos } = await sb
+      .from('resultados')
+      .select('corredor_id, pontos, status');
+
+    const resumoMap = {};
+    (resumos || []).forEach(r => {
+      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos: 0 };
+      resumoMap[r.corredor_id].total++;
+      resumoMap[r.corredor_id].pontos += (r.pontos || 0);
+    });
+
+    crmDados = corredores.map(c => ({
+      ...c,
+      corridas: resumoMap[c.id]?.total || 0,
+      pontos_total: resumoMap[c.id]?.pontos || 0,
+    }));
+
+    const agora = new Date();
+    const ha30dias = new Date(agora - 30 * 24 * 60 * 60 * 1000);
+    document.getElementById('crmTotal').textContent = crmDados.length;
+    document.getElementById('crmAtivos').textContent = crmDados.filter(c => c.corridas > 0).length;
+    document.getElementById('crmNovos').textContent = crmDados.filter(c => new Date(c.created_at) >= ha30dias).length;
+    const cidades = [...new Set(crmDados.map(c => c.cidade).filter(Boolean))];
+    document.getElementById('crmCidades').textContent = cidades.length;
+
+    const selCidade = document.getElementById('crmFiltroCidade');
+    selCidade.innerHTML = '<option value="">Todas as cidades</option>';
+    cidades.sort().forEach(cidade => {
+      selCidade.innerHTML += `<option value="${cidade}">${cidade}</option>`;
+    });
+
+    filtrarCRM();
+  }
+
+  function filtrarCRM() {
+    const busca = document.getElementById('crmBusca').value.toLowerCase();
+    const cidade = document.getElementById('crmFiltroCidade').value;
+    const dist = document.getElementById('crmFiltroDist').value;
+
+    const filtrados = crmDados.filter(c => {
+      const matchBusca = !busca ||
+        c.nome.toLowerCase().includes(busca) ||
+        (c.email || '').toLowerCase().includes(busca);
+      const matchCidade = !cidade || c.cidade === cidade;
+      const matchDist = !dist || (c.distancias_preferidas || '').includes(dist);
+      return matchBusca && matchCidade && matchDist;
+    });
+
+    renderCRM(filtrados);
+  }
+
+  function renderCRM(lista) {
+    const div = document.getElementById('listaCRM');
+    if (lista.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhum corredor encontrado.</div>';
+      return;
+    }
+
+    div.innerHTML = lista.map(c => {
+      const telLimpo = (c.telefone || '').replace(/\D/g, '');
+      const wppLink = telLimpo ? `https://wa.me/55${telLimpo}` : null;
+      const dataCad = new Date(c.created_at).toLocaleDateString('pt-BR');
+      const distTags = (c.distancias_preferidas || '').split(',').map(d => d.trim()).filter(Boolean)
+        .map(d => `<span class="dist-pref-tag">${d}</span>`).join(' ');
+
+      return `
+        <div class="crm-card" id="crm-card-${c.id}">
+          <div class="crm-row" onclick="toggleCRMDetail('${c.id}')">
+            <div>
+              <div class="nome">${c.nome}</div>
+              <div class="sub">Cadastrado em ${dataCad}</div>
+            </div>
+            <div>
+              <div style="font-size:13px;">${c.email || '—'}</div>
+              <div class="sub">${c.telefone || ''}</div>
+            </div>
+            <div style="font-size:13px;">${c.cidade || '—'}</div>
+            <div style="font-size:13px; text-align:center;">${c.corridas}</div>
+            <div style="font-size:13px; text-align:center;">${c.pontos_total} pts</div>
+            <div style="color:#bbb; font-size:16px;">▼</div>
+          </div>
+          <div class="crm-detail" id="crm-detail-${c.id}">
+            <div class="crm-detail-grid">
+              <div>
+                <div class="crm-campo">
+                  <span class="ck">E-mail</span>
+                  <a href="mailto:${c.email}">${c.email || '—'}</a>
+                </div>
+                <div class="crm-campo" style="margin-top:10px;">
+                  <span class="ck">WhatsApp / Telefone</span>
+                  ${wppLink
+                    ? `<a href="${wppLink}" target="_blank" class="btn-wpp">💬 WhatsApp</a> ${c.telefone}`
+                    : (c.telefone || '—')}
+                </div>
+                <div class="crm-campo" style="margin-top:10px;">
+                  <span class="ck">Instagram</span>
+                  ${c.instagram
+                    ? `<a href="https://instagram.com/${c.instagram}" target="_blank">@${c.instagram}</a>`
+                    : '—'}
+                </div>
+              </div>
+              <div>
+                <div class="crm-campo">
+                  <span class="ck">Cidade / Sexo</span>
+                  ${c.cidade || '—'} · ${c.sexo === 'M' ? 'Masculino' : c.sexo === 'F' ? 'Feminino' : '—'}
+                </div>
+                <div class="crm-campo" style="margin-top:10px;">
+                  <span class="ck">Corridas / Pontos</span>
+                  ${c.corridas} corrida(s) · ${c.pontos_total} pontos
+                </div>
+                <div class="crm-campo" style="margin-top:10px;">
+                  <span class="ck">Distâncias preferidas</span>
+                  ${distTags || '—'}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:6px; font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Notas internas</div>
+            <textarea class="crm-notas-area" id="notas-${c.id}" placeholder="Adicione observações sobre este corredor...">${c.crm_notas || ''}</textarea>
+
+            <div class="crm-actions">
+              <button class="btn btn-primary btn-sm" onclick="salvarCRM('${c.id}')">💾 Salvar notas</button>
+              <span class="msg-crm" id="msg-crm-${c.id}">✅ Salvo!</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleCRMDetail(id) {
+    document.getElementById(`crm-detail-${id}`).classList.toggle('aberto');
+  }
+
+  async function salvarCRM(corredorId) {
+    const notas = document.getElementById(`notas-${corredorId}`).value;
+    const msg = document.getElementById(`msg-crm-${corredorId}`);
+
+    const { error } = await sb
+      .from('corredores')
+      .update({ crm_notas: notas })
+      .eq('id', corredorId);
+
+    if (!error) {
+      const c = crmDados.find(x => x.id === corredorId);
+      if (c) c.crm_notas = notas;
+      msg.classList.add('vis');
+      setTimeout(() => msg.classList.remove('vis'), 2500);
+    }
+  }
+
+  // ── RESET DE TEMPORADA ───────────────────────────────────────
+  async function confirmarReset() {
+    const nome = document.getElementById('nomeTemporada').value.trim();
+    const msg = document.getElementById('msgReset');
+
+    if (!nome) {
+      msg.textContent = 'Informe o nome da nova temporada antes de resetar.';
+      msg.className = 'msg error';
+      return;
+    }
+
+    const confirmado = confirm(
+      `⚠️ ATENÇÃO\n\nIsso vai arquivar TODOS os resultados aprovados da temporada atual.\n\nO histórico será preservado, mas o ranking vai zerar.\n\nNova temporada: "${nome}"\n\nTem certeza?`
+    );
+    if (!confirmado) return;
+
+    // Arquivar todos os resultados aprovados
+    const { error } = await sb
+      .from('resultados')
+      .update({ status: 'arquivado' })
+      .eq('status', 'aprovado');
+
+    if (error) {
+      msg.textContent = 'Erro ao resetar: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = `✅ Temporada resetada! "${nome}" iniciada. Ranking zerado.`;
+      msg.className = 'msg success';
+      await Promise.all([carregarPendentes(), carregarHistorico(), carregarCRM()]);
+    }
+  }
 
   // ── VALIDAÇÕES PENDENTES ─────────────────────────────────────
   async function carregarPendentes() {
