@@ -283,7 +283,7 @@
   async function carregarRanking() {
     const { data, error } = await client
       .from('ranking_geral')
-      .select('*')
+      .select('nome, cidade, sexo, instagram, total_pontos, eventos_participados, posicao')
       .order('total_pontos', { ascending: false });
 
     if (error) {
@@ -339,7 +339,10 @@
       const posIcon = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
       html += `<tr>
         <td><span class="pos ${posClass}">${posIcon}</span></td>
-        <td><span class="nome-corredor">${r.nome}</span></td>
+        <td>
+          <span class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</span>
+          ${r.instagram ? `<br><a href="https://instagram.com/${r.instagram}" target="_blank" style="font-size:12px; color:#888; text-decoration:none;">@${r.instagram}</a>` : ''}
+        </td>
         <td class="hide-mobile"><span class="cidade">${r.cidade || '—'}</span></td>
         <td class="hide-mobile"><span class="sexo-badge ${r.sexo === 'M' ? 'sexo-m' : 'sexo-f'}">${r.sexo === 'M' ? 'Masc' : 'Fem'}</span></td>
         <td><span class="eventos-count">${r.eventos_participados || 0} evento${r.eventos_participados !== 1 ? 's' : ''}</span></td>
