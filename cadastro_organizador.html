@@ -143,6 +143,11 @@
       </div>
 
       <div class="form-group">
+        <label>Local da largada</label>
+        <input type="text" id="local_largada" placeholder="Ex: Parque Ibirapuera — Portão 10">
+      </div>
+
+      <div class="form-group">
         <label>Link de inscrição</label>
         <input type="url" id="link_inscricao" placeholder="https://...">
       </div>
@@ -229,6 +234,7 @@
       numero_permit:   document.getElementById('numero_permit').value.trim() || null,
       cidade:       document.getElementById('cidade').value.trim(),
       distancias:   distancias.join(', ') || null,
+      local_largada: document.getElementById('local_largada').value.trim() || null,
       link_inscricao: document.getElementById('link_inscricao').value.trim() || null,
       observacoes:  document.getElementById('observacoes').value.trim() || null,
     };
