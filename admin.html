@@ -605,7 +605,7 @@
           </td>
           <td style="min-width:160px;">
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.finalizou})">
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}')">
                 ✅ Aprovar
               </button>
               <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">
@@ -633,15 +633,12 @@
     form.classList.toggle('aberta');
   }
 
-  async function aprovar(resultadoId, finalizou) {
+  async function aprovar(resultadoId) {
     const msg = document.getElementById('msgValidacao');
-
-    // Calcular pontos: inscrito (5) + participou (5) + finalizou (5 se aplicável)
-    const pontos = 5 + 5 + (finalizou ? 5 : 0);
 
     const { error } = await sb.from('resultados').update({
       status: 'aprovado',
-      pontos,
+      pontos: 1,
       validado_em: new Date().toISOString(),
       motivo_rejeicao: null,
     }).eq('id', resultadoId);
@@ -650,7 +647,7 @@
       msg.textContent = 'Erro: ' + error.message;
       msg.className = 'msg error';
     } else {
-      msg.textContent = `✅ Resultado aprovado! ${pontos} pontos atribuídos.`;
+      msg.textContent = '✅ Resultado aprovado! 1 ponto atribuído.';
       msg.className = 'msg success';
       setTimeout(() => { msg.className = 'msg'; }, 4000);
       await Promise.all([carregarPendentes(), carregarHistorico()]);
