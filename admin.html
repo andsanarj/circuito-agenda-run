@@ -164,8 +164,8 @@
     </div>
 
     <!-- Cabeçalho da tabela -->
-    <div style="display:grid; grid-template-columns:2fr 1.5fr 1fr 80px 90px auto; gap:8px; padding:8px 16px; font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.3px;">
-      <span>Corredor</span><span>Contato</span><span>Cidade</span><span>Corridas</span><span>Pontos</span><span></span>
+    <div style="display:grid; grid-template-columns:2fr 1.5fr 1fr 80px 90px 100px auto; gap:8px; padding:8px 16px; font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.3px;">
+      <span>Corredor</span><span>Contato</span><span>Cidade</span><span>Corridas</span><span>Pts atual</span><span>Pts histórico</span><span></span>
     </div>
 
     <div id="listaCRM"><div class="empty">Carregando...</div></div>
@@ -372,15 +372,17 @@
 
     const resumoMap = {};
     (resumos || []).forEach(r => {
-      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos: 0 };
+      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos_atual: 0, pontos_historico: 0 };
       resumoMap[r.corredor_id].total++;
-      resumoMap[r.corredor_id].pontos += (r.pontos || 0);
+      if (r.status === 'aprovado')  resumoMap[r.corredor_id].pontos_atual      += (r.pontos || 0);
+      if (r.status === 'arquivado') resumoMap[r.corredor_id].pontos_historico  += (r.pontos || 0);
     });
 
     crmDados = corredores.map(c => ({
       ...c,
-      corridas: resumoMap[c.id]?.total || 0,
-      pontos_total: resumoMap[c.id]?.pontos || 0,
+      corridas:         resumoMap[c.id]?.total || 0,
+      pontos_atual:     resumoMap[c.id]?.pontos_atual || 0,
+      pontos_historico: resumoMap[c.id]?.pontos_historico || 0,
     }));
 
     const agora = new Date();
@@ -433,7 +435,7 @@
 
       return `
         <div class="crm-card" id="crm-card-${c.id}">
-          <div class="crm-row" onclick="toggleCRMDetail('${c.id}')">
+          <div class="crm-row" onclick="toggleCRMDetail('${c.id}')" style="grid-template-columns:2fr 1.5fr 1fr 80px 90px 100px auto;">
             <div>
               <div class="nome">${c.nome}</div>
               <div class="sub">Cadastrado em ${dataCad}</div>
@@ -444,7 +446,8 @@
             </div>
             <div style="font-size:13px;">${c.cidade || '—'}</div>
             <div style="font-size:13px; text-align:center;">${c.corridas}</div>
-            <div style="font-size:13px; text-align:center;">${c.pontos_total} pts</div>
+            <div style="font-size:13px; text-align:center; font-weight:700; color:#1F4E79;">${c.pontos_atual} pts</div>
+            <div style="font-size:13px; text-align:center; color:#888;">${c.pontos_historico > 0 ? c.pontos_historico + ' pts' : '—'}</div>
             <div style="color:#bbb; font-size:16px;">▼</div>
           </div>
           <div class="crm-detail" id="crm-detail-${c.id}">
@@ -473,9 +476,22 @@
                   ${c.cidade || '—'} · ${c.sexo === 'M' ? 'Masculino' : c.sexo === 'F' ? 'Feminino' : '—'}
                 </div>
                 <div class="crm-campo" style="margin-top:10px;">
-                  <span class="ck">Corridas / Pontos</span>
-                  ${c.corridas} corrida(s) · ${c.pontos_total} pontos
+                  <span class="ck">Corridas</span>
+                  ${c.corridas} corrida(s)
                 </div>
+                <div class="crm-campo" style="margin-top:10px;">
+                  <span class="ck">Pontos — temporada atual</span>
+                  <strong style="color:#1F4E79;">${c.pontos_atual} pts</strong>
+                </div>
+                ${c.pontos_historico > 0 ? `
+                <div class="crm-campo" style="margin-top:6px;">
+                  <span class="ck">Pontos — temporadas anteriores</span>
+                  ${c.pontos_historico} pts
+                </div>
+                <div class="crm-campo" style="margin-top:6px;">
+                  <span class="ck">Total acumulado</span>
+                  <strong>${c.pontos_atual + c.pontos_historico} pts</strong>
+                </div>` : ''}
                 <div class="crm-campo" style="margin-top:10px;">
                   <span class="ck">Distâncias preferidas</span>
                   ${distTags || '—'}

@@ -142,11 +142,14 @@
   <div class="pontos-card">
     <div class="info">
       <h2 id="nomeCorreder">Carregando...</h2>
-      <p>Temporada 2026 · Grande São Paulo</p>
+      <p>Temporada atual · Grande São Paulo</p>
     </div>
     <div class="pts">
       <div class="num" id="totalPontos">0</div>
-      <div class="label">pontos</div>
+      <div class="label">pontos na temporada</div>
+      <div id="ptsHistoricoLabel" style="font-size:12px; color:#7fa8c8; margin-top:4px; display:none;">
+        + <span id="ptsHistorico">0</span> pts em temporadas anteriores
+      </div>
     </div>
   </div>
 
@@ -158,11 +161,11 @@
     </div>
     <div class="stat">
       <div class="num" id="eventosParticipados">0</div>
-      <div class="label">Eventos</div>
+      <div class="label">Eventos (temporada)</div>
     </div>
     <div class="stat">
-      <div class="num" id="melhorPontuacao">0</div>
-      <div class="label">Melhor pontuação</div>
+      <div class="num" id="totalHistorico">0</div>
+      <div class="label">Pts acumulados total</div>
     </div>
   </div>
 
@@ -309,17 +312,31 @@
     // Distâncias preferidas
     renderDistPref(corredor.distancias_preferidas || '');
 
-    // Buscar ranking
+    // Buscar ranking da temporada atual (aprovado)
     const { data: rankingData } = await client
       .from('ranking_geral')
       .select('*')
       .eq('id', corredor.id)
       .single();
 
-    if (rankingData) {
-      document.getElementById('totalPontos').textContent = rankingData.total_pontos || 0;
-      document.getElementById('posicaoRanking').textContent = rankingData.posicao ? rankingData.posicao + 'º' : '—';
-      document.getElementById('eventosParticipados').textContent = rankingData.eventos_participados || 0;
+    // Buscar pontos históricos (arquivado = temporadas anteriores)
+    const { data: arquivados } = await client
+      .from('resultados')
+      .select('pontos')
+      .eq('corredor_id', corredor.id)
+      .eq('status', 'arquivado');
+
+    const ptsHistorico = (arquivados || []).reduce((s, r) => s + (r.pontos || 0), 0);
+    const ptsAtual = rankingData?.total_pontos || 0;
+
+    document.getElementById('totalPontos').textContent = ptsAtual;
+    document.getElementById('posicaoRanking').textContent = rankingData?.posicao ? rankingData.posicao + 'º' : '—';
+    document.getElementById('eventosParticipados').textContent = rankingData?.eventos_participados || 0;
+    document.getElementById('totalHistorico').textContent = ptsAtual + ptsHistorico;
+
+    if (ptsHistorico > 0) {
+      document.getElementById('ptsHistorico').textContent = ptsHistorico;
+      document.getElementById('ptsHistoricoLabel').style.display = 'block';
     }
 
     // Carregar eventos e histórico em paralelo
@@ -535,11 +552,6 @@
       .order('created_at', { ascending: false });
 
     renderHistorico(historico || []);
-
-    if (historico && historico.length > 0) {
-      const melhor = Math.max(...historico.map(r => r.pontos || 0));
-      document.getElementById('melhorPontuacao').textContent = melhor;
-    }
   }
 
   function renderHistorico(historico) {
@@ -548,15 +560,27 @@
       div.innerHTML = `<div class="historico-vazio"><div class="icon">🏁</div><p>Nenhum evento ainda.<br>Registre sua primeira corrida acima!</p></div>`;
       return;
     }
-    const statusLabel = { pendente: '⏳ Pendente', aprovado: '✅ Aprovado', rejeitado: '❌ Rejeitado' };
+    const statusLabel = {
+      pendente:  '⏳ Pendente',
+      aprovado:  '✅ Aprovado',
+      rejeitado: '❌ Rejeitado',
+      arquivado: '📦 Temp. anterior',
+    };
+    const statusStyle = {
+      pendente:  'color:#b07800;',
+      aprovado:  'color:#1a7a4a;',
+      rejeitado: 'color:#b00020;',
+      arquivado: 'color:#888;',
+    };
     let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Status</th><th>Pts</th></tr></thead><tbody>`;
     historico.forEach(r => {
       const data = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const st = r.status || 'pendente';
-      html += `<tr>
+      const rowStyle = st === 'arquivado' ? 'opacity:0.6;' : '';
+      html += `<tr style="${rowStyle}">
         <td><strong>${r.eventos?.nome || '—'}</strong>${r.tempo ? `<br><span style="font-size:11px;color:#888;">${r.tempo}${r.posicao_geral ? ' · ' + r.posicao_geral + 'º geral' : ''}</span>` : ''}</td>
         <td>${data}</td>
-        <td>${statusLabel[st] || st}</td>
+        <td style="font-size:12px;font-weight:700;${statusStyle[st] || ''}">${statusLabel[st] || st}</td>
         <td><span class="pts-badge">${r.pontos || 0} pts</span></td>
       </tr>`;
     });
