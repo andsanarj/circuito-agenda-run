@@ -277,10 +277,13 @@
     </div>
     <div class="reset-box">
       <h3>🔄 Resetar Pontuação — Nova Temporada</h3>
-      <p>Arquiva todos os resultados aprovados da temporada atual. Os pontos são zerados no ranking, mas o histórico de cada corredor é preservado. Use apenas ao iniciar uma nova temporada.</p>
+      <p>Arquiva todos os resultados aprovados da temporada atual. Os pontos são zerados no ranking, mas o histórico de cada corredor é preservado com o nome da temporada.</p>
+      <div style="margin-bottom:14px; font-size:13px; color:#555;">
+        📅 Temporada em andamento: <strong id="labelTemporadaAtual" style="color:#1F4E79;">carregando...</strong>
+      </div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <input type="text" id="nomeTemporada" placeholder="Ex: Temporada 2027" style="width:220px;">
-        <button class="btn btn-red" onclick="confirmarReset()">🔄 Resetar e iniciar nova temporada</button>
+        <button class="btn btn-red" onclick="confirmarReset()">🔄 Encerrar e iniciar nova temporada</button>
       </div>
       <div id="msgReset" class="msg" style="margin-top:10px;"></div>
     </div>
@@ -338,6 +341,17 @@
   const ADMIN_EMAIL   = 'agendarun1@gmail.com';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  let temporadaAtual = 'Temporada 2026';
+
+  async function carregarConfig() {
+    const { data } = await sb.from('config').select('value').eq('key', 'temporada_atual').single();
+    if (data?.value) {
+      temporadaAtual = data.value;
+      document.getElementById('labelTemporadaAtual').textContent = temporadaAtual;
+      document.getElementById('nomeTemporada').placeholder = 'Ex: Temporada 2027';
+    }
+  }
+
   // ── Verificar acesso ─────────────────────────────────────────
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -350,7 +364,7 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('painelAdmin').style.display = 'block';
-    await Promise.all([carregarCRM(), carregarPendentes(), carregarHistorico(), carregarEventos()]);
+    await Promise.all([carregarConfig(), carregarCRM(), carregarPendentes(), carregarHistorico(), carregarEventos()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
@@ -368,14 +382,20 @@
 
     const { data: resumos } = await sb
       .from('resultados')
-      .select('corredor_id, pontos, status');
+      .select('corredor_id, pontos, status, temporada');
 
     const resumoMap = {};
     (resumos || []).forEach(r => {
-      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos_atual: 0, pontos_historico: 0 };
+      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos_atual: 0, pontos_historico: 0, por_temporada: {} };
       resumoMap[r.corredor_id].total++;
-      if (r.status === 'aprovado')  resumoMap[r.corredor_id].pontos_atual      += (r.pontos || 0);
-      if (r.status === 'arquivado') resumoMap[r.corredor_id].pontos_historico  += (r.pontos || 0);
+      if (r.status === 'aprovado') {
+        resumoMap[r.corredor_id].pontos_atual += (r.pontos || 0);
+      }
+      if (r.status === 'arquivado') {
+        resumoMap[r.corredor_id].pontos_historico += (r.pontos || 0);
+        const t = r.temporada || 'Temporada anterior';
+        resumoMap[r.corredor_id].por_temporada[t] = (resumoMap[r.corredor_id].por_temporada[t] || 0) + (r.pontos || 0);
+      }
     });
 
     crmDados = corredores.map(c => ({
@@ -383,6 +403,7 @@
       corridas:         resumoMap[c.id]?.total || 0,
       pontos_atual:     resumoMap[c.id]?.pontos_atual || 0,
       pontos_historico: resumoMap[c.id]?.pontos_historico || 0,
+      por_temporada:    resumoMap[c.id]?.por_temporada || {},
     }));
 
     const agora = new Date();
@@ -485,11 +506,11 @@
                 </div>
                 ${c.pontos_historico > 0 ? `
                 <div class="crm-campo" style="margin-top:6px;">
-                  <span class="ck">Pontos — temporadas anteriores</span>
-                  ${c.pontos_historico} pts
+                  <span class="ck">Temporadas anteriores</span>
+                  ${Object.entries(c.por_temporada).map(([t, p]) => `<div style="font-size:12px; color:#666;">${t}: <strong>${p} pt${p !== 1 ? 's' : ''}</strong></div>`).join('')}
                 </div>
                 <div class="crm-campo" style="margin-top:6px;">
-                  <span class="ck">Total acumulado</span>
+                  <span class="ck">Total acumulado (todas as temporadas)</span>
                   <strong>${c.pontos_atual + c.pontos_historico} pts</strong>
                 </div>` : ''}
                 <div class="crm-campo" style="margin-top:10px;">
@@ -535,34 +556,53 @@
 
   // ── RESET DE TEMPORADA ───────────────────────────────────────
   async function confirmarReset() {
-    const nome = document.getElementById('nomeTemporada').value.trim();
+    const nomaNova = document.getElementById('nomeTemporada').value.trim();
     const msg = document.getElementById('msgReset');
 
-    if (!nome) {
+    if (!nomaNova) {
       msg.textContent = 'Informe o nome da nova temporada antes de resetar.';
       msg.className = 'msg error';
       return;
     }
 
     const confirmado = confirm(
-      `⚠️ ATENÇÃO\n\nIsso vai arquivar TODOS os resultados aprovados da temporada atual.\n\nO histórico será preservado, mas o ranking vai zerar.\n\nNova temporada: "${nome}"\n\nTem certeza?`
+      `⚠️ ATENÇÃO\n\nIsso vai arquivar TODOS os resultados aprovados de "${temporadaAtual}".\n\nO histórico será preservado, mas o ranking vai zerar.\n\nNova temporada: "${nomaNova}"\n\nTem certeza?`
     );
     if (!confirmado) return;
 
-    // Arquivar todos os resultados aprovados
-    const { error } = await sb
+    msg.textContent = 'Processando...';
+    msg.className = 'msg';
+    msg.style.display = 'block';
+
+    // 1. Marcar todos os resultados aprovados com o nome da temporada que está encerrando
+    const { error: e1 } = await sb
+      .from('resultados')
+      .update({ temporada: temporadaAtual })
+      .eq('status', 'aprovado');
+
+    if (e1) { msg.textContent = 'Erro ao marcar temporada: ' + e1.message; msg.className = 'msg error'; return; }
+
+    // 2. Arquivar os resultados
+    const { error: e2 } = await sb
       .from('resultados')
       .update({ status: 'arquivado' })
       .eq('status', 'aprovado');
 
-    if (error) {
-      msg.textContent = 'Erro ao resetar: ' + error.message;
-      msg.className = 'msg error';
-    } else {
-      msg.textContent = `✅ Temporada resetada! "${nome}" iniciada. Ranking zerado.`;
-      msg.className = 'msg success';
-      await Promise.all([carregarPendentes(), carregarHistorico(), carregarCRM()]);
-    }
+    if (e2) { msg.textContent = 'Erro ao arquivar: ' + e2.message; msg.className = 'msg error'; return; }
+
+    // 3. Atualizar a temporada atual na config
+    const { error: e3 } = await sb
+      .from('config')
+      .upsert({ key: 'temporada_atual', value: nomaNova });
+
+    if (e3) { msg.textContent = 'Erro ao atualizar config: ' + e3.message; msg.className = 'msg error'; return; }
+
+    temporadaAtual = nomaNova;
+    document.getElementById('labelTemporadaAtual').textContent = nomaNova;
+    document.getElementById('nomeTemporada').value = '';
+    msg.textContent = `✅ "${temporadaAtual}" encerrada e arquivada. "${nomaNova}" iniciada!`;
+    msg.className = 'msg success';
+    await Promise.all([carregarPendentes(), carregarHistorico(), carregarCRM()]);
   }
 
   // ── VALIDAÇÕES PENDENTES ─────────────────────────────────────

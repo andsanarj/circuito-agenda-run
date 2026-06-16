@@ -146,7 +146,7 @@
     </div>
     <div class="pts">
       <div class="num" id="totalPontos">0</div>
-      <div class="label">pontos na temporada</div>
+      <div class="label">pts · <span id="labelTemporadaAtual">carregando...</span></div>
       <div id="ptsHistoricoLabel" style="font-size:12px; color:#7fa8c8; margin-top:4px; display:none;">
         + <span id="ptsHistorico">0</span> pts em temporadas anteriores
       </div>
@@ -283,10 +283,20 @@
 
   let modoEdicao = false;
   let corredorIdGlobal = null;
+  let temporadaAtual = 'Temporada atual';
 
   async function init() {
     const { data: { session } } = await client.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
+
+    // Carregar nome da temporada
+    const { data: cfg } = await client.from('config').select('value').eq('key', 'temporada_atual').single();
+    if (cfg?.value) {
+      temporadaAtual = cfg.value;
+      document.getElementById('labelTemporadaAtual').textContent = temporadaAtual;
+    } else {
+      document.getElementById('labelTemporadaAtual').textContent = 'Temporada 2026';
+    }
 
     const { data: corredor } = await client
       .from('corredores')
@@ -560,31 +570,60 @@
       div.innerHTML = `<div class="historico-vazio"><div class="icon">🏁</div><p>Nenhum evento ainda.<br>Registre sua primeira corrida acima!</p></div>`;
       return;
     }
-    const statusLabel = {
-      pendente:  '⏳ Pendente',
-      aprovado:  '✅ Aprovado',
-      rejeitado: '❌ Rejeitado',
-      arquivado: '📦 Temp. anterior',
-    };
-    const statusStyle = {
-      pendente:  'color:#b07800;',
-      aprovado:  'color:#1a7a4a;',
-      rejeitado: 'color:#b00020;',
-      arquivado: 'color:#888;',
-    };
-    let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Status</th><th>Pts</th></tr></thead><tbody>`;
+
+    const statusLabel = { pendente: '⏳ Pendente', aprovado: '✅ Aprovado', rejeitado: '❌ Rejeitado' };
+    const statusStyle = { pendente: 'color:#b07800;', aprovado: 'color:#1a7a4a;', rejeitado: 'color:#b00020;' };
+
+    // Separar por grupo: temporada atual vs temporadas anteriores
+    const grupos = {};
     historico.forEach(r => {
-      const data = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-      const st = r.status || 'pendente';
-      const rowStyle = st === 'arquivado' ? 'opacity:0.6;' : '';
-      html += `<tr style="${rowStyle}">
-        <td><strong>${r.eventos?.nome || '—'}</strong>${r.tempo ? `<br><span style="font-size:11px;color:#888;">${r.tempo}${r.posicao_geral ? ' · ' + r.posicao_geral + 'º geral' : ''}</span>` : ''}</td>
-        <td>${data}</td>
-        <td style="font-size:12px;font-weight:700;${statusStyle[st] || ''}">${statusLabel[st] || st}</td>
-        <td><span class="pts-badge">${r.pontos || 0} pts</span></td>
-      </tr>`;
+      let grupo;
+      if (r.status === 'arquivado') {
+        grupo = r.temporada || 'Temporada anterior';
+      } else {
+        grupo = '__atual__';
+      }
+      if (!grupos[grupo]) grupos[grupo] = [];
+      grupos[grupo].push(r);
     });
-    html += '</tbody></table>';
+
+    function tabelaGrupo(lista, encerrada) {
+      let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Status</th><th>Pts</th></tr></thead><tbody>`;
+      let totalPts = 0;
+      lista.forEach(r => {
+        const data = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const st = r.status || 'pendente';
+        totalPts += (r.pontos || 0);
+        const rowStyle = encerrada ? 'opacity:0.65;' : '';
+        const stLabel = encerrada ? '📦 Arquivado' : (statusLabel[st] || st);
+        const stStyle = encerrada ? 'color:#888;' : (statusStyle[st] || '');
+        html += `<tr style="${rowStyle}">
+          <td><strong>${r.eventos?.nome || '—'}</strong>${r.tempo ? `<br><span style="font-size:11px;color:#888;">${r.tempo}${r.posicao_geral ? ' · ' + r.posicao_geral + 'º geral' : ''}</span>` : ''}</td>
+          <td>${data}</td>
+          <td style="font-size:12px;font-weight:700;${stStyle}">${stLabel}</td>
+          <td><span class="pts-badge">${r.pontos || 0} pts</span></td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      if (encerrada) html += `<div style="text-align:right;font-size:12px;color:#888;padding:6px 0;">Total: <strong>${totalPts} pt${totalPts !== 1 ? 's' : ''}</strong></div>`;
+      return html;
+    }
+
+    let html = '';
+
+    // Temporada atual primeiro
+    if (grupos['__atual__']) {
+      html += `<div style="font-size:11px;font-weight:700;color:#1F4E79;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">📅 ${temporadaAtual}</div>`;
+      html += tabelaGrupo(grupos['__atual__'], false);
+    }
+
+    // Temporadas anteriores (arquivadas)
+    const anteriores = Object.keys(grupos).filter(k => k !== '__atual__').sort().reverse();
+    anteriores.forEach(t => {
+      html += `<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin:20px 0 8px;padding-top:16px;border-top:1px solid #eee;">📦 ${t}</div>`;
+      html += tabelaGrupo(grupos[t], true);
+    });
+
     div.innerHTML = html;
   }
 

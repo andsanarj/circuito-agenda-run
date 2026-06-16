@@ -71,6 +71,8 @@
       cursor: pointer;
     }
     .filtros input { flex: 1; min-width: 200px; }
+    .temporada-sel { padding: 8px 14px; border: 2px solid #1F4E79; border-radius: 8px; font-size: 14px; font-weight: 700; color: #1F4E79; background: #EBF3FB; cursor: pointer; }
+    .aviso-temp-ant { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 16px; font-size: 13px; color: #b07800; margin-bottom: 16px; }
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -217,7 +219,7 @@
 </header>
 
 <div class="hero">
-  <div class="temporada-badge">Temporada 2026</div>
+  <div class="temporada-badge" id="badgeTemporada">Carregando...</div>
   <h1>🏆 Ranking Geral</h1>
   <p>Grande São Paulo · Atualizado após cada evento pontuável</p>
 </div>
@@ -246,6 +248,13 @@
       <option value="M">Masculino</option>
       <option value="F">Feminino</option>
     </select>
+    <select id="filtroTemporada" class="temporada-sel" onchange="trocarTemporada()">
+      <option value="__atual__">Temporada atual</option>
+    </select>
+  </div>
+
+  <div id="avisoTemporadaAnt" class="aviso-temp-ant" style="display:none;">
+    📦 Você está visualizando o ranking de uma temporada encerrada.
   </div>
 
   <div class="ranking-table">
@@ -279,6 +288,46 @@
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let dadosCompletos = [];
+  let temporadaAtual = 'Temporada atual';
+
+  async function init() {
+    // Carregar nome da temporada atual
+    const { data: cfg } = await client.from('config').select('value').eq('key', 'temporada_atual').single();
+    if (cfg?.value) {
+      temporadaAtual = cfg.value;
+      document.getElementById('badgeTemporada').textContent = temporadaAtual;
+      document.getElementById('filtroTemporada').options[0].textContent = temporadaAtual + ' (atual)';
+    } else {
+      document.getElementById('badgeTemporada').textContent = 'Temporada 2026';
+    }
+
+    // Buscar temporadas anteriores (arquivadas)
+    const { data: arq } = await client
+      .from('resultados')
+      .select('temporada')
+      .eq('status', 'arquivado');
+
+    const temporadasAnt = [...new Set((arq || []).map(r => r.temporada).filter(Boolean))].sort().reverse();
+    const sel = document.getElementById('filtroTemporada');
+    if (temporadasAnt.length > 0) {
+      temporadasAnt.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t + ' (encerrada)';
+        sel.appendChild(opt);
+      });
+      // Verificar se há arquivados sem temporada
+      const semTemp = (arq || []).filter(r => !r.temporada).length;
+      if (semTemp > 0) {
+        const opt = document.createElement('option');
+        opt.value = '__sem_temporada__';
+        opt.textContent = 'Temporada anterior (sem nome)';
+        sel.appendChild(opt);
+      }
+    }
+
+    await carregarRanking();
+  }
 
   async function carregarRanking() {
     const { data, error } = await client
@@ -297,13 +346,69 @@
 
     // Stats
     const { count: totalCorredores } = await client.from('corredores').select('*', { count: 'exact', head: true });
-    const { count: totalEventos } = await client.from('eventos').select('*', { count: 'exact', head: true }).eq('status', 'aprovado');
+    const { count: totalEventos } = await client.from('eventos').select('*', { count: 'exact', head: true }).eq('ativo', true);
     const totalPts = dadosCompletos.reduce((s, r) => s + (r.total_pontos || 0), 0);
 
     document.getElementById('totalCorredores').textContent = totalCorredores || 0;
     document.getElementById('totalEventos').textContent = totalEventos || 0;
     document.getElementById('totalPontos').textContent = totalPts;
     document.getElementById('atualizado').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+  }
+
+  async function carregarRankingTemporada(nomeTemporada) {
+    const query = nomeTemporada === '__sem_temporada__'
+      ? client.from('resultados').select('corredor_id, pontos, corredores(nome, cidade, sexo, instagram)').eq('status', 'arquivado').is('temporada', null)
+      : client.from('resultados').select('corredor_id, pontos, corredores(nome, cidade, sexo, instagram)').eq('status', 'arquivado').eq('temporada', nomeTemporada);
+
+    const { data, error } = await query;
+    if (error) { console.error(error); return; }
+
+    // Agregar por corredor
+    const map = {};
+    (data || []).forEach(r => {
+      if (!map[r.corredor_id]) {
+        map[r.corredor_id] = {
+          nome: r.corredores?.nome,
+          cidade: r.corredores?.cidade,
+          sexo: r.corredores?.sexo,
+          instagram: r.corredores?.instagram,
+          total_pontos: 0,
+          eventos_participados: 0,
+        };
+      }
+      map[r.corredor_id].total_pontos += (r.pontos || 0);
+      map[r.corredor_id].eventos_participados++;
+    });
+
+    dadosCompletos = Object.values(map)
+      .sort((a, b) => b.total_pontos - a.total_pontos)
+      .map((r, i) => ({ ...r, posicao: i + 1 }));
+
+    renderizar(dadosCompletos);
+    document.getElementById('atualizado').textContent = 'Ranking encerrado · ' + nomeTemporada;
+
+    // Zerar stats pois são da temporada atual
+    const totalPts = dadosCompletos.reduce((s, r) => s + (r.total_pontos || 0), 0);
+    document.getElementById('totalPontos').textContent = totalPts;
+  }
+
+  async function trocarTemporada() {
+    const val = document.getElementById('filtroTemporada').value;
+    const aviso = document.getElementById('avisoTemporadaAnt');
+    // Limpar busca e sexo
+    document.getElementById('busca').value = '';
+    document.getElementById('filtroSexo').value = '';
+
+    if (val === '__atual__') {
+      aviso.style.display = 'none';
+      document.getElementById('badgeTemporada').textContent = temporadaAtual;
+      await carregarRanking();
+    } else {
+      aviso.style.display = 'block';
+      const label = val === '__sem_temporada__' ? 'Temporada anterior' : val;
+      document.getElementById('badgeTemporada').textContent = label + ' — Encerrada';
+      await carregarRankingTemporada(val);
+    }
   }
 
   function renderizar(dados) {
@@ -313,8 +418,8 @@
       document.getElementById('tabelaContainer').innerHTML =
         `<div class="empty">
           <div class="icon">🏁</div>
-          <h3>O ranking ainda está vazio</h3>
-          <p>Seja o primeiro corredor do Circuito Agenda Run!</p>
+          <h3>Nenhum resultado nesta temporada</h3>
+          <p>Os resultados aparecerão após aprovação pelo administrador.</p>
           <a href="cadastro_corredor.html" class="btn-cadastro">Fazer meu cadastro grátis</a>
         </div>`;
       return;
@@ -354,12 +459,12 @@
     document.getElementById('tabelaContainer').innerHTML = html;
   }
 
-  // Filtros
+  // Filtros de busca/sexo
   function aplicarFiltros() {
     const busca = document.getElementById('busca').value.toLowerCase();
     const sexo = document.getElementById('filtroSexo').value;
     const filtrado = dadosCompletos.filter(r => {
-      const matchBusca = !busca || r.nome.toLowerCase().includes(busca) || (r.cidade || '').toLowerCase().includes(busca);
+      const matchBusca = !busca || (r.nome || '').toLowerCase().includes(busca) || (r.cidade || '').toLowerCase().includes(busca);
       const matchSexo = !sexo || r.sexo === sexo;
       return matchBusca && matchSexo;
     });
@@ -369,7 +474,7 @@
   document.getElementById('busca').addEventListener('input', aplicarFiltros);
   document.getElementById('filtroSexo').addEventListener('change', aplicarFiltros);
 
-  carregarRanking();
+  init();
 </script>
 </body>
 </html>
