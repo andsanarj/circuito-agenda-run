@@ -607,19 +607,56 @@
 
   // ── VALIDAÇÕES PENDENTES ─────────────────────────────────────
   async function carregarPendentes() {
-    const { data } = await sb
+    // Diagnóstico: buscar TODOS os resultados para ver o que existe
+    const { data: todos, error: errTodos } = await sb
       .from('resultados')
-      .select('id, numero_peito, participou, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
+      .select('id, status, created_at');
+
+    if (errTodos) {
+      document.getElementById('tabelaPendentes').innerHTML = `<div class="empty" style="color:#b00020;">❌ Sem acesso à tabela resultados: ${errTodos.message}</div>`;
+      document.getElementById('countPendentes').textContent = 'erro';
+      return;
+    }
+
+    if (!todos || todos.length === 0) {
+      document.getElementById('tabelaPendentes').innerHTML = `<div class="empty">⚠️ A tabela resultados está vazia — nenhum resultado foi cadastrado ainda.</div>`;
+      document.getElementById('countPendentes').textContent = '0 pendentes';
+      return;
+    }
+
+    // Mostrar resumo por status para diagnóstico
+    const porStatus = {};
+    todos.forEach(r => { porStatus[r.status] = (porStatus[r.status] || 0) + 1; });
+    const resumo = Object.entries(porStatus).map(([s, n]) => `${s}: ${n}`).join(' | ');
+    console.log('Resultados no banco:', resumo);
+
+    // Agora buscar só os pendentes com detalhes
+    const { data, error } = await sb
+      .from('resultados')
+      .select('id, numero_peito, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
       .eq('status', 'pendente')
       .order('created_at', { ascending: true });
 
-    document.getElementById('countPendentes').textContent = `${(data || []).length} pendente${(data || []).length !== 1 ? 's' : ''}`;
-
-    const div = document.getElementById('tabelaPendentes');
-    if (!data || data.length === 0) {
-      div.innerHTML = '<div class="empty">✅ Nenhuma submissão pendente!</div>';
+    if (error) {
+      document.getElementById('tabelaPendentes').innerHTML = `<div class="empty" style="color:#b00020;">❌ Erro ao buscar pendentes: ${error.message}</div>`;
+      document.getElementById('countPendentes').textContent = 'erro';
       return;
     }
+
+    const pendentes = data || [];
+    document.getElementById('countPendentes').textContent = `${pendentes.length} pendente${pendentes.length !== 1 ? 's' : ''}`;
+
+    if (pendentes.length === 0) {
+      // Mostrar quais status existem para ajudar a diagnosticar
+      document.getElementById('tabelaPendentes').innerHTML = `
+        <div class="empty">
+          ✅ Nenhuma submissão pendente!
+          <br><span style="font-size:12px;color:#aaa;margin-top:6px;display:block;">Resultados no banco: ${resumo}</span>
+        </div>`;
+      return;
+    }
+
+    const div = document.getElementById('tabelaPendentes');
 
     let html = `
       <table>
