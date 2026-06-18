@@ -171,6 +171,22 @@
     <div id="listaCRM"><div class="empty">Carregando...</div></div>
   </div>
 
+  <!-- ── SOLICITAÇÕES DE CORRIDAS ─────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>📋 Solicitações de Corridas</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Organizadores pedindo inclusão de evento no Circuito.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge-count" id="countSolicitacoes">0 novas</span>
+        <button class="btn btn-gray btn-sm" onclick="carregarSolicitacoes()">🔄 Atualizar</button>
+      </div>
+    </div>
+    <div id="listaSolicitacoes"><div class="empty">Carregando...</div></div>
+    <div id="msgSolicitacao" class="msg"></div>
+  </div>
+
   <!-- ── VALIDAÇÕES PENDENTES ───────────────────────────────── -->
   <div class="card">
     <div class="card-header">
@@ -364,10 +380,122 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('painelAdmin').style.display = 'block';
-    await Promise.all([carregarConfig(), carregarCRM(), carregarPendentes(), carregarHistorico(), carregarEventos()]);
+    await Promise.all([carregarConfig(), carregarCRM(), carregarSolicitacoes(), carregarPendentes(), carregarHistorico(), carregarEventos()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  // ── SOLICITAÇÕES DE CORRIDAS ─────────────────────────────────
+  async function carregarSolicitacoes() {
+    const el = document.getElementById('listaSolicitacoes');
+    const countEl = document.getElementById('countSolicitacoes');
+    el.innerHTML = '<div class="empty">Carregando...</div>';
+
+    const { data, error } = await sb
+      .from('organizadores')
+      .select('*')
+      .in('status', ['pendente', null])
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<div class="empty" style="color:#b00020;">❌ Erro: ${error.message}</div>`;
+      countEl.textContent = 'erro';
+      return;
+    }
+
+    const lista = data || [];
+    countEl.textContent = `${lista.length} nova${lista.length !== 1 ? 's' : ''}`;
+
+    if (lista.length === 0) {
+      el.innerHTML = '<div class="empty">Nenhuma solicitação pendente.</div>';
+      return;
+    }
+
+    el.innerHTML = lista.map(s => {
+      const data_ev = s.data_evento ? new Date(s.data_evento + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const criado  = new Date(s.created_at).toLocaleDateString('pt-BR');
+      return `
+      <div style="border:1px solid #e8edf2; border-radius:10px; padding:16px 20px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong style="font-size:15px; color:#1F4E79;">${s.nome_evento || '—'}</strong>
+            <span style="margin-left:10px; font-size:12px; color:#888;">solicitado em ${criado}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm" style="background:#2a7a4a; color:#fff; padding:6px 14px;" onclick="aprovarSolicitacao('${s.id}')">✅ Aprovar e criar evento</button>
+            <button class="btn btn-sm btn-gray" style="padding:6px 14px;" onclick="rejeitarSolicitacao('${s.id}')">✗ Rejeitar</button>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; margin-top:12px; font-size:13px; color:#555;">
+          <div><strong>Data:</strong> ${data_ev}</div>
+          <div><strong>Horário:</strong> ${s.horario_largada || '—'}</div>
+          <div><strong>Cidade:</strong> ${s.cidade || '—'}</div>
+          <div><strong>Permit:</strong> ${s.numero_permit || '—'}</div>
+          <div><strong>Distâncias:</strong> ${s.distancias || '—'}</div>
+          <div><strong>Local:</strong> ${s.local_largada || '—'}</div>
+          <div><strong>Contato:</strong> ${s.nome_contato || '—'}</div>
+          <div><strong>E-mail:</strong> ${s.email || '—'}</div>
+          <div><strong>Telefone:</strong> ${s.telefone || '—'}</div>
+          ${s.link_inscricao ? `<div><strong>Link:</strong> <a href="${s.link_inscricao}" target="_blank" style="color:#1F4E79;">abrir</a></div>` : ''}
+          ${s.observacoes ? `<div style="grid-column:1/-1;"><strong>Obs:</strong> ${s.observacoes}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function aprovarSolicitacao(id) {
+    const msg = document.getElementById('msgSolicitacao');
+    msg.className = 'msg';
+
+    // Buscar dados da solicitação
+    const { data: sol, error: errSol } = await sb.from('organizadores').select('*').eq('id', id).single();
+    if (errSol || !sol) {
+      msg.textContent = 'Erro ao buscar solicitação: ' + (errSol?.message || 'não encontrada');
+      msg.className = 'msg error';
+      return;
+    }
+
+    // Criar o evento
+    const { error: errEv } = await sb.from('eventos').insert([{
+      nome:           sol.nome_evento,
+      data:           sol.data_evento || null,
+      horario_largada: sol.horario_largada || null,
+      numero_permit:  sol.numero_permit || null,
+      distancia:      sol.distancias || null,
+      cidade:         sol.cidade || null,
+      link_inscricao: sol.link_inscricao || null,
+      ativo:          true,
+    }]);
+
+    if (errEv) {
+      msg.textContent = 'Erro ao criar evento: ' + errEv.message;
+      msg.className = 'msg error';
+      return;
+    }
+
+    // Marcar solicitação como aprovada
+    await sb.from('organizadores').update({ status: 'aprovado' }).eq('id', id);
+
+    msg.textContent = `✅ Evento "${sol.nome_evento}" criado com sucesso! Corredores já podem ver e se inscrever.`;
+    msg.className = 'msg success';
+    setTimeout(() => { msg.className = 'msg'; }, 5000);
+    await Promise.all([carregarSolicitacoes(), carregarEventos()]);
+  }
+
+  async function rejeitarSolicitacao(id) {
+    if (!confirm('Rejeitar esta solicitação?')) return;
+    const msg = document.getElementById('msgSolicitacao');
+    const { error } = await sb.from('organizadores').update({ status: 'rejeitado' }).eq('id', id);
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = 'Solicitação rejeitada.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+      await carregarSolicitacoes();
+    }
+  }
 
   // ── CRM ──────────────────────────────────────────────────────
   let crmDados = [];

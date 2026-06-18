@@ -532,23 +532,34 @@
       motivo_rejeicao: null,
     };
 
-    let error;
+    let erro = null;
     if (resultadoId) {
-      ({ error } = await client.from('resultados').update(dados).eq('id', resultadoId));
+      // UPDATE: usar .select() para detectar se alguma linha foi realmente atualizada
+      const { data: atualizado, error: errUpd } = await client
+        .from('resultados')
+        .update(dados)
+        .eq('id', resultadoId)
+        .select('id');
+
+      if (errUpd) {
+        erro = errUpd.message;
+      } else if (!atualizado || atualizado.length === 0) {
+        erro = 'Sem permissão para atualizar. Certifique-se de estar logado com sua conta.';
+      }
     } else {
-      ({ error } = await client.from('resultados').insert([dados]));
+      const { error: errIns } = await client.from('resultados').insert([dados]);
+      if (errIns) erro = errIns.message;
     }
 
-    if (error) {
-      msg.textContent = 'Erro ao enviar: ' + error.message;
+    if (erro) {
+      msg.textContent = 'Erro ao enviar: ' + erro;
       msg.className = 'msg-form error';
       btn.disabled = false;
       btn.textContent = 'Enviar para validação';
     } else {
-      msg.textContent = '✅ Enviado! Aguarde a validação do administrador. Seus pontos serão computados após aprovação.';
+      msg.textContent = '✅ Enviado! Aguarde a validação do administrador.';
       msg.className = 'msg-form success';
       btn.textContent = 'Enviado ✓';
-      // Recarregar lista de eventos após 2s
       setTimeout(() => carregarEventos(corredorIdGlobal), 2000);
     }
   }
