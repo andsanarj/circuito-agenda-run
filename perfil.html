@@ -413,14 +413,14 @@
             </div>
           </div>
           <div class="resultado-form" id="form-ev-${ev.id}">
-            ${renderFormResultado(ev.id, r)}
+            ${renderFormResultado(ev.id, r, ev.distancia)}
           </div>
         </div>
       `;
     }).join('');
   }
 
-  function renderFormResultado(eventoId, resultado) {
+  function renderFormResultado(eventoId, resultado, distanciasEvento) {
     const r = resultado || {};
     const isRejeitado = r.status === 'rejeitado';
     const motivoHtml = isRejeitado && r.motivo_rejeicao
@@ -429,11 +429,38 @@
     const checked = r.finalizou ? 'checked' : '';
     const camposVisiveis = r.finalizou ? 'visivel' : '';
 
+    // Montar campo de distância
+    const dists = (distanciasEvento || '').split(',').map(d => d.trim()).filter(Boolean);
+    let distHtml = '';
+    if (dists.length > 1) {
+      const opts = dists.map(d => `<option value="${d}" ${r.distancia === d ? 'selected' : ''}>${d}</option>`).join('');
+      distHtml = `
+      <div class="form-group">
+        <label>Distância que você correu *</label>
+        <select id="distancia-${eventoId}">
+          <option value="">Selecione a distância...</option>
+          ${opts}
+        </select>
+      </div>`;
+    } else if (dists.length === 1) {
+      distHtml = `
+      <div class="form-group">
+        <label>Distância</label>
+        <input type="text" id="distancia-${eventoId}" value="${dists[0]}" readonly style="background:#f0f4f8; color:#888;">
+      </div>`;
+    } else {
+      distHtml = `
+      <div class="form-group">
+        <label>Distância que você correu</label>
+        <input type="text" id="distancia-${eventoId}" placeholder="Ex: 10K" value="${r.distancia || ''}">
+      </div>`;
+    }
+
     return `
       <h4>${isRejeitado ? '✏️ Corrigir resultado' : '📋 Registrar minha participação'}</h4>
       ${motivoHtml}
       <div class="info-pontos-form">
-        🏆 <strong>Inscrição:</strong> 5 pts &nbsp;·&nbsp; <strong>Participação:</strong> 5 pts &nbsp;·&nbsp; <strong>Finalização:</strong> 5 pts &nbsp;·&nbsp; <em>Máx 15 pts por evento (após validação)</em>
+        🏆 <strong>2 pts</strong> por participação &nbsp;·&nbsp; <strong>+1 pt bônus</strong> para seguidores do @agenda_run &nbsp;·&nbsp; <em>(após validação)</em>
       </div>
       <div class="form-group">
         <label>Número de peito *</label>
@@ -459,6 +486,7 @@
           <input type="text" id="categoria-${eventoId}" placeholder="Ex: M4044, F3539" value="${r.categoria || ''}">
         </div>
       </div>
+      ${distHtml}
       <div class="form-group" style="margin-top:14px;">
         <label>Link do resultado oficial * <span style="color:#888; font-weight:400;">(RunKing ou site da corrida)</span></label>
         <input type="url" id="urlresult-${eventoId}" placeholder="https://resultados.runking.com.br/..." value="${r.url_resultado || ''}" required>
@@ -500,6 +528,7 @@
     msg.className = 'msg-form';
 
     const peito = document.getElementById(`peito-${eventoId}`).value.trim();
+    const distancia = document.getElementById(`distancia-${eventoId}`)?.value.trim() || null;
     const urlResult = document.getElementById(`urlresult-${eventoId}`).value.trim();
     const finalizou = document.getElementById(`finalizou-${eventoId}`).checked;
     const tempo = document.getElementById(`tempo-${eventoId}`).value.trim() || null;
@@ -508,6 +537,11 @@
 
     if (!peito) {
       msg.textContent = 'Preencha o número de peito.';
+      msg.className = 'msg-form error';
+      return;
+    }
+    if (!distancia) {
+      msg.textContent = 'Selecione a distância que você correu.';
       msg.className = 'msg-form error';
       return;
     }
@@ -524,6 +558,7 @@
       corredor_id: corredorIdGlobal,
       evento_id: eventoId,
       numero_peito: peito,
+      distancia,
       tempo: finalizou ? tempo : null,
       posicao_geral: finalizou ? posicao : null,
       categoria,

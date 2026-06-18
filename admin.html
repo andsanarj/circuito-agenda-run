@@ -761,7 +761,7 @@
     // Agora buscar só os pendentes com detalhes
     const { data, error } = await sb
       .from('resultados')
-      .select('id, numero_peito, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
       .eq('status', 'pendente')
       .order('created_at', { ascending: true });
 
@@ -817,6 +817,7 @@
           </td>
           <td class="resultado-detalhe">
             <div class="campo">🏷️ <strong>Peito:</strong> ${r.numero_peito || '—'}</div>
+            ${r.distancia ? `<div class="campo">📏 <strong>Distância:</strong> ${r.distancia}</div>` : ''}
             <div class="campo">🏁 <strong>Finalizou:</strong> ${r.finalizou ? 'Sim' : 'Não'}</div>
             ${r.tempo ? `<div class="campo">⏱️ <strong>Tempo:</strong> ${r.tempo}</div>` : ''}
             ${r.posicao_geral ? `<div class="campo">🥇 <strong>Posição:</strong> ${r.posicao_geral}º geral</div>` : ''}
