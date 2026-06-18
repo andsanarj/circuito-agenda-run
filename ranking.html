@@ -336,7 +336,7 @@
   async function carregarRanking() {
     const { data, error } = await client
       .from('ranking_geral')
-      .select('nome, cidade, sexo, instagram, total_pontos, eventos_participados, posicao')
+      .select('id, nome, cidade, sexo, instagram, total_pontos, eventos_participados, posicao')
       .order('total_pontos', { ascending: false });
 
     if (error) {
@@ -446,10 +446,16 @@
       const pos = r.posicao || (i + 1);
       const posClass = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : '';
       const posIcon = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+      const perfilUrl = r.instagram
+        ? `corredor.html?u=${r.instagram}`
+        : r.id ? `corredor.html?id=${r.id}` : null;
+      const nomeHtml = perfilUrl
+        ? `<a href="${perfilUrl}" style="font-weight:600; color:#1a1a1a; text-decoration:none;" class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</a>`
+        : `<span class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</span>`;
       html += `<tr>
         <td><span class="pos ${posClass}">${posIcon}</span></td>
         <td>
-          <span class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</span>
+          ${nomeHtml}
           ${r.instagram ? `<br><a href="https://instagram.com/${r.instagram}" target="_blank" style="font-size:12px; color:#888; text-decoration:none;">@${r.instagram}</a>` : ''}
         </td>
         <td class="hide-mobile"><span class="cidade">${r.cidade || '—'}</span></td>

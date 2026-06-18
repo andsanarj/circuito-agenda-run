@@ -172,6 +172,20 @@
     </div>
   </div>
 
+  <!-- Compartilhar perfil -->
+  <div style="background:#fff; border-radius:10px; border:0.5px solid #e0e7ef; padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+    <p style="font-size:13px; color:#555; margin:0; flex:1; min-width:160px;">
+      Compartilhe seu perfil público e mostre seu ranking para outros corredores.
+    </p>
+    <div>
+      <button id="btnCompartilhar" data-url="" onclick="compartilharPerfil(this)"
+        style="background:#1F4E79; color:#fff; border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:1px; white-space:nowrap;">
+        📤 Compartilhar perfil
+      </button>
+      <div id="shareOkPerfil" style="font-size:12px; color:#1a7a4a; margin-top:4px; display:none; text-align:center;">✅ Link copiado!</div>
+    </div>
+  </div>
+
   <!-- ── MINHAS CORRIDAS ──────────────────────────────────────── -->
   <div class="card">
     <div class="card-title">
@@ -286,6 +300,7 @@
 
   let modoEdicao = false;
   let corredorIdGlobal = null;
+  let corredorInstagramGlobal = null;
   let temporadaAtual = 'Temporada atual';
 
   async function init() {
@@ -310,6 +325,14 @@
     if (!corredor) { window.location.href = 'cadastro_corredor.html'; return; }
 
     corredorIdGlobal = corredor.id;
+    corredorInstagramGlobal = corredor.instagram || null;
+
+    // Exibir botão compartilhar com URL correta
+    const shareUrl = corredor.instagram
+      ? `${location.origin}/corredor.html?u=${corredor.instagram}`
+      : `${location.origin}/corredor.html?id=${corredor.id}`;
+    const btnShare = document.getElementById('btnCompartilhar');
+    if (btnShare) btnShare.setAttribute('data-url', shareUrl);
 
     // Preencher campos do perfil
     document.getElementById('nomeCorreder').textContent = corredor.nome.split(' ')[0];
@@ -769,6 +792,17 @@
     btn.disabled = false;
     btn.textContent = 'Salvar alterações';
   });
+
+  function compartilharPerfil(btn) {
+    const url = btn.getAttribute('data-url');
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      const ok = document.getElementById('shareOkPerfil');
+      if (ok) { ok.style.display = 'block'; setTimeout(() => { ok.style.display = 'none'; }, 3000); }
+    }).catch(() => {
+      prompt('Copie o link do seu perfil:', url);
+    });
+  }
 
   async function sair() {
     await client.auth.signOut();
