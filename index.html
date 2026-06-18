@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Circuito Agenda Run — Ranking de Corridas de Rua da Grande SP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; }
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; color: #1a1a1a; }
+  h1, h2, h3, h4 { font-family: 'Barlow Condensed', sans-serif; }
 
   /* ── HERO ── */
   .hero {
@@ -25,28 +28,29 @@
   }
   .hero-inner { position: relative; max-width: 800px; margin: 0 auto; }
   .hero-logo { width: 110px; margin-bottom: 24px; border-radius: 18px; }
-  .hero h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+  .hero h1 { font-size: 3.4rem; font-weight: 800; letter-spacing: 1px; line-height: 1.05; text-transform: uppercase; }
   .hero h1 span { color: #4CBFCB; }
   .hero-tagline {
-    font-size: 1.35rem; font-weight: 600; margin: 16px 0 12px;
-    color: #E8622A; letter-spacing: 1px; text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.05rem; font-weight: 600; margin: 16px 0 12px;
+    color: #E8622A; letter-spacing: 2px; text-transform: uppercase;
   }
-  .hero-sub { font-size: 1.05rem; color: #c8d8e8; max-width: 580px; margin: 0 auto 36px; line-height: 1.6; }
+  .hero-sub { font-family: 'Inter', sans-serif; font-size: 1rem; color: #c8d8e8; max-width: 540px; margin: 0 auto 36px; line-height: 1.7; }
   .btn-primary {
     display: inline-block; background: #E8622A; color: white;
-    padding: 16px 40px; border-radius: 50px; font-size: 1.05rem;
-    font-weight: 700; text-decoration: none; letter-spacing: 0.5px;
-    box-shadow: 0 4px 20px rgba(232,98,42,0.4);
-    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 15px 40px; border-radius: 6px; font-size: 0.95rem;
+    font-weight: 700; text-decoration: none; letter-spacing: 1.5px;
+    text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif;
+    transition: background 0.2s, transform 0.2s;
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,98,42,0.5); }
+  .btn-primary:hover { background: #c94f1f; transform: translateY(-2px); }
   .hero-note { margin-top: 16px; font-size: 0.85rem; color: #7fa8c8; }
 
   /* ── COMO FUNCIONA ── */
   .section { padding: 80px 20px; }
   .section-title {
-    text-align: center; font-size: 2rem; font-weight: 800;
-    color: #1F4E79; margin-bottom: 12px;
+    text-align: center; font-size: 2.4rem; font-weight: 800;
+    color: #1F4E79; margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
   }
   .section-sub { text-align: center; color: #555; font-size: 1rem; margin-bottom: 56px; }
   .steps { display: flex; gap: 32px; max-width: 900px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
@@ -66,7 +70,7 @@
   .step p { font-size: 0.92rem; color: #555; line-height: 1.5; }
 
   /* ── PONTUAÇÃO ── */
-  .pts-section { background: #1F4E79; color: white; padding: 80px 20px; }
+  .pts-section { background: #0F2D4A; color: white; padding: 80px 20px; border-top: 3px solid #E8622A; }
   .pts-section .section-title { color: white; }
   .pts-section .section-sub { color: #a8c8e8; }
   .pts-cards { display: flex; gap: 24px; max-width: 800px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
@@ -75,7 +79,7 @@
     padding: 32px 28px; text-align: center; flex: 1; min-width: 180px; max-width: 220px;
     border: 1px solid rgba(255,255,255,0.15);
   }
-  .pts-num { font-size: 3rem; font-weight: 900; color: #4CBFCB; line-height: 1; }
+  .pts-num { font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 800; color: #4CBFCB; line-height: 1; }
   .pts-label { font-size: 0.9rem; color: #c8d8e8; margin-top: 8px; line-height: 1.4; }
   .pts-total {
     text-align: center; margin-top: 40px;
@@ -102,9 +106,11 @@
   .cal-box p { color: #555; line-height: 1.6; margin-bottom: 28px; }
   .btn-secondary {
     display: inline-block; border: 2px solid #1F4E79; color: #1F4E79;
-    padding: 12px 32px; border-radius: 50px; font-size: 0.95rem;
-    font-weight: 700; text-decoration: none;
+    padding: 12px 32px; border-radius: 6px; font-size: 0.9rem;
+    font-weight: 700; text-decoration: none; letter-spacing: 1px;
+    text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif;
   }
+  .btn-secondary:hover { background: #1F4E79; color: #fff; }
 
   /* ── RANKING ── */
   .ranking-section { padding: 80px 20px; }
@@ -135,7 +141,7 @@
   .ranking-cta p { color: #555; margin-bottom: 16px; }
 
   /* ── ORGANIZADORES ── */
-  .org-section { background: linear-gradient(135deg, #0d2d4a, #1F4E79); color: white; padding: 80px 20px; text-align: center; }
+  .org-section { background: #0F2D4A; border-top: 3px solid #E8622A; color: white; padding: 80px 20px; text-align: center; }
   .org-section .section-title { color: white; }
   .org-section .section-sub { color: #a8c8e8; max-width: 560px; margin: 0 auto 48px; }
   .org-benefits { display: flex; gap: 24px; max-width: 800px; margin: 0 auto 48px; flex-wrap: wrap; justify-content: center; }
@@ -145,9 +151,11 @@
   .org-benefit p { font-size: 0.85rem; color: #a8c8e8; line-height: 1.5; }
   .btn-white {
     display: inline-block; background: white; color: #1F4E79;
-    padding: 16px 40px; border-radius: 50px; font-size: 1rem;
-    font-weight: 700; text-decoration: none;
+    padding: 15px 40px; border-radius: 6px; font-size: 0.95rem;
+    font-weight: 700; text-decoration: none; letter-spacing: 1.5px;
+    text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif;
   }
+  .btn-white:hover { background: #f0f4f8; }
 
   /* ── NAV ── */
   nav {
@@ -217,13 +225,11 @@
   <div class="hero-inner">
     <img src="logo.png" alt="Agenda Run" class="hero-logo">
     <h1>Circuito<br><span>Agenda Run</span></h1>
-    <p class="hero-tagline">Corra. Pontue. Suba no ranking.</p>
+    <p class="hero-tagline">Cada corrida conta. Cada ponto importa.</p>
     <p class="hero-sub">
-      A competição que não termina quando você cruza a linha de chegada.
-      Acumule pontos em corridas selecionadas da Grande São Paulo e dispute
-      o ranking da temporada 2026.
+      Acumule pontos em corridas da Grande São Paulo e dispute o ranking da temporada. A competição não termina quando você cruza a linha de chegada.
     </p>
-    <a href="cadastro_corredor.html" class="btn-primary">Faça seu pré-cadastro — é grátis</a>
+    <a href="cadastro_corredor.html" class="btn-primary">Criar conta grátis</a>
     <p class="hero-note">Estreia: Em breve · Grande São Paulo</p>
   </div>
 </section>
