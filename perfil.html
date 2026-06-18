@@ -460,11 +460,12 @@
       <h4>${isRejeitado ? '✏️ Corrigir resultado' : '📋 Registrar minha participação'}</h4>
       ${motivoHtml}
       <div class="info-pontos-form">
-        🏆 <strong>2 pts</strong> por participação &nbsp;·&nbsp; <strong>+1 pt bônus</strong> para seguidores do @agenda_run &nbsp;·&nbsp; <em>(após validação)</em>
+        🏆 <strong>2 pts</strong> por participação &nbsp;·&nbsp; <strong>+1 pt bônus</strong> para assinantes do @agendarun &nbsp;·&nbsp; <em>(pontuação aplicada na validação da assinatura no dia da aprovação do resultado)</em>
       </div>
       <div class="form-group">
-        <label>Número de peito *</label>
+        <label>NÚMERO DE PEITO</label>
         <input type="text" id="peito-${eventoId}" placeholder="Ex: 478" value="${r.numero_peito || ''}" required>
+        <small style="display:block; margin-top:5px; font-size:12px; color:#888; line-height:1.4;">Obrigatório o número que usou na prova para validação do resultado. Não serão aceitas corridas feitas por terceiros.</small>
       </div>
       <label class="checkbox-row">
         <input type="checkbox" id="finalizou-${eventoId}" ${checked} onchange="toggleCamposFinalizacao('${eventoId}')">
