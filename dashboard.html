@@ -270,7 +270,7 @@
 
     const { data: eventos } = await sb
       .from('eventos')
-      .select('id, nome, data, distancia, cidade')
+      .select('id, nome, data, distancia, cidade, cupom_desconto')
       .gte('data', hoje)
       .order('data', { ascending: true })
       .limit(5);
@@ -296,6 +296,7 @@
       const dia = dataEv ? dataEv.getDate().toString().padStart(2, '0') : '—';
       const mes = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '';
       const chips = [ev.distancia, ev.cidade].filter(Boolean).map(t => `<span class="ev-chip">${t}</span>`).join('');
+      const cupomChip = ev.cupom_desconto ? `<span class="ev-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ ${ev.cupom_desconto}</span>` : '';
       const jaInscrito = naLista.has(ev.id);
 
       const botao = jaInscrito
@@ -307,7 +308,7 @@
           <div class="ev-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div></div>
           <div class="ev-info">
             <div class="ev-nome">${ev.nome}</div>
-            <div class="ev-chips">${chips}</div>
+            <div class="ev-chips">${chips}${cupomChip}</div>
           </div>
           <div class="ev-acao">${botao}</div>
         </div>
