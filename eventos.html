@@ -134,7 +134,7 @@
     // Buscar todos os eventos
     const { data: eventos } = await sb
       .from('eventos')
-      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking')
+      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking, cupom_desconto')
       .order('data', { ascending: false });
 
     // Buscar inscrições do corredor (se logado)
@@ -203,6 +203,10 @@
         ? `<a href="${ev.link_inscricao}" target="_blank" class="link-perfil" style="margin-top:6px;">🔗 Inscrições abertas →</a>`
         : '';
 
+      const cupomTag = ev.cupom_desconto
+        ? `<span class="meta-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ Cupom: ${ev.cupom_desconto}</span>`
+        : '';
+
       return `
         <div class="evento-card ${passado && !resultado ? 'passado' : ''}">
           <div class="barra"></div>
@@ -210,6 +214,7 @@
             <div class="evento-info">
               <div class="ev-nome">${ev.nome}</div>
               <div class="ev-meta">${chips}</div>
+              ${cupomTag ? `<div style="margin-top:6px;">${cupomTag}</div>` : ''}
               ${statusBadge}
             </div>
             <div class="evento-acao" style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">

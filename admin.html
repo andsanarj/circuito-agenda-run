@@ -1068,7 +1068,7 @@
   async function carregarEventos() {
     const { data } = await sb
       .from('eventos')
-      .select('id, nome, data, distancia, cidade, url_runking')
+      .select('id, nome, data, distancia, cidade, url_runking, cupom_desconto')
       .order('data', { ascending: false });
 
     const tbody = document.getElementById('corpoEventos');
@@ -1105,9 +1105,45 @@
             ${cnt.total} submissão(ões)
             ${cnt.pendentes > 0 ? `<span class="tag tag-pendente">${cnt.pendentes} pendente${cnt.pendentes > 1 ? 's' : ''}</span>` : ''}
           </td>
+          <td style="min-width:180px;">
+            <div id="cupom-view-${ev.id}" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              ${ev.cupom_desconto
+                ? `<span style="background:#fff8e1; color:#b07800; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">🏷️ ${ev.cupom_desconto}</span>`
+                : '<span style="color:#aaa; font-size:12px;">Sem cupom</span>'}
+              <button class="btn btn-gray btn-sm" onclick="abrirCupom('${ev.id}', '${ev.cupom_desconto || ''}')">✏️</button>
+            </div>
+            <div id="cupom-form-${ev.id}" style="display:none; margin-top:4px;">
+              <input type="text" id="cupom-input-${ev.id}" value="${ev.cupom_desconto || ''}" placeholder="Ex: CIRCUITO10" maxlength="50"
+                style="width:100%; padding:6px 10px; border:1px solid #ddd; border-radius:6px; font-size:13px; margin-bottom:4px;">
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-green btn-sm" onclick="salvarCupom('${ev.id}')">Salvar</button>
+                <button class="btn btn-red btn-sm" onclick="salvarCupom('${ev.id}', true)">Remover</button>
+                <button class="btn btn-gray btn-sm" onclick="fecharCupom('${ev.id}')">✕</button>
+              </div>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
+  }
+
+  // ── CUPOM DE DESCONTO ────────────────────────────────────────
+  function abrirCupom(eventoId, valorAtual) {
+    document.getElementById(`cupom-view-${eventoId}`).style.display = 'none';
+    document.getElementById(`cupom-form-${eventoId}`).style.display = 'block';
+    document.getElementById(`cupom-input-${eventoId}`).focus();
+  }
+
+  function fecharCupom(eventoId) {
+    document.getElementById(`cupom-view-${eventoId}`).style.display = 'flex';
+    document.getElementById(`cupom-form-${eventoId}`).style.display = 'none';
+  }
+
+  async function salvarCupom(eventoId, remover = false) {
+    const valor = remover ? null : document.getElementById(`cupom-input-${eventoId}`).value.trim().toUpperCase() || null;
+    const { error } = await sb.from('eventos').update({ cupom_desconto: valor }).eq('id', eventoId);
+    if (error) { alert('Erro ao salvar cupom: ' + error.message); return; }
+    await carregarEventos();
   }
 
   document.getElementById('formEvento').addEventListener('submit', async (e) => {
