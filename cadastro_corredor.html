@@ -71,7 +71,7 @@
 
     <div class="info-pontos">
       <strong>🏆 Como funciona a pontuação</strong>
-      2 pts por participação · +1 pt bônus para assinantes do @AGENDA_RUN_SP · Máximo por prova: 3 pontos
+      2 pts por participação · +1 pt assinante @AGENDA_RUN_SP · +1 pt Kit Run Express · Máximo por prova: 4 pontos
     </div>
 
     <form id="formCorredor">
@@ -287,17 +287,16 @@
         btn.textContent = 'Criar minha conta — é grátis';
         return;
       }
-      // Fazer login imediatamente para ativar a sessão antes do insert
-      const { data: loginData, error: loginError } = await client.auth.signInWithPassword({ email, password: senha });
-      if (loginError) {
-        msg.textContent = 'Conta criada, mas erro ao ativar sessão: ' + loginError.message;
-        msg.className = 'msg error';
+      // Usar a sessão retornada pelo signUp (funciona quando confirmação de e-mail está desativada)
+      // Se o Supabase exigir confirmação, authData.session será null e mostramos mensagem adequada
+      if (!authData.session && !authData.user) {
+        msg.textContent = '✅ Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.';
+        msg.className = 'msg success';
         btn.disabled = false;
         btn.textContent = 'Criar minha conta — é grátis';
         return;
       }
-      // Pegar ID da sessão ativa (mais confiável — authData.user pode vir nulo)
-      userId = loginData?.user?.id || authData?.user?.id;
+      userId = authData.session?.user?.id || authData.user?.id;
       if (!userId) {
         msg.textContent = 'Erro ao obter ID do usuário. Tente novamente ou contate o suporte.';
         msg.className = 'msg error';

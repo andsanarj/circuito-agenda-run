@@ -246,12 +246,15 @@
     const { error } = await client.from('organizadores').insert([dados]);
 
     if (error) {
-      msg.textContent = 'Erro ao enviar: ' + error.message;
+      const msgErro = error.message.includes('organizadores_email_data_unique')
+        ? 'Você já possui um evento cadastrado nessa data. Caso precise de ajuda, entre em contato conosco.'
+        : 'Erro ao enviar: ' + error.message;
+      msg.textContent = msgErro;
       msg.className = 'msg error';
       btn.disabled = false;
       btn.textContent = 'Enviar solicitação';
     } else {
-      msg.textContent = '✅ Solicitação recebida! Entraremos em contato em até 48 horas no e-mail ' + dados.email + '.';
+      msg.textContent = '✅ Solicitação recebida! Entraremos em contato em até 7 dias pelos e-mails agendarun1@gmail.com ou agendarun@agendarun.com.br.';
       msg.className = 'msg success';
       document.getElementById('formOrganizador').reset();
       distancias.length = 0; renderTags();
