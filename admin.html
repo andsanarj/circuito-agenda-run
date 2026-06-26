@@ -197,8 +197,9 @@
         <h2>✅ Validação de Resultados</h2>
         <p style="font-size:13px; color:#888; margin-top:2px;">Revise cada submissão antes de aprovar. Confira o link oficial para validar as informações.</p>
       </div>
-      <div style="display:flex; gap:8px; align-items:center;">
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span class="badge-count" id="countPendentes">0 pendentes</span>
+        <button class="btn btn-green btn-sm" onclick="aprovarTodos()">✅ Aprovar todos (2 pts)</button>
         <button class="btn btn-gray btn-sm" onclick="carregarPendentes()">🔄 Atualizar</button>
       </div>
     </div>
@@ -917,6 +918,76 @@
     }
   }
 
+  // ── APROVAR TODOS PENDENTES ───────────────────────────────────
+  async function aprovarTodos() {
+    const msg = document.getElementById('msgValidacao');
+    if (!confirm('Aprovar todos os resultados pendentes com 2 pts (sem bônus)?')) return;
+
+    const { data: pendentes, error: errBusca } = await sb
+      .from('resultados').select('id').eq('status', 'pendente');
+
+    if (errBusca || !pendentes || pendentes.length === 0) {
+      msg.textContent = pendentes?.length === 0 ? 'Nenhum resultado pendente.' : 'Erro ao buscar pendentes.';
+      msg.className = 'msg error';
+      return;
+    }
+
+    const ids = pendentes.map(r => r.id);
+    const { error } = await sb.from('resultados').update({
+      status: 'aprovado', pontos: 2,
+      validado_em: new Date().toISOString(), motivo_rejeicao: null,
+    }).in('id', ids);
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = `✅ ${ids.length} resultado${ids.length !== 1 ? 's' : ''} aprovado${ids.length !== 1 ? 's' : ''} com 2 pts!`;
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 5000);
+      await Promise.all([carregarPendentes(), carregarHistorico()]);
+    }
+  }
+
+  // ── EXCLUIR RESULTADO ─────────────────────────────────────────
+  async function excluirResultado(resultadoId) {
+    const msg = document.getElementById('msgValidacao');
+    if (!confirm('Tem certeza que deseja excluir este resultado? Esta ação não pode ser desfeita.')) return;
+
+    const { error } = await sb.from('resultados').delete().eq('id', resultadoId);
+
+    if (error) {
+      msg.textContent = 'Erro ao excluir: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = '🗑️ Resultado excluído.';
+      msg.className = 'msg success';
+      document.getElementById(`hist-row-${resultadoId}`)?.remove();
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+    }
+  }
+
+  // ── EDITAR BÔNUS DE RESULTADO APROVADO ───────────────────────
+  async function salvarBonus(resultadoId) {
+    const msg = document.getElementById('msgValidacao');
+    const isInsta = document.getElementById(`h-insta-${resultadoId}`)?.checked;
+    const isKit   = document.getElementById(`h-kit-${resultadoId}`)?.checked;
+    const pontos  = 2 + (isInsta ? 1 : 0) + (isKit ? 1 : 0);
+
+    const { error } = await sb.from('resultados').update({ pontos }).eq('id', resultadoId);
+
+    if (error) {
+      msg.textContent = 'Erro ao salvar bônus: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      document.getElementById(`pts-${resultadoId}`).textContent = pontos;
+      document.getElementById(`bonus-form-${resultadoId}`).style.display = 'none';
+      msg.textContent = `✅ Bônus atualizado — ${pontos} pts.`;
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+    }
+  }
+
   // ── HISTÓRICO ────────────────────────────────────────────────
   async function carregarHistorico() {
     const { data } = await sb
@@ -939,18 +1010,40 @@
 
     let html = `
       <table>
-        <thead><tr><th>Corredor</th><th>Evento</th><th>Status</th><th>Pts</th><th>Validado em</th><th>Obs.</th></tr></thead>
+        <thead><tr><th>Corredor</th><th>Evento</th><th>Status</th><th>Pts</th><th>Validado em</th><th>Ações</th></tr></thead>
         <tbody>
     `;
     data.forEach(r => {
       const dataVal = r.validado_em ? new Date(r.validado_em).toLocaleString('pt-BR') : '—';
-      html += `<tr>
+      const pts = r.pontos || 0;
+      const bonusInsta  = pts >= 3; // heurística: tinha bônus instagram
+      html += `<tr id="hist-row-${r.id}">
         <td>${r.corredores?.nome || '?'}</td>
         <td>${r.eventos?.nome || '?'}</td>
         <td>${tagMap[r.status] || r.status}</td>
-        <td><strong>${r.pontos || 0}</strong></td>
+        <td><strong id="pts-${r.id}">${pts}</strong></td>
         <td style="font-size:11px;">${dataVal}</td>
-        <td style="font-size:12px; color:#888;">${r.motivo_rejeicao || '—'}</td>
+        <td>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:140px;">
+            ${r.status === 'aprovado' ? `
+            <div id="bonus-form-${r.id}" style="display:none; font-size:11px; background:#f8fafc; border:1px solid #e0e7ef; border-radius:6px; padding:8px; margin-bottom:4px;">
+              <div style="font-weight:700; color:#1F4E79; margin-bottom:6px;">Editar bônus:</div>
+              <label style="display:flex; align-items:center; gap:5px; margin-bottom:4px; cursor:pointer;">
+                <input type="checkbox" id="h-insta-${r.id}" style="width:auto;" ${pts === 3 || pts === 4 ? 'checked' : ''}>
+                +1 @AGENDA_RUN_SP
+              </label>
+              <label style="display:flex; align-items:center; gap:5px; margin-bottom:8px; cursor:pointer;">
+                <input type="checkbox" id="h-kit-${r.id}" style="width:auto;" ${pts === 4 ? 'checked' : ''}>
+                +1 Kit Run Express
+              </label>
+              <button class="btn btn-green btn-sm" onclick="salvarBonus('${r.id}')">Salvar</button>
+              <button class="btn btn-gray btn-sm" onclick="document.getElementById('bonus-form-${r.id}').style.display='none'">Cancelar</button>
+            </div>
+            <button class="btn btn-gray btn-sm" onclick="document.getElementById('bonus-form-${r.id}').style.display=document.getElementById('bonus-form-${r.id}').style.display==='none'?'block':'none'">✏️ Bônus</button>
+            ` : ''}
+            <button class="btn btn-red btn-sm" onclick="excluirResultado('${r.id}')">🗑️ Excluir</button>
+          </div>
+        </td>
       </tr>`;
     });
     html += '</tbody></table>';
