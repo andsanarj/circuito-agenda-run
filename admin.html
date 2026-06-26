@@ -215,6 +215,11 @@
       <h2>📊 Histórico de Validações</h2>
       <button class="btn btn-gray btn-sm" onclick="carregarHistorico()">🔄 Atualizar</button>
     </div>
+    <div style="padding:12px 20px; border-bottom:1px solid #f0f0f0;">
+      <input type="text" id="buscaHistorico" placeholder="🔍 Buscar por corredor ou evento..."
+        oninput="filtrarHistorico()"
+        style="width:100%; max-width:380px; padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px;">
+    </div>
     <div id="tabelaHistorico">
       <div class="empty">Carregando...</div>
     </div>
@@ -986,6 +991,15 @@
       msg.className = 'msg success';
       setTimeout(() => { msg.className = 'msg'; }, 3000);
     }
+  }
+
+  function filtrarHistorico() {
+    const termo = document.getElementById('buscaHistorico').value.toLowerCase().trim();
+    const linhas = document.querySelectorAll('#tabelaHistorico tbody tr');
+    linhas.forEach(tr => {
+      const texto = tr.textContent.toLowerCase();
+      tr.style.display = !termo || texto.includes(termo) ? '' : 'none';
+    });
   }
 
   // ── HISTÓRICO ────────────────────────────────────────────────
