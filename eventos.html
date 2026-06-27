@@ -58,6 +58,8 @@
     .btn-participar:hover { background: #c94f1f; }
     .btn-na-lista { background: #e6f9f0; color: #1a7a4a; border: 2px solid #1a7a4a; padding: 9px 20px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: default; white-space: nowrap; }
     .btn-passado { background: #f0f4f8; color: #aaa; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: default; white-space: nowrap; }
+    .btn-remover { background: none; border: none; color: #b00020; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
+    .btn-remover:hover { color: #8a0018; }
     .btn-login-evt { background: #1F4E79; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
     .btn-login-evt:hover { background: #163d62; }
     .link-perfil { display: block; font-size: 12px; color: #888; margin-top: 6px; text-decoration: none; }
@@ -210,10 +212,14 @@
       } else if (!corredorId) {
         botao = `<a href="cadastro_corredor.html" class="btn-login-evt">Completar cadastro</a>`;
       } else if (resultado) {
-        const linkPerfil = resultado.status === 'na_lista'
-          ? `<a href="perfil.html" class="link-perfil">Registrar resultado →</a>`
-          : `<a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
-        botao = `<span class="btn-na-lista">✓ Na minha lista</span>${linkPerfil}`;
+        if (resultado.status === 'na_lista') {
+          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
+                   <a href="perfil.html" class="link-perfil">Registrar resultado →</a>
+                   <button class="btn-remover" onclick="removerDaLista('${resultado.id}', this)">✕ Remover da lista</button>`;
+        } else {
+          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
+                   <a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
+        }
       } else if (passado) {
         botao = `<button class="btn-passado" disabled>Evento encerrado</button>`;
       } else {
@@ -244,6 +250,20 @@
         </div>
       `;
     }).join('');
+  }
+
+  async function removerDaLista(resultadoId, btn) {
+    if (!confirm('Remover este evento da sua lista?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Removendo...';
+    const { error } = await sb.from('resultados').delete().eq('id', resultadoId);
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = '✕ Remover da lista';
+      alert('Erro: ' + error.message);
+    } else {
+      await carregarEventos();
+    }
   }
 
   async function entrarNaLista(eventoId, btn) {
