@@ -40,10 +40,19 @@
     .evento-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; overflow: hidden; display: flex; align-items: stretch; }
     .evento-card .barra { width: 6px; background: #1F4E79; flex-shrink: 0; }
     .evento-card.passado .barra { background: #ccc; }
-    .evento-card .corpo { flex: 1; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .evento-card .corpo { flex: 1; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .ev-date-box { background: #1F4E79; color: #fff; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 52px; flex-shrink: 0; }
+    .ev-date-box .dia { font-size: 22px; font-weight: 800; line-height: 1; font-family: 'Barlow Condensed', sans-serif; }
+    .ev-date-box .mes { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; }
+    .evento-card.passado .ev-date-box { background: #bbb; }
+    .ev-main { flex: 1; }
     .evento-info .ev-nome { font-size: 17px; font-weight: 700; color: #1F4E79; margin-bottom: 6px; }
     .evento-info .ev-meta { display: flex; flex-wrap: wrap; gap: 8px; }
     .meta-chip { display: inline-flex; align-items: center; gap: 4px; background: #f0f4f8; color: #555; font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+    .pts-badge-ev { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
+    .pts-bronze { background: #f5deb3; color: #7a4a00; }
+    .pts-prata  { background: #e8e8e8; color: #444; }
+    .pts-ouro   { background: #fff3cd; color: #7a5800; }
     .evento-acao { flex-shrink: 0; text-align: right; }
     .btn-participar { background: #E8622A; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
     .btn-participar:hover { background: #c94f1f; }
@@ -134,8 +143,8 @@
     // Buscar todos os eventos
     const { data: eventos } = await sb
       .from('eventos')
-      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking, cupom_desconto')
-      .order('data', { ascending: false });
+      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking, cupom_desconto, pontuacao')
+      .order('data', { ascending: true });
 
     // Buscar inscrições do corredor (se logado)
     let mapaResultados = {};
@@ -159,24 +168,39 @@
 
     div.innerHTML = eventos.map(ev => {
       const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
-      const dataFmt = dataEv ? dataEv.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
       const passado = dataEv && dataEv < hoje;
       const resultado = mapaResultados[ev.id] || null;
 
-      // Horário formatado
-      const horarioFmt = ev.horario_largada ? ev.horario_largada.substring(0, 5) : null;
+      const dia = dataEv ? dataEv.getDate().toString().padStart(2, '0') : '—';
+      const mes = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '';
+      const ano = dataEv ? dataEv.getFullYear() : '';
 
       // Chips de meta info
       const chips = [
-        dataFmt ? `📅 ${dataFmt}` : null,
-        horarioFmt ? `🕖 Largada ${horarioFmt}` : null,
         ev.distancia ? `🏃 ${ev.distancia}` : null,
-        ev.cidade ? `📍 ${ev.cidade}` : null,
-        ev.numero_permit ? `📋 PERMIT ${ev.numero_permit}` : null,
+        ev.cidade    ? `📍 ${ev.cidade}` : null,
       ].filter(Boolean).map(t => `<span class="meta-chip">${t}</span>`).join('');
 
-      // Badge de status se já inscrito
-      const statusMap = { na_lista: '', pendente: '<span class="tag-status tag-pendente">⏳ Resultado pendente</span>', aprovado: `<span class="tag-status tag-aprovado">✅ Aprovado · ${resultado?.pontos || 0} pts</span>`, rejeitado: '<span class="tag-status tag-rejeitado">❌ Resultado rejeitado</span>' };
+      // Badge de pontuação
+      const pts = parseFloat(ev.pontuacao);
+      const ptsBadge = !isNaN(pts)
+        ? pts === 0.5 ? `<span class="pts-badge-ev pts-bronze">🥉 Bronze</span>`
+        : pts === 2   ? `<span class="pts-badge-ev pts-ouro">🥇 Ouro</span>`
+        :               `<span class="pts-badge-ev pts-prata">🥈 Prata</span>`
+        : '';
+
+      // Cupom
+      const cupomTag = ev.cupom_desconto
+        ? `<span class="meta-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ ${ev.cupom_desconto}</span>`
+        : '';
+
+      // Badge de status
+      const statusMap = {
+        na_lista:  '',
+        pendente:  '<span class="tag-status tag-pendente">⏳ Resultado pendente</span>',
+        aprovado:  `<span class="tag-status tag-aprovado">✅ Aprovado · ${resultado?.pontos || 0} pts</span>`,
+        rejeitado: '<span class="tag-status tag-rejeitado">❌ Resultado rejeitado</span>',
+      };
       const statusBadge = resultado ? (statusMap[resultado.status] || '') : '';
 
       // Botão de ação
@@ -186,13 +210,10 @@
       } else if (!corredorId) {
         botao = `<a href="cadastro_corredor.html" class="btn-login-evt">Completar cadastro</a>`;
       } else if (resultado) {
-        if (resultado.status === 'na_lista') {
-          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
-                   <a href="perfil.html" class="link-perfil">Registrar resultado →</a>`;
-        } else {
-          botao = `<span class="btn-na-lista">✓ Na minha lista</span>
-                   <a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
-        }
+        const linkPerfil = resultado.status === 'na_lista'
+          ? `<a href="perfil.html" class="link-perfil">Registrar resultado →</a>`
+          : `<a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
+        botao = `<span class="btn-na-lista">✓ Na minha lista</span>${linkPerfil}`;
       } else if (passado) {
         botao = `<button class="btn-passado" disabled>Evento encerrado</button>`;
       } else {
@@ -200,22 +221,20 @@
       }
 
       const linkInscricao = ev.link_inscricao
-        ? `<a href="${ev.link_inscricao}" target="_blank" class="link-perfil" style="margin-top:6px;">🔗 Inscrições abertas →</a>`
-        : '';
-
-      const cupomTag = ev.cupom_desconto
-        ? `<span class="meta-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ Cupom: ${ev.cupom_desconto}</span>`
+        ? `<a href="${ev.link_inscricao}" target="_blank" class="link-perfil" style="margin-top:4px;">🔗 Inscrições abertas →</a>`
         : '';
 
       return `
         <div class="evento-card ${passado && !resultado ? 'passado' : ''}">
           <div class="barra"></div>
           <div class="corpo">
-            <div class="evento-info">
-              <div class="ev-nome">${ev.nome}</div>
-              <div class="ev-meta">${chips}</div>
-              ${cupomTag ? `<div style="margin-top:6px;">${cupomTag}</div>` : ''}
-              ${statusBadge}
+            <div class="ev-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div><div style="font-size:10px; color:#a8c8e8;">${ano}</div></div>
+            <div class="ev-main">
+              <div class="evento-info">
+                <div class="ev-nome">${ev.nome} ${ptsBadge}</div>
+                <div class="ev-meta">${chips}${cupomTag}</div>
+                ${statusBadge}
+              </div>
             </div>
             <div class="evento-acao" style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
               ${botao}
