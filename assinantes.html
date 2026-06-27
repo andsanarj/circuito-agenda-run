@@ -69,6 +69,16 @@
     .prazo-chip.vencido { background: #fdecea; color: #b00020; }
     .obs-text { color: #666; font-size: 13px; }
 
+    .btn-interesse {
+      background: #EBF3FB; color: #1F4E79; border: none; padding: 6px 14px;
+      border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: background 0.2s;
+    }
+    .btn-interesse:hover { background: #d0e8f8; }
+    .btn-interesse.ativo { background: #e6f9f0; color: #1a7a4a; }
+    .btn-interesse.ativo:hover { background: #fdecea; color: #b00020; }
+    .btn-interesse.ativo:hover::after { content: ' (cancelar)'; }
+
     .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
     .loading { text-align: center; padding: 80px; color: #888; font-size: 15px; }
 
@@ -147,7 +157,7 @@
 
     const { data: corredor } = await sb
       .from('corredores')
-      .select('nome, assinante')
+      .select('id, nome, assinante')
       .eq('user_id', session.user.id)
       .single();
 
@@ -156,23 +166,28 @@
     if (!corredor || !corredor.assinante) {
       document.getElementById('bloqueio').style.display = 'block';
     } else {
+      corredorIdGlobal = corredor.id;
       document.getElementById('conteudo').style.display = 'block';
-      carregarKitRun();
+      carregarKitRun(corredor.id);
     }
   }
 
-  async function carregarKitRun() {
-    const div = document.getElementById('listaKitRun');
-    const { data: eventos, error } = await sb
-      .from('kit_run_eventos')
-      .select('*')
-      .order('data', { ascending: true });
+  let corredorIdGlobal = null;
 
-    if (error || !eventos || eventos.length === 0) {
+  async function carregarKitRun(corredorId) {
+    const div = document.getElementById('listaKitRun');
+
+    const [{ data: eventos }, { data: interesses }] = await Promise.all([
+      sb.from('kit_run_eventos').select('*').order('data', { ascending: true }),
+      sb.from('kit_run_interesses').select('kit_run_evento_id').eq('corredor_id', corredorId)
+    ]);
+
+    if (!eventos || eventos.length === 0) {
       div.innerHTML = '<div class="empty">Nenhum evento cadastrado pela Kit Run Express ainda.</div>';
       return;
     }
 
+    const comInteresse = new Set((interesses || []).map(i => i.kit_run_evento_id));
     const hoje = new Date(); hoje.setHours(0,0,0,0);
     const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
 
@@ -185,23 +200,68 @@
             <th>Local</th>
             <th>Pedidos até</th>
             <th>Observação</th>
+            <th>Interesse</th>
           </tr>
         </thead>
         <tbody>
           ${eventos.map(ev => {
             const prazoDate = ev.pedidos_ate ? new Date(ev.pedidos_ate + 'T12:00:00') : null;
             const vencido = prazoDate && prazoDate < hoje;
-            return `<tr>
+            const temInteresse = comInteresse.has(ev.id);
+            const btnInteresse = vencido
+              ? `<span style="color:#ccc; font-size:12px;">Encerrado</span>`
+              : temInteresse
+                ? `<button class="btn-interesse ativo" onclick="cancelarInteresse('${ev.id}', this)">✓ Tenho interesse</button>`
+                : `<button class="btn-interesse" onclick="registrarInteresse('${ev.id}', this)">+ Tenho interesse</button>`;
+            return `<tr id="kit-row-${ev.id}">
               <td><strong>${ev.corrida}</strong></td>
               <td>${fmt(ev.data)}</td>
               <td>${ev.local || '—'}</td>
               <td><span class="prazo-chip ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
               <td class="obs-text">${ev.observacao || '—'}</td>
+              <td>${btnInteresse}</td>
             </tr>`;
           }).join('')}
         </tbody>
       </table>
     `;
+  }
+
+  async function registrarInteresse(eventoId, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Registrando...';
+    const { error } = await sb.from('kit_run_interesses').insert([{
+      corredor_id: corredorIdGlobal,
+      kit_run_evento_id: eventoId
+    }]);
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = '+ Tenho interesse';
+      alert('Erro: ' + error.message);
+    } else {
+      btn.className = 'btn-interesse ativo';
+      btn.textContent = '✓ Tenho interesse';
+      btn.disabled = false;
+      btn.onclick = () => cancelarInteresse(eventoId, btn);
+    }
+  }
+
+  async function cancelarInteresse(eventoId, btn) {
+    if (!confirm('Cancelar seu interesse neste evento?')) return;
+    btn.disabled = true;
+    const { error } = await sb.from('kit_run_interesses')
+      .delete()
+      .eq('corredor_id', corredorIdGlobal)
+      .eq('kit_run_evento_id', eventoId);
+    if (error) {
+      btn.disabled = false;
+      alert('Erro: ' + error.message);
+    } else {
+      btn.className = 'btn-interesse';
+      btn.textContent = '+ Tenho interesse';
+      btn.disabled = false;
+      btn.onclick = () => registrarInteresse(eventoId, btn);
+    }
   }
 
   init();
