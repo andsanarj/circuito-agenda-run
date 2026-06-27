@@ -116,6 +116,20 @@
       .crm-stats { grid-template-columns: repeat(2, 1fr); }
       .crm-detail-grid { grid-template-columns: 1fr; }
     }
+    /* Modal edição de evento */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-ev { background: #fff; border-radius: 12px; padding: 28px 32px; max-width: 620px; width: 94%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+    .modal-ev h3 { font-size: 20px; color: #1F4E79; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .btn-fechar-modal { background: none; border: none; font-size: 22px; cursor: pointer; color: #aaa; }
+    .btn-fechar-modal:hover { color: #555; }
+    .btn-salvar-ev { background: #1F4E79; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-salvar-ev:hover { background: #163d62; }
+    .btn-salvar-ev:disabled { background: #aaa; cursor: not-allowed; }
+    .msg-modal-ev { font-size: 13px; padding: 8px 12px; border-radius: 6px; display: none; margin-bottom: 12px; }
+    .msg-modal-ev.error { background: #fdecea; color: #b00020; display: block; }
+    .btn-editar-ev { background: #EBF3FB; color: #1F4E79; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-editar-ev:hover { background: #d0e8f8; }
   </style>
 </head>
 <body>
@@ -319,6 +333,63 @@
   </div>
 
 </div>
+</div>
+
+<!-- Modal edição de evento -->
+<div class="modal-overlay" id="modalEvOverlay" onclick="fecharModalEv(event)">
+  <div class="modal-ev">
+    <h3>✏️ Editar evento <button class="btn-fechar-modal" onclick="fecharModalEv()">×</button></h3>
+    <input type="hidden" id="editEvId">
+    <div class="msg-modal-ev" id="msgModalEv"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome do evento *</label>
+        <input type="text" id="editEvNome">
+      </div>
+      <div class="form-group">
+        <label>Data *</label>
+        <input type="date" id="editEvData">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Distância(s)</label>
+        <input type="text" id="editEvDistancia" placeholder="Ex: 5K, 10K">
+      </div>
+      <div class="form-group">
+        <label>Local</label>
+        <input type="text" id="editEvCidade">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Link de inscrição</label>
+        <input type="url" id="editEvLink">
+      </div>
+      <div class="form-group">
+        <label>Organizador</label>
+        <input type="text" id="editEvOrganizador">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Pontuação *</label>
+        <select id="editEvPontuacao">
+          <option value="0.5">🥉 Bronze — 0,5 ponto</option>
+          <option value="1">🥈 Prata — 1 ponto</option>
+          <option value="2">🥇 Ouro — 2 pontos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cupom de desconto</label>
+        <input type="text" id="editEvCupom" placeholder="Ex: CIRCUITO10" maxlength="50" style="text-transform:uppercase;">
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+      <button class="btn btn-gray" onclick="fecharModalEv()">Cancelar</button>
+      <button class="btn-salvar-ev" id="btnSalvarEvModal" onclick="salvarEdicaoEvento()">Salvar alterações</button>
+    </div>
+  </div>
 </div>
 
 <footer>Circuito Agenda Run · Painel Administrativo</footer>
@@ -1069,6 +1140,8 @@
   }
 
   // ── EVENTOS ──────────────────────────────────────────────────
+  const _evCache = {};
+
   async function carregarEventos() {
     const { data } = await sb
       .from('eventos')
@@ -1101,12 +1174,14 @@
       return p != null ? `${p} pt` : '—';
     };
 
+    data.forEach(ev => { _evCache[ev.id] = ev; });
+
     tbody.innerHTML = data.map(ev => {
       const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const cnt = contPorEvento[ev.id] || { total: 0, pendentes: 0 };
       return `
         <tr>
-          <td><strong>${ev.nome}</strong></td>
+          <td><strong>${ev.nome}</strong><br><button class="btn-editar-ev" style="margin-top:5px;" onclick="abrirEdicaoEvento('${ev.id}')">✏️ Editar</button></td>
           <td>${dataFmt}</td>
           <td>${ev.distancia || '—'}</td>
           <td>${ev.cidade || '—'}</td>
@@ -1136,6 +1211,65 @@
         </tr>
       `;
     }).join('');
+  }
+
+  // ── EDIÇÃO DE EVENTO ─────────────────────────────────────────
+  function abrirEdicaoEvento(id) {
+    const ev = _evCache[id];
+    if (!ev) return;
+    document.getElementById('editEvId').value = ev.id;
+    document.getElementById('editEvNome').value = ev.nome || '';
+    document.getElementById('editEvData').value = ev.data || '';
+    document.getElementById('editEvDistancia').value = ev.distancia || '';
+    document.getElementById('editEvCidade').value = ev.cidade || '';
+    document.getElementById('editEvLink').value = ev.link_inscricao || '';
+    document.getElementById('editEvOrganizador').value = ev.organizador || '';
+    document.getElementById('editEvPontuacao').value = ev.pontuacao != null ? String(ev.pontuacao) : '1';
+    document.getElementById('editEvCupom').value = ev.cupom_desconto || '';
+    document.getElementById('msgModalEv').className = 'msg-modal-ev';
+    document.getElementById('modalEvOverlay').classList.add('open');
+  }
+
+  function fecharModalEv(e) {
+    if (e && e.target !== document.getElementById('modalEvOverlay')) return;
+    document.getElementById('modalEvOverlay').classList.remove('open');
+  }
+
+  async function salvarEdicaoEvento() {
+    const id = document.getElementById('editEvId').value;
+    const nome = document.getElementById('editEvNome').value.trim();
+    const data = document.getElementById('editEvData').value;
+    const msg = document.getElementById('msgModalEv');
+    const btn = document.getElementById('btnSalvarEvModal');
+
+    if (!nome || !data) {
+      msg.textContent = 'Preencha Nome e Data.';
+      msg.className = 'msg-modal-ev error';
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    const { error } = await sb.from('eventos').update({
+      nome,
+      data,
+      distancia:      document.getElementById('editEvDistancia').value.trim() || null,
+      cidade:         document.getElementById('editEvCidade').value.trim() || null,
+      link_inscricao: document.getElementById('editEvLink').value.trim() || null,
+      organizador:    document.getElementById('editEvOrganizador').value.trim() || null,
+      pontuacao:      parseFloat(document.getElementById('editEvPontuacao').value),
+      cupom_desconto: document.getElementById('editEvCupom').value.trim().toUpperCase() || null,
+    }).eq('id', id);
+
+    btn.disabled = false; btn.textContent = 'Salvar alterações';
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'msg-modal-ev error';
+    } else {
+      document.getElementById('modalEvOverlay').classList.remove('open');
+      await carregarEventos();
+    }
   }
 
   // ── CUPOM DE DESCONTO ────────────────────────────────────────
