@@ -112,7 +112,10 @@
   <div class="hero-inner">
     <div>
       <div class="hero-saudacao">Bem-vindo de volta,</div>
-      <div class="hero-nome" id="heroNome">…</div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="hero-nome" id="heroNome">…</div>
+        <a id="btnAreaAssinantes" href="assinantes.html" style="display:none; background:#E8622A; color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; text-decoration:none; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.5px; white-space:nowrap;">⭐ Área exclusiva</a>
+      </div>
       <div class="hero-sub">Temporada 2026 · Grande São Paulo</div>
     </div>
     <div class="hero-stats">
@@ -198,7 +201,7 @@
 
     const { data: corredor } = await sb
       .from('corredores')
-      .select('id, nome')
+      .select('id, nome, assinante')
       .eq('user_id', session.user.id)
       .single();
 
@@ -207,6 +210,7 @@
     corredorId = corredor.id;
     const primeiroNome = corredor.nome.split(' ')[0];
     document.getElementById('heroNome').textContent = corredor.nome;
+    if (corredor.assinante) document.getElementById('btnAreaAssinantes').style.display = 'inline-block';
     document.title = primeiroNome + ' — Circuito Agenda Run';
 
     await Promise.all([
