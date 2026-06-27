@@ -440,7 +440,8 @@
 
       if (r.status === 'na_lista') {
         tagHtml = '<span class="tag tag-nova">📋 Na sua lista</span>';
-        acaoHtml = `<button class="btn-registrar" onclick="abrirForm('${ev.id}', '${r.id}')">Registrar resultado</button>`;
+        acaoHtml = `<button class="btn-registrar" onclick="abrirForm('${ev.id}', '${r.id}')">Registrar resultado</button>
+                    <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
       } else if (r.status === 'pendente') {
         tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
         acaoHtml = '';
@@ -557,6 +558,13 @@
       </div>
       <div class="msg-form" id="msg-form-${eventoId}"></div>
     `;
+  }
+
+  async function removerDaLista(resultadoId) {
+    if (!confirm('Remover este evento da sua lista?')) return;
+    const { error } = await sb.from('resultados').delete().eq('id', resultadoId);
+    if (error) { alert('Erro: ' + error.message); return; }
+    await carregarMinhasCorridas();
   }
 
   function abrirForm(eventoId, resultadoId) {
