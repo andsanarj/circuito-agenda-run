@@ -198,6 +198,7 @@
             <th>Corrida</th>
             <th>Data</th>
             <th>Local</th>
+            <th>Valor</th>
             <th>Pedidos até</th>
             <th>Observação</th>
             <th>Interesse</th>
@@ -217,6 +218,7 @@
               <td><strong>${ev.corrida}</strong></td>
               <td>${fmt(ev.data)}</td>
               <td>${ev.local || '—'}</td>
+              <td>${ev.valor != null ? '<strong>R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') + '</strong>' : '—'}</td>
               <td><span class="prazo-chip ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
               <td class="obs-text">${ev.observacao || '—'}</td>
               <td>${btnInteresse}</td>
