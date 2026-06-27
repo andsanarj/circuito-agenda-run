@@ -412,12 +412,42 @@
   async function carregarKitRunDashboard(corredorIdParam, isAssinante) {
     const div = document.getElementById('kitRunDashboard');
 
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    const { data: eventos } = await sb
+      .from('kit_run_eventos')
+      .select('id, corrida, data, local, valor')
+      .order('data', { ascending: true })
+      .limit(4);
+
+    const tabelaHtml = eventos && eventos.length > 0 ? `
+      <table class="kit-dash-table" style="margin-top:14px;">
+        <thead>
+          <tr>
+            <th>Corrida</th>
+            <th>Data</th>
+            <th>Local</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${eventos.map(ev => `<tr>
+            <td>${ev.corrida}</td>
+            <td>${fmt(ev.data)}</td>
+            <td>${ev.local || '—'}</td>
+            <td>${ev.valor != null ? 'R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    ` : `<div class="empty" style="padding:16px 0 6px;">Nenhum evento cadastrado no momento.</div>`;
+
     if (!isAssinante) {
       div.innerHTML = `
         <div class="kitrun-lock">
           <div class="lock-icon">⭐</div>
           <h4>Serviço exclusivo para assinantes</h4>
-          <p>Assinantes do Circuito Agenda Run têm acesso ao serviço de retirada de kit da <strong>Kit Run Express</strong> com condições especiais.</p>
+          <p>Assinantes têm condições especiais no serviço de retirada de kit da <strong>Kit Run Express</strong>.</p>
           <div class="kitrun-beneficios">
             <div class="b-title">🎁 Benefícios incluídos na assinatura</div>
             <ul>
@@ -428,67 +458,23 @@
           <p class="kitrun-aviso">⚠️ Benefício exclusivo e intransferível — não se aplica a terceiros.</p>
           <a href="perfil.html" class="btn-assinar-kit">⭐ Assinar por R$ 9,99/mês</a>
         </div>
+        ${tabelaHtml}
       `;
       return;
     }
 
-    // É assinante — mostrar eventos
+    // É assinante
     document.getElementById('linkKitRunCompleto').style.display = 'inline';
 
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const { data: eventos } = await sb
-      .from('kit_run_eventos')
-      .select('id, corrida, data, pedidos_ate, local, valor')
-      .order('data', { ascending: true })
-      .limit(4);
-
-    if (!eventos || eventos.length === 0) {
-      div.innerHTML = `
-        <div class="kitrun-beneficios" style="margin:0 0 10px;">
-          <div class="b-title">🎁 Seus benefícios ativos</div>
-          <ul>
-            <li><strong>1 retirada gratuita</strong> a cada 2 meses</li>
-            <li><strong>50% de desconto</strong> nas demais retiradas</li>
-          </ul>
-        </div>
-        <div class="empty" style="padding:16px;">Nenhum evento cadastrado pela Kit Run Express no momento.</div>
-        <div class="kitrun-footer-note">⚠️ Benefício exclusivo e intransferível — não se aplica a terceiros.</div>
-      `;
-      return;
-    }
-
-    const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-
     div.innerHTML = `
-      <div class="kitrun-beneficios" style="margin:0 0 14px;">
+      <div class="kitrun-beneficios" style="margin:0 0 4px;">
         <div class="b-title">🎁 Seus benefícios ativos</div>
         <ul>
           <li><strong>1 retirada gratuita</strong> a cada 2 meses</li>
           <li><strong>50% de desconto</strong> nas demais retiradas</li>
         </ul>
       </div>
-      <table class="kit-dash-table">
-        <thead>
-          <tr>
-            <th>Corrida</th>
-            <th>Data</th>
-            <th>Valor</th>
-            <th>Pedidos até</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${eventos.map(ev => {
-            const prazoDate = ev.pedidos_ate ? new Date(ev.pedidos_ate + 'T12:00:00') : null;
-            const vencido = prazoDate && prazoDate < hoje;
-            return `<tr>
-              <td>${ev.corrida}</td>
-              <td>${fmt(ev.data)}</td>
-              <td>${ev.valor != null ? 'R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') : '—'}</td>
-              <td><span class="prazo-chip-sm ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
+      ${tabelaHtml}
       <div class="kitrun-footer-note">⚠️ Benefício exclusivo e intransferível — não se aplica a terceiros. <a href="assinantes.html" style="color:#1F4E79; font-weight:700; text-decoration:none;">Registrar interesse →</a></div>
     `;
   }
