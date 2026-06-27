@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kit Run Express — Painel de Eventos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .btn-sair { background: rgba(255,255,255,0.12); color: #fff; border: none; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-sair:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── SENHA ── */
+    .senha-wrap { max-width: 420px; margin: 80px auto; padding: 0 20px; }
+    .senha-card { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); text-align: center; }
+    .senha-card .icone { font-size: 40px; margin-bottom: 16px; }
+    .senha-card h2 { font-size: 22px; color: #1F4E79; margin-bottom: 6px; }
+    .senha-card p { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .senha-card input {
+      width: 100%; padding: 11px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 15px; margin-bottom: 12px; font-family: inherit;
+    }
+    .senha-card input:focus { outline: none; border-color: #1F4E79; }
+    .btn-entrar {
+      width: 100%; padding: 12px; background: #E8622A; color: #fff; border: none;
+      border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-entrar:hover { background: #c94f1f; }
+    .msg-senha { margin-top: 10px; font-size: 13px; color: #b00020; }
+
+    /* ── PAINEL ── */
+    .painel { display: none; max-width: 860px; margin: 0 auto; padding: 32px 20px; flex: 1; }
+
+    .page-title { font-size: 26px; color: #1F4E79; margin-bottom: 4px; }
+    .page-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
+
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card h3 { font-size: 18px; color: #1F4E79; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 13px; font-weight: 600; color: #444; }
+    label span { color: #E8622A; }
+    input[type=text], input[type=date], textarea {
+      padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: #333; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #1F4E79; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn-cadastrar {
+      margin-top: 20px; padding: 12px 28px; background: #E8622A; color: #fff; border: none;
+      border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-cadastrar:hover { background: #c94f1f; }
+    .btn-cadastrar:disabled { background: #aaa; cursor: not-allowed; }
+
+    .msg { margin-top: 14px; font-size: 13px; padding: 10px 14px; border-radius: 6px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error   { background: #fdecea; color: #b00020; display: block; }
+
+    /* ── LISTAGEM ── */
+    .empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
+    .loading { text-align: center; padding: 32px; color: #888; font-size: 14px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    tbody tr { border-bottom: 1px solid #f0f0f0; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 12px 14px; color: #333; vertical-align: top; }
+    .obs-cell { color: #666; font-size: 13px; max-width: 200px; }
+    .btn-excluir {
+      background: #fdecea; color: #b00020; border: none; padding: 5px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-excluir:hover { background: #f8c4c0; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      table { font-size: 13px; }
+      tbody td { padding: 8px 10px; }
+    }
+
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <button class="btn-sair" id="btnSair" style="display:none;" onclick="sair()">Sair</button>
+</header>
+
+<!-- ── TELA DE SENHA ── -->
+<div class="senha-wrap" id="telaSenha">
+  <div class="senha-card">
+    <div class="icone">🏃</div>
+    <h2>Kit Run Express</h2>
+    <p>Área exclusiva para gerenciamento de eventos.<br>Digite a senha de acesso para continuar.</p>
+    <input type="password" id="inputSenha" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter') entrar()">
+    <button class="btn-entrar" onclick="entrar()">Entrar</button>
+    <div id="msgSenha" class="msg-senha"></div>
+  </div>
+</div>
+
+<!-- ── PAINEL ── -->
+<div class="painel" id="painel">
+
+  <h1 class="page-title">🏃 Kit Run Express — Painel de Eventos</h1>
+  <p class="page-sub">Cadastre os eventos em que a Kit Run Express irá prestar o serviço de retirada de kit.</p>
+
+  <!-- Formulário de cadastro -->
+  <div class="card">
+    <h3>➕ Cadastrar novo evento</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Corrida <span>*</span></label>
+        <input type="text" id="corrida" placeholder="Ex: Maratona de São Paulo">
+      </div>
+      <div class="form-group">
+        <label>Data da corrida <span>*</span></label>
+        <input type="date" id="data">
+      </div>
+      <div class="form-group">
+        <label>Pedidos até <span>*</span></label>
+        <input type="date" id="pedidos_ate">
+      </div>
+      <div class="form-group full">
+        <label>Observação</label>
+        <textarea id="observacao" placeholder="Informações adicionais sobre o serviço de retirada de kit..."></textarea>
+      </div>
+    </div>
+    <button class="btn-cadastrar" id="btnCadastrar" onclick="cadastrar()">Cadastrar evento</button>
+    <div id="msgForm" class="msg"></div>
+  </div>
+
+  <!-- Listagem -->
+  <div class="card">
+    <h3>📋 Eventos cadastrados</h3>
+    <div id="listaEventos" class="loading">Carregando...</div>
+  </div>
+
+</div>
+
+<footer>
+  Circuito Agenda Run · Kit Run Express · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  // ── SENHA DE ACESSO (altere aqui quando precisar) ────────────
+  const SENHA_KITRUN = 'KitRun2026';
+
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── AUTH LOCAL ───────────────────────────────────────────────
+  function entrar() {
+    const senha = document.getElementById('inputSenha').value;
+    if (senha === SENHA_KITRUN) {
+      localStorage.setItem('kitrun_auth', 'ok');
+      mostrarPainel();
+    } else {
+      document.getElementById('msgSenha').textContent = 'Senha incorreta. Tente novamente.';
+    }
+  }
+
+  function sair() {
+    localStorage.removeItem('kitrun_auth');
+    document.getElementById('painel').style.display = 'none';
+    document.getElementById('telaSenha').style.display = 'block';
+    document.getElementById('btnSair').style.display = 'none';
+    document.getElementById('inputSenha').value = '';
+  }
+
+  function mostrarPainel() {
+    document.getElementById('telaSenha').style.display = 'none';
+    document.getElementById('painel').style.display = 'block';
+    document.getElementById('btnSair').style.display = 'inline-block';
+    carregarEventos();
+  }
+
+  // Verificar se já está autenticado
+  if (localStorage.getItem('kitrun_auth') === 'ok') {
+    mostrarPainel();
+  }
+
+  // ── CADASTRAR ────────────────────────────────────────────────
+  async function cadastrar() {
+    const corrida    = document.getElementById('corrida').value.trim();
+    const data       = document.getElementById('data').value;
+    const pedidosAte = document.getElementById('pedidos_ate').value;
+    const observacao = document.getElementById('observacao').value.trim();
+    const msg        = document.getElementById('msgForm');
+    const btn        = document.getElementById('btnCadastrar');
+
+    msg.className = 'msg';
+
+    if (!corrida || !data || !pedidosAte) {
+      msg.textContent = 'Preencha os campos obrigatórios: Corrida, Data e Pedidos até.';
+      msg.className = 'msg error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Cadastrando...';
+
+    const { error } = await sb.from('kit_run_eventos').insert([{
+      corrida,
+      data,
+      pedidos_ate: pedidosAte,
+      observacao: observacao || null,
+    }]);
+
+    if (error) {
+      msg.textContent = 'Erro ao cadastrar: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = '✅ Evento cadastrado com sucesso!';
+      msg.className = 'msg success';
+      document.getElementById('corrida').value = '';
+      document.getElementById('data').value = '';
+      document.getElementById('pedidos_ate').value = '';
+      document.getElementById('observacao').value = '';
+      await carregarEventos();
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Cadastrar evento';
+  }
+
+  // ── LISTAR ───────────────────────────────────────────────────
+  async function carregarEventos() {
+    const div = document.getElementById('listaEventos');
+    div.innerHTML = '<div class="loading">Carregando...</div>';
+
+    const { data: eventos, error } = await sb
+      .from('kit_run_eventos')
+      .select('*')
+      .order('data', { ascending: true });
+
+    if (error || !eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>';
+      return;
+    }
+
+    const fmtData = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    div.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Corrida</th>
+            <th>Data</th>
+            <th>Pedidos até</th>
+            <th>Observação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${eventos.map(ev => `
+            <tr id="row-${ev.id}">
+              <td><strong>${ev.corrida}</strong></td>
+              <td>${fmtData(ev.data)}</td>
+              <td>${fmtData(ev.pedidos_ate)}</td>
+              <td class="obs-cell">${ev.observacao || '<span style="color:#ccc;">—</span>'}</td>
+              <td><button class="btn-excluir" onclick="excluir('${ev.id}', this)">🗑️ Excluir</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ── EXCLUIR ──────────────────────────────────────────────────
+  async function excluir(id, btn) {
+    if (!confirm('Excluir este evento? Esta ação não pode ser desfeita.')) return;
+    btn.disabled = true;
+    btn.textContent = 'Excluindo...';
+
+    const { error } = await sb.from('kit_run_eventos').delete().eq('id', id);
+
+    if (error) {
+      alert('Erro ao excluir: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = '🗑️ Excluir';
+    } else {
+      document.getElementById(`row-${id}`)?.remove();
+      // Se a tabela ficou vazia, recarregar para mostrar mensagem
+      const tbody = document.querySelector('#listaEventos tbody');
+      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+        document.getElementById('listaEventos').innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>';
+      }
+    }
+  }
+</script>
+</body>
+</html>
