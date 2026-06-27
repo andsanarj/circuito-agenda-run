@@ -275,13 +275,19 @@
           <input type="text" id="evOrganizador" placeholder="Ex: Yescom, Caixa Seguros...">
         </div>
       </div>
-      <div class="form-group">
-        <label>Pontuação do evento *</label>
-        <select id="evPontuacao" style="max-width:320px;">
-          <option value="0.5">🥉 Bronze — 0,5 ponto</option>
-          <option value="1" selected>🥈 Prata — 1 ponto</option>
-          <option value="2">🥇 Ouro — 2 pontos</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pontuação do evento *</label>
+          <select id="evPontuacao">
+            <option value="0.5">🥉 Bronze — 0,5 ponto</option>
+            <option value="1" selected>🥈 Prata — 1 ponto</option>
+            <option value="2">🥇 Ouro — 2 pontos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cupom de desconto</label>
+          <input type="text" id="evCupom" placeholder="Ex: CIRCUITO10" maxlength="50" style="text-transform:uppercase;">
+        </div>
       </div>
       <button type="submit" class="btn btn-primary" id="btnSalvarEvento">+ Adicionar Evento</button>
     </form>
@@ -1163,9 +1169,10 @@
       distancia:     distancias.join(', ') || null,
       cidade:        document.getElementById('evCidade').value.trim() || null,
       link_inscricao: document.getElementById('evLinkInscricao').value.trim() || null,
-      organizador:   document.getElementById('evOrganizador').value.trim() || null,
-      pontuacao:     parseFloat(document.getElementById('evPontuacao').value),
-      ativo:         true,
+      organizador:    document.getElementById('evOrganizador').value.trim() || null,
+      pontuacao:      parseFloat(document.getElementById('evPontuacao').value),
+      cupom_desconto: document.getElementById('evCupom').value.trim().toUpperCase() || null,
+      ativo:          true,
     }]);
 
     if (error) {
