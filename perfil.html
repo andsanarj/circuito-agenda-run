@@ -863,7 +863,8 @@
         msg.style.display = 'block';
         setTimeout(() => window.open(data.paymentUrl, '_blank'), 1200);
       } else {
-        throw new Error(data.error || 'Erro desconhecido');
+        const detalhe = data.detail ? ' — ' + JSON.stringify(data.detail) : '';
+        throw new Error((data.error || 'Erro desconhecido') + detalhe);
       }
     } catch (err) {
       msg.textContent = '❌ ' + err.message;
