@@ -1073,7 +1073,7 @@
     const { data } = await sb
       .from('eventos')
       .select('id, nome, data, distancia, cidade, organizador, pontuacao, cupom_desconto')
-      .order('data', { ascending: false });
+      .order('data', { ascending: true });
 
     const tbody = document.getElementById('corpoEventos');
     if (!data || data.length === 0) {
