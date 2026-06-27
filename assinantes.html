@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área de Assinantes — Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; }
+    header nav a:hover { color: #fff; }
+
+    .page-hero {
+      background: linear-gradient(135deg, #1F4E79, #0d2d4a);
+      color: #fff; padding: 48px 24px 40px; text-align: center;
+    }
+    .page-hero .badge {
+      display: inline-block; background: #E8622A; color: #fff;
+      font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .page-hero h1 { font-size: 32px; margin-bottom: 8px; }
+    .page-hero p { color: #a8c8e8; font-size: 15px; }
+
+    .container { max-width: 860px; margin: 40px auto; padding: 0 20px; flex: 1; }
+
+    /* Bloqueio para não assinantes */
+    .bloqueio {
+      background: #fff; border-radius: 12px; padding: 60px 40px;
+      text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .bloqueio .icone { font-size: 48px; margin-bottom: 16px; }
+    .bloqueio h2 { font-size: 24px; color: #1F4E79; margin-bottom: 10px; }
+    .bloqueio p { color: #666; font-size: 15px; max-width: 420px; margin: 0 auto 28px; line-height: 1.6; }
+    .btn-assinar {
+      display: inline-block; background: #E8622A; color: #fff;
+      padding: 13px 32px; border-radius: 6px; font-size: 15px; font-weight: 700;
+      text-decoration: none; font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-assinar:hover { background: #c94f1f; }
+
+    /* Conteúdo exclusivo (em branco por ora) */
+    .conteudo { display: none; }
+    .em-breve {
+      background: #fff; border-radius: 12px; padding: 60px 40px;
+      text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .em-breve h2 { font-size: 24px; color: #1F4E79; margin-bottom: 10px; }
+    .em-breve p { color: #666; font-size: 15px; line-height: 1.6; }
+
+    .loading { text-align: center; padding: 80px; color: #888; font-size: 15px; }
+
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="eventos.html">📅 Eventos</a>
+    <a href="perfil.html">👤 Perfil</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="badge">⭐ Exclusivo</div>
+  <h1>Área de Assinantes</h1>
+  <p>Conteúdo exclusivo para membros do Circuito Agenda Run.</p>
+</div>
+
+<div class="container">
+
+  <div id="loading" class="loading">Verificando acesso...</div>
+
+  <!-- Bloqueio para não assinantes -->
+  <div id="bloqueio" class="bloqueio" style="display:none;">
+    <div class="icone">🔒</div>
+    <h2>Área exclusiva para assinantes</h2>
+    <p>Assine o Circuito Agenda Run por R$ 9,99/mês e tenha acesso a esta área exclusiva, além de +1 ponto bônus em cada corrida.</p>
+    <a href="perfil.html" class="btn-assinar">⭐ Assinar agora</a>
+  </div>
+
+  <!-- Conteúdo exclusivo -->
+  <div id="conteudo" class="conteudo">
+    <div class="em-breve">
+      <h2>🚧 Em breve</h2>
+      <p>Estamos preparando conteúdo exclusivo para você.<br>Fique de olho — novidades chegando em breve!</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br" style="color:#1F4E79">agendarun@agendarun.com.br</a> · Temporada teste
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      window.location.href = 'login.html?redirect=assinantes.html';
+      return;
+    }
+
+    const { data: corredor } = await sb
+      .from('corredores')
+      .select('nome, assinante')
+      .eq('user_id', session.user.id)
+      .single();
+
+    document.getElementById('loading').style.display = 'none';
+
+    if (!corredor || !corredor.assinante) {
+      document.getElementById('bloqueio').style.display = 'block';
+    } else {
+      document.getElementById('conteudo').style.display = 'block';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
