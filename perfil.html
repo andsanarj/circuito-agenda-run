@@ -186,6 +186,22 @@
     </div>
   </div>
 
+  <!-- ── ASSINATURA ──────────────────────────────────────────── -->
+  <div id="blocoAssinatura" style="background:#fff; border-radius:10px; border:0.5px solid #e0e7ef; padding:16px 20px; margin-bottom:20px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+      <div>
+        <div id="statusAssinatura" style="font-size:13px; font-weight:700; margin-bottom:4px;">Carregando...</div>
+        <div id="textoAssinatura" style="font-size:12px; color:#666;"></div>
+      </div>
+      <button id="btnAssinar" onclick="assinar()"
+        style="background:#E8622A; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; display:none;">
+        ⭐ Assinar — R$ 9,99/mês
+      </button>
+      <span id="badgeAssinante" style="display:none; background:#e6f9f0; color:#1a7a4a; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px;">✅ Assinante ativo</span>
+    </div>
+    <div id="msgAssinatura" style="display:none; margin-top:10px; font-size:13px; padding:10px; border-radius:6px;"></div>
+  </div>
+
   <!-- ── MINHAS CORRIDAS ──────────────────────────────────────── -->
   <div class="card">
     <div class="card-title">
@@ -326,6 +342,7 @@
 
     corredorIdGlobal = corredor.id;
     corredorInstagramGlobal = corredor.instagram || null;
+    exibirStatusAssinatura(corredor);
 
     // Exibir botão compartilhar com URL correta
     const shareUrl = corredor.instagram
@@ -793,6 +810,70 @@
     btn.disabled = false;
     btn.textContent = 'Salvar alterações';
   });
+
+  // ── ASSINATURA ───────────────────────────────────────────────
+  function exibirStatusAssinatura(corredor) {
+    const status = document.getElementById('statusAssinatura');
+    const texto  = document.getElementById('textoAssinatura');
+    const btnAssinar = document.getElementById('btnAssinar');
+    const badge  = document.getElementById('badgeAssinante');
+
+    if (corredor.assinante) {
+      status.textContent = '⭐ Você é assinante do Circuito!';
+      status.style.color = '#1a7a4a';
+      texto.textContent = corredor.assinante_ate
+        ? `Ativo até ${new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR')} · +1 ponto bônus em cada corrida`
+        : '+1 ponto bônus em cada corrida';
+      badge.style.display = 'inline-block';
+    } else {
+      status.textContent = '🔓 Você ainda não é assinante';
+      status.style.color = '#b07800';
+      texto.textContent = 'Assine por R$ 9,99/mês e ganhe +1 ponto bônus em cada corrida registrada.';
+      btnAssinar.style.display = 'inline-block';
+    }
+  }
+
+  async function assinar() {
+    const btn = document.getElementById('btnAssinar');
+    const msg = document.getElementById('msgAssinatura');
+    btn.disabled = true;
+    btn.textContent = 'Aguarde...';
+    msg.style.display = 'none';
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+
+      const res = await fetch(
+        'https://tbveeaupcmpltncjwfgt.supabase.co/functions/v1/criar-assinatura',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      const data = await res.json();
+
+      if (data.paymentUrl) {
+        msg.textContent = '✅ Assinatura criada! Abrindo página de pagamento...';
+        msg.style.background = '#e6f9f0';
+        msg.style.color = '#1a7a4a';
+        msg.style.display = 'block';
+        setTimeout(() => window.open(data.paymentUrl, '_blank'), 1200);
+      } else {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
+    } catch (err) {
+      msg.textContent = '❌ ' + err.message;
+      msg.style.background = '#fdecea';
+      msg.style.color = '#b00020';
+      msg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '⭐ Assinar — R$ 9,99/mês';
+    }
+  }
 
   function compartilharPerfil(btn) {
     const url = btn.getAttribute('data-url');
