@@ -75,17 +75,24 @@
     .empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
     .loading { text-align: center; padding: 32px; color: #888; font-size: 14px; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 700px; }
+    thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid #f0f0f0; }
     tbody tr:last-child { border-bottom: none; }
     tbody td { padding: 12px 14px; color: #333; vertical-align: top; }
-    .obs-cell { color: #666; font-size: 13px; max-width: 200px; }
+    .obs-cell { color: #666; font-size: 13px; max-width: 160px; }
+    .acoes-cell { display: flex; flex-direction: column; gap: 6px; min-width: 90px; }
     .btn-excluir {
       background: #fdecea; color: #b00020; border: none; padding: 5px 12px; border-radius: 6px;
-      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;
     }
     .btn-excluir:hover { background: #f8c4c0; }
+    .btn-editar {
+      background: #fff8e1; color: #b07800; border: none; padding: 5px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;
+    }
+    .btn-editar:hover { background: #fdefc0; }
     .btn-interessados {
       background: #EBF3FB; color: #1F4E79; border: none; padding: 5px 12px; border-radius: 6px;
       font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
@@ -118,6 +125,35 @@
     .inter-nome { font-weight: 700; font-size: 14px; color: #222; }
     .inter-insta { font-size: 12px; color: #1F4E79; margin-top: 2px; }
     .modal-empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
+
+    /* Modal de edição */
+    .modal-edit { max-width: 560px; }
+    .modal-edit .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .modal-edit .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .modal-edit .form-group.full { grid-column: 1 / -1; }
+    .modal-edit label { font-size: 12px; font-weight: 600; color: #444; }
+    .modal-edit label span { color: #E8622A; }
+    .modal-edit input, .modal-edit textarea {
+      padding: 9px 12px; border: 1px solid #ddd; border-radius: 7px;
+      font-size: 13px; font-family: inherit; color: #333;
+    }
+    .modal-edit input:focus, .modal-edit textarea:focus { outline: none; border-color: #1F4E79; }
+    .modal-edit textarea { resize: vertical; min-height: 70px; }
+    .modal-edit-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .btn-salvar {
+      background: #E8622A; color: #fff; border: none; padding: 10px 24px; border-radius: 6px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-salvar:hover { background: #c94f1f; }
+    .btn-salvar:disabled { background: #aaa; cursor: not-allowed; }
+    .btn-cancelar {
+      background: #f0f4f8; color: #555; border: none; padding: 10px 20px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-cancelar:hover { background: #e0e8f0; }
+    .msg-edit { font-size: 12px; padding: 8px 12px; border-radius: 6px; display: none; margin-bottom: 10px; }
+    .msg-edit.error { background: #fdecea; color: #b00020; display: block; }
 
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
@@ -195,6 +231,48 @@
     <div id="listaEventos" class="loading">Carregando...</div>
   </div>
 
+</div>
+
+<!-- ── MODAL EDITAR ── -->
+<div class="modal-overlay" id="modalEditOverlay" onclick="fecharModalEdit(event)">
+  <div class="modal modal-edit">
+    <div class="modal-header">
+      <h3>✏️ Editar evento</h3>
+      <button class="btn-fechar" onclick="fecharModalEdit()">×</button>
+    </div>
+    <input type="hidden" id="editId">
+    <div class="msg-edit" id="msgEdit"></div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Corrida <span>*</span></label>
+        <input type="text" id="editCorrida">
+      </div>
+      <div class="form-group">
+        <label>Data da corrida <span>*</span></label>
+        <input type="date" id="editData">
+      </div>
+      <div class="form-group">
+        <label>Pedidos até <span>*</span></label>
+        <input type="date" id="editPedidosAte">
+      </div>
+      <div class="form-group">
+        <label>Local</label>
+        <input type="text" id="editLocal">
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" id="editValor" min="0" step="0.01">
+      </div>
+      <div class="form-group full">
+        <label>Observação</label>
+        <textarea id="editObservacao"></textarea>
+      </div>
+    </div>
+    <div class="modal-edit-footer">
+      <button class="btn-cancelar" onclick="fecharModalEdit()">Cancelar</button>
+      <button class="btn-salvar" id="btnSalvarEdit" onclick="salvarEdicao()">Salvar alterações</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── MODAL INTERESSADOS ── -->
@@ -331,6 +409,7 @@
     });
 
     div.innerHTML = `
+      <div class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -346,6 +425,7 @@
         <tbody>
           ${eventos.map(ev => {
             const qtd = contagem[ev.id] || 0;
+            const evJson = JSON.stringify(ev).replace(/'/g, "\\'");
             return `
             <tr id="row-${ev.id}">
               <td>
@@ -359,11 +439,17 @@
               <td>${ev.valor != null ? 'R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') : '<span style="color:#ccc;">—</span>'}</td>
               <td>${fmtData(ev.pedidos_ate)}</td>
               <td class="obs-cell">${ev.observacao || '<span style="color:#ccc;">—</span>'}</td>
-              <td><button class="btn-excluir" onclick="excluir('${ev.id}', this)">🗑️ Excluir</button></td>
+              <td>
+                <div class="acoes-cell">
+                  <button class="btn-editar" onclick='abrirEdicao(${JSON.stringify(ev)})'>✏️ Editar</button>
+                  <button class="btn-excluir" onclick="excluir('${ev.id}', this)">🗑️ Excluir</button>
+                </div>
+              </td>
             </tr>`;
           }).join('')}
         </tbody>
       </table>
+      </div>
     `;
   }
 
@@ -406,6 +492,62 @@
   function fecharModal(e) {
     if (e && e.target !== document.getElementById('modalOverlay')) return;
     document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  // ── EDITAR ───────────────────────────────────────────────────
+  function abrirEdicao(ev) {
+    document.getElementById('editId').value = ev.id;
+    document.getElementById('editCorrida').value = ev.corrida || '';
+    document.getElementById('editData').value = ev.data || '';
+    document.getElementById('editPedidosAte').value = ev.pedidos_ate || '';
+    document.getElementById('editLocal').value = ev.local || '';
+    document.getElementById('editValor').value = ev.valor != null ? ev.valor : '';
+    document.getElementById('editObservacao').value = ev.observacao || '';
+    document.getElementById('msgEdit').className = 'msg-edit';
+    document.getElementById('modalEditOverlay').classList.add('open');
+  }
+
+  function fecharModalEdit(e) {
+    if (e && e.target !== document.getElementById('modalEditOverlay')) return;
+    document.getElementById('modalEditOverlay').classList.remove('open');
+  }
+
+  async function salvarEdicao() {
+    const id = document.getElementById('editId').value;
+    const corrida = document.getElementById('editCorrida').value.trim();
+    const data = document.getElementById('editData').value;
+    const pedidosAte = document.getElementById('editPedidosAte').value;
+    const msg = document.getElementById('msgEdit');
+    const btn = document.getElementById('btnSalvarEdit');
+
+    if (!corrida || !data || !pedidosAte) {
+      msg.textContent = 'Preencha os campos obrigatórios: Corrida, Data e Pedidos até.';
+      msg.className = 'msg-edit error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const { error } = await sb.from('kit_run_eventos').update({
+      corrida,
+      data,
+      pedidos_ate: pedidosAte,
+      local: document.getElementById('editLocal').value.trim() || null,
+      valor: document.getElementById('editValor').value ? parseFloat(document.getElementById('editValor').value) : null,
+      observacao: document.getElementById('editObservacao').value.trim() || null,
+    }).eq('id', id);
+
+    btn.disabled = false;
+    btn.textContent = 'Salvar alterações';
+
+    if (error) {
+      msg.textContent = 'Erro ao salvar: ' + error.message;
+      msg.className = 'msg-edit error';
+    } else {
+      document.getElementById('modalEditOverlay').classList.remove('open');
+      await carregarEventos();
+    }
   }
 
   // ── EXCLUIR ──────────────────────────────────────────────────
