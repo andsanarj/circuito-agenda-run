@@ -74,6 +74,12 @@
     .btn-lista { background: #E8622A; color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
     .btn-lista:hover { background: #c94f1f; }
     .btn-na-lista { background: #e6f9f0; color: #1a7a4a; border: 2px solid #1a7a4a; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .pts-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
+    .pts-bronze { background: #f5deb3; color: #7a4a00; }
+    .pts-prata  { background: #e8e8e8; color: #444; }
+    .pts-ouro   { background: #fff3cd; color: #7a5800; }
+    .legenda-pts { display: flex; gap: 10px; flex-wrap: wrap; padding: 10px 0 2px; border-top: 1px solid #f5f5f5; margin-top: 8px; }
+    .legenda-pts span { font-size: 11px; color: #888; display: flex; align-items: center; gap: 5px; }
 
     /* Minhas corridas */
     .corrida-item { padding: 13px 0; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; gap: 12px; }
@@ -184,6 +190,11 @@
       </div>
       <div class="card-body">
         <div id="proximasEventos" class="loading">Carregando...</div>
+        <div class="legenda-pts">
+          <span><span class="pts-badge pts-bronze">🥉 Bronze</span> 0,5 pt</span>
+          <span><span class="pts-badge pts-prata">🥈 Prata</span> 1 pt</span>
+          <span><span class="pts-badge pts-ouro">🥇 Ouro</span> 2 pts</span>
+        </div>
       </div>
     </div>
 
@@ -322,7 +333,7 @@
 
     const { data: eventos } = await sb
       .from('eventos')
-      .select('id, nome, data, distancia, cidade, cupom_desconto')
+      .select('id, nome, data, distancia, cidade, cupom_desconto, pontuacao')
       .gte('data', hoje)
       .order('data', { ascending: true })
       .limit(5);
@@ -351,6 +362,15 @@
       const cupomChip = ev.cupom_desconto ? `<span class="ev-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ ${ev.cupom_desconto}</span>` : '';
       const jaInscrito = naLista.has(ev.id);
 
+      const pts = parseFloat(ev.pontuacao);
+      const ptsBadge = !isNaN(pts)
+        ? pts === 0.5
+          ? `<span class="pts-badge pts-bronze">🥉 Bronze</span>`
+          : pts === 2
+            ? `<span class="pts-badge pts-ouro">🥇 Ouro</span>`
+            : `<span class="pts-badge pts-prata">🥈 Prata</span>`
+        : '';
+
       const botao = jaInscrito
         ? `<span class="btn-na-lista">✓ Na lista</span>`
         : `<button class="btn-lista" onclick="entrarNaLista('${ev.id}', this)">+ Participar</button>`;
@@ -359,7 +379,7 @@
         <div class="evento-item">
           <div class="ev-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div></div>
           <div class="ev-info">
-            <div class="ev-nome">${ev.nome}</div>
+            <div class="ev-nome">${ev.nome} ${ptsBadge}</div>
             <div class="ev-chips">${chips}${cupomChip}</div>
           </div>
           <div class="ev-acao">${botao}</div>
