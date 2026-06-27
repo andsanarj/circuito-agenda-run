@@ -774,7 +774,7 @@
 
   function toggleEdicao() {
     modoEdicao = !modoEdicao;
-    const campos = ['nome', 'telefone', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
+    const campos = ['nome', 'telefone', 'cpf', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
     campos.forEach(id => { document.getElementById(id).disabled = !modoEdicao; });
     document.getElementById('distPrefView').style.display = modoEdicao ? 'none' : 'flex';
     document.getElementById('distPrefEdit').style.display = modoEdicao ? 'block' : 'none';
