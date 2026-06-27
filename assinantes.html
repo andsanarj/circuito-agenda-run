@@ -61,10 +61,12 @@
 
     /* Tabela Kit Run */
     .kit-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .kit-table thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kit-table thead th { background: #f0f4f8; padding: 10px 14px; text-align: center; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kit-table thead th:first-child { text-align: left; }
     .kit-table tbody tr { border-bottom: 1px solid #f0f0f0; }
     .kit-table tbody tr:last-child { border-bottom: none; }
-    .kit-table tbody td { padding: 12px 14px; color: #333; vertical-align: top; }
+    .kit-table tbody td { padding: 12px 14px; color: #333; vertical-align: middle; text-align: center; }
+    .kit-table tbody td:first-child { text-align: left; }
     .prazo-chip { display: inline-block; background: #fff8e1; color: #b07800; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
     .prazo-chip.vencido { background: #fdecea; color: #b00020; }
     .obs-text { color: #666; font-size: 13px; }
