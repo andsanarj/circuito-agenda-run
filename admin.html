@@ -243,16 +243,6 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Horário da largada</label>
-          <input type="time" id="evHorario" placeholder="07:00">
-        </div>
-        <div class="form-group">
-          <label>Número do PERMIT</label>
-          <input type="text" id="evPermit" placeholder="Ex: 0123/2026/SP">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
           <label>Distância(s) da prova</label>
           <div class="tag-input-box" id="distBox" onclick="document.getElementById('distInput').focus()">
             <input type="text" id="distInput" placeholder="Digite e pressione Enter..."
@@ -271,8 +261,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Cidade</label>
-          <input type="text" id="evCidade" placeholder="São Paulo">
+          <label>Local</label>
+          <input type="text" id="evCidade" placeholder="Ex: São Paulo">
         </div>
       </div>
       <div class="form-row">
@@ -281,17 +271,25 @@
           <input type="url" id="evLinkInscricao" placeholder="https://...">
         </div>
         <div class="form-group">
-          <label>URL dos resultados oficiais (RunKing)</label>
-          <input type="url" id="evUrlResult" placeholder="https://resultados.runking.com.br/...">
+          <label>Organizador</label>
+          <input type="text" id="evOrganizador" placeholder="Ex: Yescom, Caixa Seguros...">
         </div>
+      </div>
+      <div class="form-group">
+        <label>Pontuação do evento *</label>
+        <select id="evPontuacao" style="max-width:320px;">
+          <option value="0.5">🥉 Bronze — 0,5 ponto</option>
+          <option value="1" selected>🥈 Prata — 1 ponto</option>
+          <option value="2">🥇 Ouro — 2 pontos</option>
+        </select>
       </div>
       <button type="submit" class="btn btn-primary" id="btnSalvarEvento">+ Adicionar Evento</button>
     </form>
     <div id="msgEvento" class="msg"></div>
 
     <table id="tabelaEventos">
-      <thead><tr><th>#</th><th>Nome</th><th>Data</th><th>Dist.</th><th>Resultados</th><th>Submissões</th></tr></thead>
-      <tbody id="corpoEventos"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+      <thead><tr><th>Nome</th><th>Data</th><th>Dist.</th><th>Local</th><th>Organizador</th><th>Pontuação</th><th>Submissões</th><th>Cupom</th></tr></thead>
+      <tbody id="corpoEventos"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
     </table>
   </div>
 
@@ -1068,12 +1066,12 @@
   async function carregarEventos() {
     const { data } = await sb
       .from('eventos')
-      .select('id, nome, data, distancia, cidade, url_runking, cupom_desconto')
+      .select('id, nome, data, distancia, cidade, organizador, pontuacao, cupom_desconto')
       .order('data', { ascending: false });
 
     const tbody = document.getElementById('corpoEventos');
     if (!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum evento cadastrado.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum evento cadastrado.</td></tr>';
       return;
     }
 
@@ -1089,23 +1087,30 @@
       if (r.status === 'pendente') contPorEvento[r.evento_id].pendentes++;
     });
 
+    const pontuacaoLabel = (p) => {
+      const v = parseFloat(p);
+      if (v === 0.5) return '<span style="background:#f5deb3; color:#7a4a00; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px;">🥉 Bronze</span>';
+      if (v === 1)   return '<span style="background:#e8e8e8; color:#444; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px;">🥈 Prata</span>';
+      if (v === 2)   return '<span style="background:#fff3cd; color:#7a5800; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px;">🥇 Ouro</span>';
+      return p != null ? `${p} pt` : '—';
+    };
+
     tbody.innerHTML = data.map(ev => {
       const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const cnt = contPorEvento[ev.id] || { total: 0, pendentes: 0 };
       return `
         <tr>
-          <td>${ev.id}</td>
           <td><strong>${ev.nome}</strong></td>
           <td>${dataFmt}</td>
           <td>${ev.distancia || '—'}</td>
-          <td>${ev.url_runking
-            ? `<a href="${ev.url_runking}" target="_blank" class="link-resultado">Ver ↗</a>`
-            : '—'}</td>
+          <td>${ev.cidade || '—'}</td>
+          <td>${ev.organizador || '<span style="color:#ccc;">—</span>'}</td>
+          <td>${pontuacaoLabel(ev.pontuacao)}</td>
           <td>
             ${cnt.total} submissão(ões)
             ${cnt.pendentes > 0 ? `<span class="tag tag-pendente">${cnt.pendentes} pendente${cnt.pendentes > 1 ? 's' : ''}</span>` : ''}
           </td>
-          <td style="min-width:180px;">
+          <td style="min-width:160px;">
             <div id="cupom-view-${ev.id}" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
               ${ev.cupom_desconto
                 ? `<span style="background:#fff8e1; color:#b07800; font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px;">🏷️ ${ev.cupom_desconto}</span>`
@@ -1153,15 +1158,14 @@
     btn.disabled = true;
 
     const { error } = await sb.from('eventos').insert([{
-      nome: document.getElementById('evNome').value.trim(),
-      data: document.getElementById('evData').value || null,
-      horario_largada: document.getElementById('evHorario').value || null,
-      numero_permit: document.getElementById('evPermit').value.trim() || null,
-      distancia: distancias.join(', ') || null,
-      cidade: document.getElementById('evCidade').value.trim() || null,
+      nome:          document.getElementById('evNome').value.trim(),
+      data:          document.getElementById('evData').value || null,
+      distancia:     distancias.join(', ') || null,
+      cidade:        document.getElementById('evCidade').value.trim() || null,
       link_inscricao: document.getElementById('evLinkInscricao').value.trim() || null,
-      url_runking: document.getElementById('evUrlResult').value.trim() || null,
-      ativo: true,
+      organizador:   document.getElementById('evOrganizador').value.trim() || null,
+      pontuacao:     parseFloat(document.getElementById('evPontuacao').value),
+      ativo:         true,
     }]);
 
     if (error) {
@@ -1172,9 +1176,7 @@
       msg.className = 'msg success';
       document.getElementById('formEvento').reset();
       distancias.length = 0; renderTags();
-      document.getElementById('evHorario').value = '';
-      document.getElementById('evPermit').value = '';
-      document.getElementById('evLinkInscricao').value = '';
+      document.getElementById('evPontuacao').value = '1';
       await carregarEventos();
       setTimeout(() => { msg.className = 'msg'; }, 4000);
     }
