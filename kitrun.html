@@ -381,6 +381,9 @@
     btn.textContent = 'Cadastrar evento';
   }
 
+  // Cache de eventos para edição
+  const _eventosCache = {};
+
   // ── LISTAR ───────────────────────────────────────────────────
   async function carregarEventos() {
     const div = document.getElementById('listaEventos');
@@ -408,6 +411,9 @@
       contagem[i.kit_run_evento_id] = (contagem[i.kit_run_evento_id] || 0) + 1;
     });
 
+    // Armazenar eventos no cache para acesso seguro
+    eventos.forEach(ev => { _eventosCache[ev.id] = ev; });
+
     div.innerHTML = `
       <div class="table-wrap">
       <table>
@@ -425,7 +431,6 @@
         <tbody>
           ${eventos.map(ev => {
             const qtd = contagem[ev.id] || 0;
-            const evJson = JSON.stringify(ev).replace(/'/g, "\\'");
             return `
             <tr id="row-${ev.id}">
               <td>
@@ -441,7 +446,7 @@
               <td class="obs-cell">${ev.observacao || '<span style="color:#ccc;">—</span>'}</td>
               <td>
                 <div class="acoes-cell">
-                  <button class="btn-editar" onclick='abrirEdicao(${JSON.stringify(ev)})'>✏️ Editar</button>
+                  <button class="btn-editar" onclick="abrirEdicao('${ev.id}')">✏️ Editar</button>
                   <button class="btn-excluir" onclick="excluir('${ev.id}', this)">🗑️ Excluir</button>
                 </div>
               </td>
@@ -495,7 +500,9 @@
   }
 
   // ── EDITAR ───────────────────────────────────────────────────
-  function abrirEdicao(ev) {
+  function abrirEdicao(id) {
+    const ev = _eventosCache[id];
+    if (!ev) return;
     document.getElementById('editId').value = ev.id;
     document.getElementById('editCorrida').value = ev.corrida || '';
     document.getElementById('editData').value = ev.data || '';
