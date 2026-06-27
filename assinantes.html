@@ -182,6 +182,7 @@
           <tr>
             <th>Corrida</th>
             <th>Data</th>
+            <th>Local</th>
             <th>Pedidos até</th>
             <th>Observação</th>
           </tr>
@@ -193,6 +194,7 @@
             return `<tr>
               <td><strong>${ev.corrida}</strong></td>
               <td>${fmt(ev.data)}</td>
+              <td>${ev.local || '—'}</td>
               <td><span class="prazo-chip ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
               <td class="obs-text">${ev.observacao || '—'}</td>
             </tr>`;
