@@ -50,15 +50,26 @@
     }
     .btn-assinar:hover { background: #c94f1f; }
 
-    /* Conteúdo exclusivo (em branco por ora) */
+    /* Conteúdo exclusivo */
     .conteudo { display: none; }
-    .em-breve {
-      background: #fff; border-radius: 12px; padding: 60px 40px;
-      text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    }
-    .em-breve h2 { font-size: 24px; color: #1F4E79; margin-bottom: 10px; }
-    .em-breve p { color: #666; font-size: 15px; line-height: 1.6; }
 
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 24px; overflow: hidden; }
+    .card-header { background: #1F4E79; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 10px; }
+    .card-header h2 { font-size: 20px; }
+    .card-header span { font-size: 13px; color: #a8c8e8; margin-left: auto; }
+    .card-body { padding: 24px; }
+
+    /* Tabela Kit Run */
+    .kit-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .kit-table thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kit-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+    .kit-table tbody tr:last-child { border-bottom: none; }
+    .kit-table tbody td { padding: 12px 14px; color: #333; vertical-align: top; }
+    .prazo-chip { display: inline-block; background: #fff8e1; color: #b07800; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .prazo-chip.vencido { background: #fdecea; color: #b00020; }
+    .obs-text { color: #666; font-size: 13px; }
+
+    .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
     .loading { text-align: center; padding: 80px; color: #888; font-size: 15px; }
 
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
@@ -98,10 +109,21 @@
 
   <!-- Conteúdo exclusivo -->
   <div id="conteudo" class="conteudo">
-    <div class="em-breve">
-      <h2>🚧 Em breve</h2>
-      <p>Estamos preparando conteúdo exclusivo para você.<br>Fique de olho — novidades chegando em breve!</p>
+
+    <!-- Kit Run Express -->
+    <div class="card">
+      <div class="card-header">
+        <h2>🏃 Kit Run Express</h2>
+        <span>Serviço de retirada de kit</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size:14px; color:#555; margin-bottom:18px;">
+          Confira os eventos em que a <strong>Kit Run Express</strong> irá prestar o serviço de retirada de kit. Faça seu pedido antes do prazo!
+        </p>
+        <div id="listaKitRun" class="loading">Carregando eventos...</div>
+      </div>
     </div>
+
   </div>
 
 </div>
@@ -135,7 +157,49 @@
       document.getElementById('bloqueio').style.display = 'block';
     } else {
       document.getElementById('conteudo').style.display = 'block';
+      carregarKitRun();
     }
+  }
+
+  async function carregarKitRun() {
+    const div = document.getElementById('listaKitRun');
+    const { data: eventos, error } = await sb
+      .from('kit_run_eventos')
+      .select('*')
+      .order('data', { ascending: true });
+
+    if (error || !eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhum evento cadastrado pela Kit Run Express ainda.</div>';
+      return;
+    }
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    div.innerHTML = `
+      <table class="kit-table">
+        <thead>
+          <tr>
+            <th>Corrida</th>
+            <th>Data</th>
+            <th>Pedidos até</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${eventos.map(ev => {
+            const prazoDate = ev.pedidos_ate ? new Date(ev.pedidos_ate + 'T12:00:00') : null;
+            const vencido = prazoDate && prazoDate < hoje;
+            return `<tr>
+              <td><strong>${ev.corrida}</strong></td>
+              <td>${fmt(ev.data)}</td>
+              <td><span class="prazo-chip ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
+              <td class="obs-text">${ev.observacao || '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
   }
 
   init();
