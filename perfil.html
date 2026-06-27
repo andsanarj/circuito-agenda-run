@@ -197,7 +197,10 @@
         style="background:#E8622A; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; display:none;">
         ⭐ Assinar — R$ 9,99/mês
       </button>
-      <span id="badgeAssinante" style="display:none; background:#e6f9f0; color:#1a7a4a; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px;">✅ Assinante ativo</span>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+        <span id="badgeAssinante" style="display:none; background:#e6f9f0; color:#1a7a4a; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px;">✅ Assinante ativo</span>
+        <a id="btnAreaAssinantes" href="assinantes.html" style="display:none; background:#1F4E79; color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; text-decoration:none; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.5px;">⭐ Área exclusiva →</a>
+      </div>
     </div>
     <div id="msgAssinatura" style="display:none; margin-top:10px; font-size:13px; padding:10px; border-radius:6px;"></div>
   </div>
@@ -840,6 +843,7 @@
         ? `Ativo até ${new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR')} · +1 ponto bônus em cada corrida`
         : '+1 ponto bônus em cada corrida';
       badge.style.display = 'inline-block';
+      document.getElementById('btnAreaAssinantes').style.display = 'inline-block';
     } else {
       status.textContent = '🔓 Você ainda não é assinante';
       status.style.color = '#b07800';
