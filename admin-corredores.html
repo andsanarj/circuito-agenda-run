@@ -162,7 +162,7 @@
 
     // Busca todos os resultados com dados do evento
     const { data: resumos } = await sb.from('resultados')
-      .select('id, corredor_id, pontos, status, temporada, numero_peito, distancia, finalizou, tempo, posicao_geral, created_at, eventos(nome, data, distancia)')
+      .select('id, corredor_id, pontos, status, temporada, numero_peito, distancia, finalizou, tempo, posicao_geral, url_resultado, created_at, eventos(nome, data, distancia)')
       .order('created_at', { ascending: false });
 
     corridasPorCorredor = {};
@@ -260,7 +260,7 @@
       const corridasHtml = todasCorridas.length === 0
         ? '<p style="font-size:12px; color:#bbb; padding:8px 0;">Nenhuma corrida registrada.</p>'
         : `<table class="corridas-table">
-            <thead><tr><th>#</th><th>Evento</th><th>Data</th><th>Dist</th><th>Tempo</th><th>Posição</th><th>Pts</th><th>Status</th></tr></thead>
+            <thead><tr><th>#</th><th>Evento</th><th>Data</th><th>Dist</th><th>Tempo</th><th>Posição</th><th>Pts</th><th>Status</th><th>Link</th></tr></thead>
             <tbody>
               ${todasCorridas.map((r, i) => {
                 const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
@@ -283,6 +283,7 @@
                     </div>
                   </td>
                   <td><span class="status-badge status-${r.status || 'pendente'}">${r.status || 'pendente'}</span></td>
+                  <td>${r.url_resultado ? `<a href="${r.url_resultado}" target="_blank" style="color:#1F4E79; font-size:11px; font-weight:700; white-space:nowrap;">🔗 Ver</a>` : '<span style="color:#ccc; font-size:11px;">—</span>'}</td>
                 </tr>`;
               }).join('')}
             </tbody>
