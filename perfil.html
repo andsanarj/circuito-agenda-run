@@ -324,7 +324,9 @@
   let modoEdicao = false;
   let corredorIdGlobal = null;
   let corredorInstagramGlobal = null;
+  let corredorAssinanteGlobal = false;
   let temporadaAtual = 'Temporada atual';
+  let _eventosCache = {}; // cache de eventos por ID
 
   async function init() {
     const { data: { session } } = await client.auth.getSession();
@@ -349,6 +351,7 @@
 
     corredorIdGlobal = corredor.id;
     corredorInstagramGlobal = corredor.instagram || null;
+    corredorAssinanteGlobal = !!corredor.assinante;
     exibirStatusAssinatura(corredor);
 
     // Exibir botão compartilhar com URL correta
@@ -415,9 +418,14 @@
   async function carregarEventos(corredorId) {
     const { data: meuResultados } = await client
       .from('resultados')
-      .select('*, eventos(id, nome, data, distancia, cidade)')
+      .select('*, eventos(id, nome, data, distancia, cidade, pontuacao)')
       .eq('corredor_id', corredorId)
       .order('created_at', { ascending: false });
+
+    // Cachear eventos para uso no cálculo de pontos
+    if (meuResultados) {
+      meuResultados.forEach(r => { if (r.eventos) _eventosCache[r.eventos.id] = r.eventos; });
+    }
 
     const div = document.getElementById('listaEventos');
 
@@ -512,8 +520,8 @@
     return `
       <h4>${isRejeitado ? '✏️ Corrigir resultado' : '📋 Registrar minha participação'}</h4>
       ${motivoHtml}
-      <div class="info-pontos-form">
-        🏆 <strong>2 pts</strong> por participação &nbsp;·&nbsp; <strong>+1 pt</strong> assinante @AGENDA_RUN_SP &nbsp;·&nbsp; <strong>+1 pt</strong> Kit Run Express &nbsp;·&nbsp; <em>(bônus aplicados na aprovação do resultado)</em>
+      <div class="info-pontos-form" id="info-pontos-${eventoId}">
+        ${gerarInfoPontos(eventoId)}
         <br><br>⚠️ <strong>Atenção:</strong> corredores que deixarem de assinar o <strong>@AGENDA_RUN_SP</strong> antes do encerramento da temporada terão o ponto bônus de assinatura removido de <strong>todas</strong> as corridas cadastradas.
       </div>
       <div class="form-group">
@@ -558,6 +566,14 @@
       </div>
       <div class="msg-form" id="msg-form-${eventoId}"></div>
     `;
+  }
+
+  function gerarInfoPontos(eventoId) {
+    const ev = _eventosCache[eventoId];
+    const base = ev?.pontuacao ?? 1;
+    const labelBase = base === 0.5 ? '🥉 Bronze — 0,5 pt' : base === 2 ? '🥇 Ouro — 2 pts' : '🥈 Prata — 1 pt';
+    const bonusAssinante = corredorAssinanteGlobal ? '<span style="color:#1a7a4a;">✅ +1 pt bônus assinante</span>' : '<span style="color:#999;">+1 pt bônus assinante (você não é assinante)</span>';
+    return `🏆 Pontuação deste evento: <strong>${labelBase}</strong> &nbsp;·&nbsp; ${bonusAssinante} &nbsp;·&nbsp; +1 pt Kit Run Express &nbsp;·&nbsp; <em>(pontos salvos agora, contam no ranking após aprovação)</em>`;
   }
 
   async function removerDaLista(resultadoId) {
@@ -616,6 +632,31 @@
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
+    // Calcular pontos automaticamente
+    const ev = _eventosCache[eventoId];
+    const basePts = parseFloat(ev?.pontuacao ?? 1);
+    const bonusAssinante = corredorAssinanteGlobal ? 1 : 0;
+    // Verificar se corredor usou Kit Run Express para este evento
+    let bonusKitRun = 0;
+    {
+      // Busca pelo evento_id (FK direta) ou por data como fallback
+      const { data: kitEventos } = await client
+        .from('kit_run_eventos')
+        .select('id')
+        .or(`evento_id.eq.${eventoId}${ev?.data ? `,data.eq.${ev.data}` : ''}`);
+      if (kitEventos && kitEventos.length > 0) {
+        const kitIds = kitEventos.map(k => k.id);
+        const { data: kitInteresse } = await client
+          .from('kit_run_interesses')
+          .select('id')
+          .eq('corredor_id', corredorIdGlobal)
+          .in('kit_run_evento_id', kitIds)
+          .maybeSingle();
+        if (kitInteresse) bonusKitRun = 1;
+      }
+    }
+    const pontosCalculados = basePts + bonusAssinante + bonusKitRun;
+
     const dados = {
       corredor_id: corredorIdGlobal,
       evento_id: eventoId,
@@ -627,6 +668,7 @@
       url_resultado: urlResult,
       status: 'pendente',
       motivo_rejeicao: null,
+      pontos: pontosCalculados,
     };
 
     let erro = null;

@@ -39,60 +39,82 @@
     .msg-senha { margin-top: 10px; font-size: 13px; color: #b00020; }
 
     /* ── PAINEL ── */
-    .painel { display: none; max-width: 860px; margin: 0 auto; padding: 32px 20px; flex: 1; }
-
+    .painel { display: none; max-width: 900px; margin: 0 auto; padding: 32px 20px; flex: 1; }
     .page-title { font-size: 26px; color: #1F4E79; margin-bottom: 4px; }
     .page-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
 
     .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
-    .card h3 { font-size: 18px; color: #1F4E79; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .card-title { font-size: 18px; color: #1F4E79; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
 
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-    label { font-size: 13px; font-weight: 600; color: #444; }
-    label span { color: #E8622A; }
-    input[type=text], input[type=date], textarea {
-      padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 14px; font-family: inherit; color: #333; transition: border-color 0.2s;
+    /* ── PICKER DE CORRIDAS ── */
+    .picker-search {
+      display: flex; gap: 10px; margin-bottom: 14px;
     }
-    input:focus, textarea:focus { outline: none; border-color: #1F4E79; }
-    textarea { resize: vertical; min-height: 80px; }
-
-    .btn-cadastrar {
-      margin-top: 20px; padding: 12px 28px; background: #E8622A; color: #fff; border: none;
-      border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+    .picker-search input {
+      flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: #333;
     }
-    .btn-cadastrar:hover { background: #c94f1f; }
-    .btn-cadastrar:disabled { background: #aaa; cursor: not-allowed; }
+    .picker-search input:focus { outline: none; border-color: #1F4E79; }
 
-    .msg { margin-top: 14px; font-size: 13px; padding: 10px 14px; border-radius: 6px; display: none; }
-    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
-    .msg.error   { background: #fdecea; color: #b00020; display: block; }
+    .eventos-picker { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; }
+    .picker-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 16px; border: 1px solid #e8eef4; border-radius: 8px; background: #fafcff;
+      transition: border-color 0.15s;
+    }
+    .picker-item:hover { border-color: #4CBFCB; }
+    .picker-item.ja-adicionado { background: #f5fdf8; border-color: #b6e5cc; }
+    .picker-info { flex: 1; }
+    .picker-nome { font-weight: 700; font-size: 14px; color: #1F4E79; }
+    .picker-meta { font-size: 12px; color: #888; margin-top: 2px; }
+    .btn-adicionar {
+      background: #E8622A; color: #fff; border: none; padding: 7px 16px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .btn-adicionar:hover { background: #c94f1f; }
+    .btn-adicionar:disabled { background: #aaa; cursor: not-allowed; }
+    .tag-adicionado {
+      background: #e6f9f0; color: #1a7a4a; font-size: 12px; font-weight: 700;
+      padding: 5px 12px; border-radius: 6px; white-space: nowrap;
+    }
+    .picker-empty { text-align: center; padding: 24px; color: #aaa; font-size: 14px; }
+    .picker-loading { text-align: center; padding: 24px; color: #888; font-size: 14px; }
 
-    /* ── LISTAGEM ── */
+    /* ── TABELA DE EVENTOS ATIVOS ── */
     .empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
     .loading { text-align: center; padding: 32px; color: #888; font-size: 14px; }
-
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 700px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 660px; }
     thead th { background: #f0f4f8; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid #f0f0f0; }
     tbody tr:last-child { border-bottom: none; }
-    tbody td { padding: 12px 14px; color: #333; vertical-align: top; }
-    .obs-cell { color: #666; font-size: 13px; max-width: 160px; }
-    .acoes-cell { display: flex; flex-direction: column; gap: 6px; min-width: 90px; }
+    tbody td { padding: 12px 14px; color: #333; vertical-align: middle; }
+
+    /* Edição inline */
+    .inline-edit-wrap { display: flex; align-items: center; gap: 6px; }
+    .inline-val { cursor: pointer; border-bottom: 1px dashed #ccc; color: #333; }
+    .inline-val:hover { border-color: #1F4E79; color: #1F4E79; }
+    .inline-val.vazio { color: #bbb; border-color: #ddd; }
+    .inline-input {
+      padding: 5px 8px; border: 1px solid #1F4E79; border-radius: 5px;
+      font-size: 13px; font-family: inherit; width: 100px;
+    }
+    .inline-input.obs { width: 160px; }
+    .btn-inline-save {
+      background: #1F4E79; color: #fff; border: none; padding: 5px 10px; border-radius: 5px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .btn-inline-cancel {
+      background: none; border: none; color: #aaa; font-size: 16px; cursor: pointer; line-height: 1;
+    }
+
+    .acoes-cell { display: flex; flex-direction: column; gap: 6px; min-width: 100px; }
     .btn-excluir {
       background: #fdecea; color: #b00020; border: none; padding: 5px 12px; border-radius: 6px;
-      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
     }
     .btn-excluir:hover { background: #f8c4c0; }
-    .btn-editar {
-      background: #fff8e1; color: #b07800; border: none; padding: 5px 12px; border-radius: 6px;
-      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;
-    }
-    .btn-editar:hover { background: #fdefc0; }
     .btn-interessados {
       background: #EBF3FB; color: #1F4E79; border: none; padding: 5px 12px; border-radius: 6px;
       font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
@@ -126,37 +148,8 @@
     .inter-insta { font-size: 12px; color: #1F4E79; margin-top: 2px; }
     .modal-empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
 
-    /* Modal de edição */
-    .modal-edit { max-width: 560px; }
-    .modal-edit .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-    .modal-edit .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .modal-edit .form-group.full { grid-column: 1 / -1; }
-    .modal-edit label { font-size: 12px; font-weight: 600; color: #444; }
-    .modal-edit label span { color: #E8622A; }
-    .modal-edit input, .modal-edit textarea {
-      padding: 9px 12px; border: 1px solid #ddd; border-radius: 7px;
-      font-size: 13px; font-family: inherit; color: #333;
-    }
-    .modal-edit input:focus, .modal-edit textarea:focus { outline: none; border-color: #1F4E79; }
-    .modal-edit textarea { resize: vertical; min-height: 70px; }
-    .modal-edit-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
-    .btn-salvar {
-      background: #E8622A; color: #fff; border: none; padding: 10px 24px; border-radius: 6px;
-      font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-    .btn-salvar:hover { background: #c94f1f; }
-    .btn-salvar:disabled { background: #aaa; cursor: not-allowed; }
-    .btn-cancelar {
-      background: #f0f4f8; color: #555; border: none; padding: 10px 20px; border-radius: 6px;
-      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
-    }
-    .btn-cancelar:hover { background: #e0e8f0; }
-    .msg-edit { font-size: 12px; padding: 8px 12px; border-radius: 6px; display: none; margin-bottom: 10px; }
-    .msg-edit.error { background: #fdecea; color: #b00020; display: block; }
-
     @media (max-width: 600px) {
-      .form-grid { grid-template-columns: 1fr; }
+      .picker-item { flex-direction: column; align-items: flex-start; }
       table { font-size: 13px; }
       tbody td { padding: 8px 10px; }
     }
@@ -190,89 +183,25 @@
 <div class="painel" id="painel">
 
   <h1 class="page-title">🏃 Kit Run Express — Painel de Eventos</h1>
-  <p class="page-sub">Cadastre os eventos em que a Kit Run Express irá prestar o serviço de retirada de kit.</p>
+  <p class="page-sub">Selecione as corridas em que o serviço de retirada de kit estará disponível.</p>
 
-  <!-- Formulário de cadastro -->
+  <!-- Seletor de corridas -->
   <div class="card">
-    <h3>➕ Cadastrar novo evento</h3>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Corrida <span>*</span></label>
-        <input type="text" id="corrida" placeholder="Ex: Maratona de São Paulo">
-      </div>
-      <div class="form-group">
-        <label>Data da corrida <span>*</span></label>
-        <input type="date" id="data">
-      </div>
-      <div class="form-group">
-        <label>Pedidos até <span>*</span></label>
-        <input type="date" id="pedidos_ate">
-      </div>
-      <div class="form-group">
-        <label>Local da corrida</label>
-        <input type="text" id="local" placeholder="Ex: Parque Ibirapuera — Portão 10">
-      </div>
-      <div class="form-group">
-        <label>Valor do serviço (R$)</label>
-        <input type="number" id="valor" placeholder="Ex: 29.90" min="0" step="0.01">
-      </div>
-      <div class="form-group full">
-        <label>Observação</label>
-        <textarea id="observacao" placeholder="Informações adicionais sobre o serviço de retirada de kit..."></textarea>
-      </div>
+    <h3 class="card-title">➕ Adicionar corrida ao serviço</h3>
+    <div class="picker-search">
+      <input type="text" id="buscaCorrida" placeholder="Buscar corrida pelo nome..." oninput="filtrarCorridas()">
     </div>
-    <button class="btn-cadastrar" id="btnCadastrar" onclick="cadastrar()">Cadastrar evento</button>
-    <div id="msgForm" class="msg"></div>
+    <div class="eventos-picker" id="eventosPicker">
+      <div class="picker-loading">Carregando corridas...</div>
+    </div>
   </div>
 
-  <!-- Listagem -->
+  <!-- Tabela de eventos com serviço ativo -->
   <div class="card">
-    <h3>📋 Eventos cadastrados</h3>
+    <h3 class="card-title">📋 Corridas com serviço ativo</h3>
     <div id="listaEventos" class="loading">Carregando...</div>
   </div>
 
-</div>
-
-<!-- ── MODAL EDITAR ── -->
-<div class="modal-overlay" id="modalEditOverlay" onclick="fecharModalEdit(event)">
-  <div class="modal modal-edit">
-    <div class="modal-header">
-      <h3>✏️ Editar evento</h3>
-      <button class="btn-fechar" onclick="fecharModalEdit()">×</button>
-    </div>
-    <input type="hidden" id="editId">
-    <div class="msg-edit" id="msgEdit"></div>
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>Corrida <span>*</span></label>
-        <input type="text" id="editCorrida">
-      </div>
-      <div class="form-group">
-        <label>Data da corrida <span>*</span></label>
-        <input type="date" id="editData">
-      </div>
-      <div class="form-group">
-        <label>Pedidos até <span>*</span></label>
-        <input type="date" id="editPedidosAte">
-      </div>
-      <div class="form-group">
-        <label>Local</label>
-        <input type="text" id="editLocal">
-      </div>
-      <div class="form-group">
-        <label>Valor (R$)</label>
-        <input type="number" id="editValor" min="0" step="0.01">
-      </div>
-      <div class="form-group full">
-        <label>Observação</label>
-        <textarea id="editObservacao"></textarea>
-      </div>
-    </div>
-    <div class="modal-edit-footer">
-      <button class="btn-cancelar" onclick="fecharModalEdit()">Cancelar</button>
-      <button class="btn-salvar" id="btnSalvarEdit" onclick="salvarEdicao()">Salvar alterações</button>
-    </div>
-  </div>
 </div>
 
 <!-- ── MODAL INTERESSADOS ── -->
@@ -294,14 +223,15 @@
 </footer>
 
 <script>
-  // ── SENHA DE ACESSO (altere aqui quando precisar) ────────────
   const SENHA_KITRUN = 'KitRun2026';
-
   const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── AUTH LOCAL ───────────────────────────────────────────────
+  let _todasCorridas = [];   // todos os eventos do Circuito
+  let _kitEventosIds = {};   // evento_id dos que já têm serviço ativo
+
+  // ── AUTH ─────────────────────────────────────────────────────
   function entrar() {
     const senha = document.getElementById('inputSenha').value;
     if (senha === SENHA_KITRUN) {
@@ -320,72 +250,104 @@
     document.getElementById('inputSenha').value = '';
   }
 
-  function mostrarPainel() {
+  async function mostrarPainel() {
     document.getElementById('telaSenha').style.display = 'none';
     document.getElementById('painel').style.display = 'block';
     document.getElementById('btnSair').style.display = 'inline-block';
-    carregarEventos();
+    await Promise.all([carregarPicker(), carregarAtivos()]);
   }
 
-  // Verificar se já está autenticado
-  if (localStorage.getItem('kitrun_auth') === 'ok') {
-    mostrarPainel();
+  if (localStorage.getItem('kitrun_auth') === 'ok') mostrarPainel();
+
+  // ── PICKER DE CORRIDAS ────────────────────────────────────────
+  async function carregarPicker() {
+    // Carregar todos os eventos do Circuito
+    const { data: corridas } = await sb
+      .from('eventos')
+      .select('id, nome, data, cidade, distancia')
+      .order('data', { ascending: true });
+    _todasCorridas = corridas || [];
+
+    // Carregar quais já têm serviço ativo (pelo evento_id)
+    const { data: ativos } = await sb
+      .from('kit_run_eventos')
+      .select('evento_id')
+      .not('evento_id', 'is', null);
+    _kitEventosIds = {};
+    (ativos || []).forEach(a => { if (a.evento_id) _kitEventosIds[a.evento_id] = true; });
+
+    renderizarPicker(_todasCorridas);
   }
 
-  // ── CADASTRAR ────────────────────────────────────────────────
-  async function cadastrar() {
-    const corrida    = document.getElementById('corrida').value.trim();
-    const data       = document.getElementById('data').value;
-    const pedidosAte = document.getElementById('pedidos_ate').value;
-    const observacao = document.getElementById('observacao').value.trim();
-    const msg        = document.getElementById('msgForm');
-    const btn        = document.getElementById('btnCadastrar');
+  function filtrarCorridas() {
+    const q = document.getElementById('buscaCorrida').value.toLowerCase();
+    const filtradas = q
+      ? _todasCorridas.filter(c => c.nome.toLowerCase().includes(q))
+      : _todasCorridas;
+    renderizarPicker(filtradas);
+  }
 
-    msg.className = 'msg';
-
-    if (!corrida || !data || !pedidosAte) {
-      msg.textContent = 'Preencha os campos obrigatórios: Corrida, Data e Pedidos até.';
-      msg.className = 'msg error';
+  function renderizarPicker(corridas) {
+    const div = document.getElementById('eventosPicker');
+    if (!corridas || corridas.length === 0) {
+      div.innerHTML = '<div class="picker-empty">Nenhuma corrida encontrada.</div>';
       return;
     }
+    const fmtData = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    div.innerHTML = corridas.map(c => {
+      const adicionado = !!_kitEventosIds[c.id];
+      const meta = [fmtData(c.data), c.cidade, c.distancia].filter(Boolean).join(' · ');
+      return `
+        <div class="picker-item ${adicionado ? 'ja-adicionado' : ''}" id="picker-${c.id}">
+          <div class="picker-info">
+            <div class="picker-nome">${c.nome}</div>
+            <div class="picker-meta">${meta}</div>
+          </div>
+          ${adicionado
+            ? `<span class="tag-adicionado">✓ Adicionada</span>`
+            : `<button class="btn-adicionar" onclick="adicionarAoServico('${c.id}', this)">+ Adicionar</button>`
+          }
+        </div>
+      `;
+    }).join('');
+  }
 
+  async function adicionarAoServico(eventoId, btn) {
     btn.disabled = true;
-    btn.textContent = 'Cadastrando...';
+    btn.textContent = 'Adicionando...';
+
+    const ev = _todasCorridas.find(c => c.id === eventoId);
+    if (!ev) { btn.disabled = false; btn.textContent = '+ Adicionar'; return; }
 
     const { error } = await sb.from('kit_run_eventos').insert([{
-      corrida,
-      data,
-      pedidos_ate: pedidosAte,
-      local: document.getElementById('local').value.trim() || null,
-      valor: document.getElementById('valor').value ? parseFloat(document.getElementById('valor').value) : null,
-      observacao: observacao || null,
+      evento_id: ev.id,
+      corrida: ev.nome,
+      data: ev.data,
+      local: ev.cidade || null,
+      valor: null,
+      observacao: null,
     }]);
 
     if (error) {
-      msg.textContent = 'Erro ao cadastrar: ' + error.message;
-      msg.className = 'msg error';
+      alert('Erro ao adicionar: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = '+ Adicionar';
     } else {
-      msg.textContent = '✅ Evento cadastrado com sucesso!';
-      msg.className = 'msg success';
-      document.getElementById('corrida').value = '';
-      document.getElementById('data').value = '';
-      document.getElementById('pedidos_ate').value = '';
-      document.getElementById('local').value = '';
-      document.getElementById('valor').value = '';
-      document.getElementById('observacao').value = '';
-      await carregarEventos();
-      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      _kitEventosIds[eventoId] = true;
+      // Atualizar o item no picker
+      const item = document.getElementById(`picker-${eventoId}`);
+      if (item) {
+        item.classList.add('ja-adicionado');
+        item.querySelector('.btn-adicionar').replaceWith(
+          Object.assign(document.createElement('span'), { className: 'tag-adicionado', textContent: '✓ Adicionada' })
+        );
+      }
+      await carregarAtivos();
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Cadastrar evento';
   }
 
-  // Cache de eventos para edição
-  const _eventosCache = {};
-
-  // ── LISTAR ───────────────────────────────────────────────────
-  async function carregarEventos() {
+  // ── TABELA DE EVENTOS ATIVOS ──────────────────────────────────
+  async function carregarAtivos() {
     const div = document.getElementById('listaEventos');
     div.innerHTML = '<div class="loading">Carregando...</div>';
 
@@ -395,24 +357,17 @@
       .order('data', { ascending: true });
 
     if (error || !eventos || eventos.length === 0) {
-      div.innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>';
+      div.innerHTML = '<div class="empty">Nenhuma corrida adicionada ainda.</div>';
       return;
     }
 
-    const fmtData = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-
-    // Buscar contagem de interessados por evento
-    const { data: interesses } = await sb
-      .from('kit_run_interesses')
-      .select('kit_run_evento_id');
-
+    // Contagem de interessados
+    const { data: interesses } = await sb.from('kit_run_interesses').select('kit_run_evento_id');
     const contagem = {};
-    (interesses || []).forEach(i => {
-      contagem[i.kit_run_evento_id] = (contagem[i.kit_run_evento_id] || 0) + 1;
-    });
+    (interesses || []).forEach(i => { contagem[i.kit_run_evento_id] = (contagem[i.kit_run_evento_id] || 0) + 1; });
 
-    // Armazenar eventos no cache para acesso seguro
-    eventos.forEach(ev => { _eventosCache[ev.id] = ev; });
+    const fmtData = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    const fmtValor = v => v != null ? 'R$ ' + parseFloat(v).toFixed(2).replace('.', ',') : null;
 
     div.innerHTML = `
       <div class="table-wrap">
@@ -423,7 +378,6 @@
             <th>Data</th>
             <th>Local</th>
             <th>Valor</th>
-            <th>Pedidos até</th>
             <th>Observação</th>
             <th>Ações</th>
           </tr>
@@ -431,23 +385,32 @@
         <tbody>
           ${eventos.map(ev => {
             const qtd = contagem[ev.id] || 0;
+            const valorDisplay = fmtValor(ev.valor) || '<span class="vazio">—</span>';
+            const obsDisplay = ev.observacao || '<span class="vazio">—</span>';
             return `
             <tr id="row-${ev.id}">
               <td>
-                <strong>${ev.corrida}</strong><br>
+                <strong>${ev.corrida}</strong>
+                <br>
                 <button class="btn-interessados" style="margin-top:6px;" onclick="verInteressados('${ev.id}', '${ev.corrida.replace(/'/g, "\\'")}')">
                   👥 Interessados<span class="badge-count">${qtd}</span>
                 </button>
               </td>
               <td>${fmtData(ev.data)}</td>
               <td>${ev.local || '<span style="color:#ccc;">—</span>'}</td>
-              <td>${ev.valor != null ? 'R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') : '<span style="color:#ccc;">—</span>'}</td>
-              <td>${fmtData(ev.pedidos_ate)}</td>
-              <td class="obs-cell">${ev.observacao || '<span style="color:#ccc;">—</span>'}</td>
+              <td>
+                <div class="inline-edit-wrap" id="wrap-valor-${ev.id}">
+                  <span class="inline-val ${ev.valor == null ? 'vazio' : ''}" onclick="editarInline('valor', '${ev.id}', this)">${ev.valor != null ? fmtValor(ev.valor) : 'Adicionar'}</span>
+                </div>
+              </td>
+              <td>
+                <div class="inline-edit-wrap" id="wrap-obs-${ev.id}">
+                  <span class="inline-val ${!ev.observacao ? 'vazio' : ''}" onclick="editarInline('obs', '${ev.id}', this)">${ev.observacao || 'Adicionar'}</span>
+                </div>
+              </td>
               <td>
                 <div class="acoes-cell">
-                  <button class="btn-editar" onclick="abrirEdicao('${ev.id}')">✏️ Editar</button>
-                  <button class="btn-excluir" onclick="excluir('${ev.id}', this)">🗑️ Excluir</button>
+                  <button class="btn-excluir" onclick="excluir('${ev.id}', '${ev.evento_id || ''}', this)">🗑️ Remover</button>
                 </div>
               </td>
             </tr>`;
@@ -458,7 +421,61 @@
     `;
   }
 
-  // ── MODAL INTERESSADOS ───────────────────────────────────────
+  // ── EDIÇÃO INLINE DE VALOR E OBS ─────────────────────────────
+  function editarInline(campo, eventoId, spanEl) {
+    const wrap = spanEl.parentElement;
+    const isValor = campo === 'valor';
+    const atualVal = spanEl.textContent.replace('Adicionar', '').replace('R$ ', '').replace(',', '.').trim();
+
+    wrap.innerHTML = `
+      <input type="${isValor ? 'number' : 'text'}" class="inline-input ${isValor ? '' : 'obs'}"
+        id="inp-${campo}-${eventoId}" value="${atualVal !== '—' ? atualVal : ''}"
+        placeholder="${isValor ? 'Ex: 29.90' : 'Observação...'}" step="${isValor ? '0.01' : ''}">
+      <button class="btn-inline-save" onclick="salvarInline('${campo}', '${eventoId}')">✓</button>
+      <button class="btn-inline-cancel" onclick="carregarAtivos()">×</button>
+    `;
+    document.getElementById(`inp-${campo}-${eventoId}`).focus();
+  }
+
+  async function salvarInline(campo, eventoId) {
+    const inp = document.getElementById(`inp-${campo}-${eventoId}`);
+    const valor = inp.value.trim();
+    const update = campo === 'valor'
+      ? { valor: valor ? parseFloat(valor) : null }
+      : { observacao: valor || null };
+
+    const { error } = await sb.from('kit_run_eventos').update(update).eq('id', eventoId);
+    if (error) { alert('Erro: ' + error.message); return; }
+    await carregarAtivos();
+  }
+
+  // ── EXCLUIR ──────────────────────────────────────────────────
+  async function excluir(id, eventoId, btn) {
+    if (!confirm('Remover esta corrida do serviço Kit Run Express?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Removendo...';
+
+    const { error } = await sb.from('kit_run_eventos').delete().eq('id', id);
+
+    if (error) {
+      alert('Erro ao remover: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = '🗑️ Remover';
+    } else {
+      // Atualizar picker para liberar o botão "Adicionar"
+      if (eventoId) {
+        delete _kitEventosIds[eventoId];
+        filtrarCorridas();
+      }
+      document.getElementById(`row-${id}`)?.remove();
+      const tbody = document.querySelector('#listaEventos tbody');
+      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+        document.getElementById('listaEventos').innerHTML = '<div class="empty">Nenhuma corrida adicionada ainda.</div>';
+      }
+    }
+  }
+
+  // ── MODAL INTERESSADOS ────────────────────────────────────────
   async function verInteressados(eventoId, nomeEvento) {
     document.getElementById('modalTitulo').textContent = nomeEvento;
     document.getElementById('modalSub').textContent = 'Corredores com interesse registrado';
@@ -477,7 +494,6 @@
     }
 
     document.getElementById('modalSub').textContent = `${data.length} corredor${data.length !== 1 ? 'es' : ''} com interesse registrado`;
-
     document.getElementById('modalBody').innerHTML = data.map((row, i) => {
       const c = row.corredores;
       const inicial = c?.nome ? c.nome.charAt(0).toUpperCase() : '?';
@@ -497,86 +513,6 @@
   function fecharModal(e) {
     if (e && e.target !== document.getElementById('modalOverlay')) return;
     document.getElementById('modalOverlay').classList.remove('open');
-  }
-
-  // ── EDITAR ───────────────────────────────────────────────────
-  function abrirEdicao(id) {
-    const ev = _eventosCache[id];
-    if (!ev) return;
-    document.getElementById('editId').value = ev.id;
-    document.getElementById('editCorrida').value = ev.corrida || '';
-    document.getElementById('editData').value = ev.data || '';
-    document.getElementById('editPedidosAte').value = ev.pedidos_ate || '';
-    document.getElementById('editLocal').value = ev.local || '';
-    document.getElementById('editValor').value = ev.valor != null ? ev.valor : '';
-    document.getElementById('editObservacao').value = ev.observacao || '';
-    document.getElementById('msgEdit').className = 'msg-edit';
-    document.getElementById('modalEditOverlay').classList.add('open');
-  }
-
-  function fecharModalEdit(e) {
-    if (e && e.target !== document.getElementById('modalEditOverlay')) return;
-    document.getElementById('modalEditOverlay').classList.remove('open');
-  }
-
-  async function salvarEdicao() {
-    const id = document.getElementById('editId').value;
-    const corrida = document.getElementById('editCorrida').value.trim();
-    const data = document.getElementById('editData').value;
-    const pedidosAte = document.getElementById('editPedidosAte').value;
-    const msg = document.getElementById('msgEdit');
-    const btn = document.getElementById('btnSalvarEdit');
-
-    if (!corrida || !data || !pedidosAte) {
-      msg.textContent = 'Preencha os campos obrigatórios: Corrida, Data e Pedidos até.';
-      msg.className = 'msg-edit error';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
-
-    const { error } = await sb.from('kit_run_eventos').update({
-      corrida,
-      data,
-      pedidos_ate: pedidosAte,
-      local: document.getElementById('editLocal').value.trim() || null,
-      valor: document.getElementById('editValor').value ? parseFloat(document.getElementById('editValor').value) : null,
-      observacao: document.getElementById('editObservacao').value.trim() || null,
-    }).eq('id', id);
-
-    btn.disabled = false;
-    btn.textContent = 'Salvar alterações';
-
-    if (error) {
-      msg.textContent = 'Erro ao salvar: ' + error.message;
-      msg.className = 'msg-edit error';
-    } else {
-      document.getElementById('modalEditOverlay').classList.remove('open');
-      await carregarEventos();
-    }
-  }
-
-  // ── EXCLUIR ──────────────────────────────────────────────────
-  async function excluir(id, btn) {
-    if (!confirm('Excluir este evento? Esta ação não pode ser desfeita.')) return;
-    btn.disabled = true;
-    btn.textContent = 'Excluindo...';
-
-    const { error } = await sb.from('kit_run_eventos').delete().eq('id', id);
-
-    if (error) {
-      alert('Erro ao excluir: ' + error.message);
-      btn.disabled = false;
-      btn.textContent = '🗑️ Excluir';
-    } else {
-      document.getElementById(`row-${id}`)?.remove();
-      // Se a tabela ficou vazia, recarregar para mostrar mensagem
-      const tbody = document.querySelector('#listaEventos tbody');
-      if (tbody && tbody.querySelectorAll('tr').length === 0) {
-        document.getElementById('listaEventos').innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>';
-      }
-    }
   }
 </script>
 </body>
