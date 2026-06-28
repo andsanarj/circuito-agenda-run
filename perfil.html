@@ -419,8 +419,16 @@
     const { data: meuResultados } = await client
       .from('resultados')
       .select('*, eventos(id, nome, data, distancia, cidade, pontuacao)')
-      .eq('corredor_id', corredorId)
-      .order('created_at', { ascending: false });
+      .eq('corredor_id', corredorId);
+
+    // Ordenar por data do evento decrescente (mais recente primeiro)
+    if (meuResultados) {
+      meuResultados.sort((a, b) => {
+        const da = a.eventos?.data || '';
+        const db = b.eventos?.data || '';
+        return db.localeCompare(da);
+      });
+    }
 
     // Cachear eventos para uso no cálculo de pontos
     if (meuResultados) {
@@ -452,13 +460,13 @@
                     <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
       } else if (r.status === 'pendente') {
         tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
-        acaoHtml = '';
+        acaoHtml = `<button class="btn-editar" onclick="abrirForm('${ev.id}', '${r.id}')">✏️ Editar</button>`;
       } else if (r.status === 'aprovado') {
         tagHtml = `<span class="tag tag-aprovado">✅ Aprovado · ${r.pontos || 0} pts</span>`;
-        acaoHtml = '';
+        acaoHtml = `<button class="btn-editar" style="background:#888;" onclick="confirmarEdicaoAprovado('${ev.id}', '${r.id}')">✏️ Editar</button>`;
       } else if (r.status === 'rejeitado') {
         tagHtml = '<span class="tag tag-rejeitado">❌ Rejeitado</span>';
-        acaoHtml = `<button class="btn-editar" onclick="abrirForm('${ev.id}', '${r.id}')">Corrigir →</button>`;
+        acaoHtml = `<button class="btn-editar" onclick="abrirForm('${ev.id}', '${r.id}')">✏️ Corrigir</button>`;
       }
 
       return `
@@ -584,6 +592,12 @@
     const { error } = await sb.from('resultados').delete().eq('id', resultadoId);
     if (error) { alert('Erro: ' + error.message); return; }
     await carregarMinhasCorridas();
+  }
+
+  function confirmarEdicaoAprovado(eventoId, resultadoId) {
+    if (confirm('⚠️ Ao editar um resultado aprovado, ele voltará para "aguardando validação" e precisará ser revisado pelo administrador novamente.\n\nDeseja continuar?')) {
+      abrirForm(eventoId, resultadoId);
+    }
   }
 
   function abrirForm(eventoId, resultadoId) {
