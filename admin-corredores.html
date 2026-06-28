@@ -56,6 +56,18 @@
     .msg-crm { font-size: 12px; color: #1a7a4a; padding: 4px 0; display: none; }
     .msg-crm.vis { display: inline; }
     .col-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 80px 90px 100px auto; gap: 8px; padding: 8px 16px; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; }
+    /* Corridas dentro do detalhe */
+    .corridas-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; }
+    .corridas-section h4 { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: #1F4E79; margin-bottom: 10px; }
+    .corridas-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .corridas-table th { background: #f0f4f8; color: #888; font-size: 10px; text-transform: uppercase; padding: 6px 10px; text-align: left; }
+    .corridas-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .corridas-table tr:last-child td { border-bottom: none; }
+    .status-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; }
+    .status-aprovado { background: #e6f9f0; color: #1a7a4a; }
+    .status-pendente { background: #fff3e0; color: #c77700; }
+    .status-rejeitado { background: #fdecea; color: #b00020; }
+    .status-arquivado { background: #f0f0f0; color: #888; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     @media (max-width: 700px) {
       .crm-row, .col-header { grid-template-columns: 1fr 1fr; }
@@ -102,6 +114,14 @@
         <option value="">Todas as distâncias</option>
         <option>5K</option><option>10K</option><option>15K</option><option>21K</option><option>42K</option>
       </select>
+      <select id="crmFiltroSexo" onchange="filtrarCRM()">
+        <option value="">Todos os sexos</option>
+        <option value="M">Masculino</option>
+        <option value="F">Feminino</option>
+      </select>
+      <select id="crmFiltroTemporada" onchange="filtrarCRM()">
+        <option value="">Todas as temporadas</option>
+      </select>
     </div>
     <div class="col-header">
       <span>Corredor</span><span>Contato</span><span>Cidade</span><span>Corridas</span><span>Pts atual</span><span>Pts histórico</span><span></span>
@@ -119,6 +139,9 @@
   const ADMIN_EMAIL  = 'agendarun1@gmail.com';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let crmDados = [];
+  let todasTemporadas = [];
+  // corridas por corredor: { [corredor_id]: [...resultados] }
+  let corridasPorCorredor = {};
 
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -134,13 +157,24 @@
 
   async function carregarCRM() {
     const { data: corredores } = await sb.from('corredores')
-      .select('id, nome, email, telefone, cidade, sexo, instagram, created_at, crm_notas, distancias_preferidas')
-      .order('created_at', { ascending: false });
+      .select('id, nome, email, telefone, cidade, sexo, instagram, created_at, crm_notas, distancias_preferidas');
     if (!corredores) return;
 
-    const { data: resumos } = await sb.from('resultados').select('corredor_id, pontos, status, temporada');
+    // Busca todos os resultados com dados do evento
+    const { data: resumos } = await sb.from('resultados')
+      .select('id, corredor_id, pontos, status, temporada, numero_peito, distancia, finalizou, tempo, posicao_geral, created_at, eventos(nome, data, distancia)')
+      .order('created_at', { ascending: false });
+
+    corridasPorCorredor = {};
     const resumoMap = {};
+    const temporadasSet = new Set();
+
     (resumos || []).forEach(r => {
+      // agrupa por corredor
+      if (!corridasPorCorredor[r.corredor_id]) corridasPorCorredor[r.corredor_id] = [];
+      corridasPorCorredor[r.corredor_id].push(r);
+
+      // pontos
       if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos_atual: 0, pontos_historico: 0, por_temporada: {} };
       resumoMap[r.corredor_id].total++;
       if (r.status === 'aprovado') resumoMap[r.corredor_id].pontos_atual += (r.pontos || 0);
@@ -149,6 +183,7 @@
         const t = r.temporada || 'Temporada anterior';
         resumoMap[r.corredor_id].por_temporada[t] = (resumoMap[r.corredor_id].por_temporada[t] || 0) + (r.pontos || 0);
       }
+      if (r.temporada) temporadasSet.add(r.temporada);
     });
 
     crmDados = corredores.map(c => ({
@@ -159,6 +194,9 @@
       por_temporada: resumoMap[c.id]?.por_temporada || {},
     }));
 
+    // Ordena por pontos_atual DESC, depois por nome
+    crmDados.sort((a, b) => b.pontos_atual - a.pontos_atual || a.nome.localeCompare(b.nome));
+
     const agora = new Date();
     const ha30 = new Date(agora - 30 * 24 * 60 * 60 * 1000);
     document.getElementById('crmTotal').textContent = crmDados.length;
@@ -166,9 +204,17 @@
     document.getElementById('crmNovos').textContent = crmDados.filter(c => new Date(c.created_at) >= ha30).length;
     const cidades = [...new Set(crmDados.map(c => c.cidade).filter(Boolean))];
     document.getElementById('crmCidades').textContent = cidades.length;
-    const sel = document.getElementById('crmFiltroCidade');
-    sel.innerHTML = '<option value="">Todas as cidades</option>';
-    cidades.sort().forEach(cidade => sel.innerHTML += `<option value="${cidade}">${cidade}</option>`);
+
+    const selCidade = document.getElementById('crmFiltroCidade');
+    selCidade.innerHTML = '<option value="">Todas as cidades</option>';
+    cidades.sort().forEach(cidade => selCidade.innerHTML += `<option value="${cidade}">${cidade}</option>`);
+
+    // Temporadas
+    todasTemporadas = [...temporadasSet].sort();
+    const selTemp = document.getElementById('crmFiltroTemporada');
+    selTemp.innerHTML = '<option value="">Todas as temporadas</option>';
+    todasTemporadas.forEach(t => selTemp.innerHTML += `<option value="${t}">${t}</option>`);
+
     filtrarCRM();
   }
 
@@ -176,31 +222,80 @@
     const busca = document.getElementById('crmBusca').value.toLowerCase();
     const cidade = document.getElementById('crmFiltroCidade').value;
     const dist = document.getElementById('crmFiltroDist').value;
-    const filtrados = crmDados.filter(c =>
+    const sexo = document.getElementById('crmFiltroSexo').value;
+    const temporada = document.getElementById('crmFiltroTemporada').value;
+
+    let filtrados = crmDados.filter(c =>
       (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca)) &&
       (!cidade || c.cidade === cidade) &&
-      (!dist || (c.distancias_preferidas || '').includes(dist))
+      (!dist || (c.distancias_preferidas || '').includes(dist)) &&
+      (!sexo || c.sexo === sexo)
     );
-    renderCRM(filtrados);
+
+    // Filtro de temporada: mostra apenas corredores que têm corrida nessa temporada
+    if (temporada) {
+      filtrados = filtrados.filter(c => {
+        const corridas = corridasPorCorredor[c.id] || [];
+        return corridas.some(r => r.temporada === temporada);
+      });
+    }
+
+    renderCRM(filtrados, temporada);
   }
 
-  function renderCRM(lista) {
+  function renderCRM(lista, temporadaFiltro) {
     const div = document.getElementById('listaCRM');
     if (lista.length === 0) { div.innerHTML = '<div class="empty">Nenhum corredor encontrado.</div>'; return; }
-    div.innerHTML = lista.map(c => {
+    div.innerHTML = lista.map((c, idx) => {
       const telLimpo = (c.telefone || '').replace(/\D/g, '');
       const wppLink = telLimpo ? `https://wa.me/55${telLimpo}` : null;
       const dataCad = new Date(c.created_at).toLocaleDateString('pt-BR');
       const distTags = (c.distancias_preferidas || '').split(',').map(d => d.trim()).filter(Boolean)
         .map(d => `<span class="dist-pref-tag">${d}</span>`).join(' ');
+
+      // Corridas deste corredor
+      let todasCorridas = corridasPorCorredor[c.id] || [];
+      if (temporadaFiltro) todasCorridas = todasCorridas.filter(r => r.temporada === temporadaFiltro);
+
+      const corridasHtml = todasCorridas.length === 0
+        ? '<p style="font-size:12px; color:#bbb; padding:8px 0;">Nenhuma corrida registrada.</p>'
+        : `<table class="corridas-table">
+            <thead><tr><th>#</th><th>Evento</th><th>Data</th><th>Dist</th><th>Tempo</th><th>Posição</th><th>Pts</th><th>Status</th></tr></thead>
+            <tbody>
+              ${todasCorridas.map((r, i) => {
+                const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                const pts = r.pontos !== null && r.pontos !== undefined ? r.pontos : '—';
+                return `<tr>
+                  <td style="color:#bbb;">${i + 1}</td>
+                  <td><strong>${r.eventos?.nome || '?'}</strong>${r.numero_peito ? `<br><span style="color:#bbb;font-size:10px;">Peito #${r.numero_peito}</span>` : ''}</td>
+                  <td style="white-space:nowrap;">${dataEv}</td>
+                  <td>${r.distancia || r.eventos?.distancia || '—'}</td>
+                  <td>${r.tempo || '—'}</td>
+                  <td>${r.posicao_geral ? r.posicao_geral + 'º' : '—'}</td>
+                  <td style="font-weight:700; color:#1F4E79;">${pts}</td>
+                  <td><span class="status-badge status-${r.status || 'pendente'}">${r.status || 'pendente'}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>`;
+
+      // Pontos exibidos: se há filtro de temporada, mostra pts dessa temporada; caso contrário, pts atual
+      let ptsMostrar = c.pontos_atual;
+      if (temporadaFiltro) {
+        ptsMostrar = todasCorridas.filter(r => r.status === 'aprovado').reduce((s, r) => s + (r.pontos || 0), 0);
+      }
+
       return `
         <div class="crm-card" id="crm-card-${c.id}">
           <div class="crm-row" onclick="toggleCRMDetail('${c.id}')">
-            <div><div class="nome">${c.nome}</div><div class="sub">Cadastrado em ${dataCad}</div></div>
+            <div>
+              <div class="nome">${idx + 1}. ${c.nome}</div>
+              <div class="sub">Cadastrado em ${dataCad}${c.sexo ? ' · ' + (c.sexo === 'M' ? '♂ Masculino' : '♀ Feminino') : ''}</div>
+            </div>
             <div><div style="font-size:13px;">${c.email || '—'}</div><div class="sub">${c.telefone || ''}</div></div>
             <div style="font-size:13px;">${c.cidade || '—'}</div>
-            <div style="font-size:13px; text-align:center;">${c.corridas}</div>
-            <div style="font-size:13px; text-align:center; font-weight:700; color:#1F4E79;">${c.pontos_atual} pts</div>
+            <div style="font-size:13px; text-align:center;">${todasCorridas.length > 0 ? todasCorridas.length : c.corridas}</div>
+            <div style="font-size:13px; text-align:center; font-weight:700; color:#1F4E79;">${ptsMostrar} pts</div>
             <div style="font-size:13px; text-align:center; color:#888;">${c.pontos_historico > 0 ? c.pontos_historico + ' pts' : '—'}</div>
             <div style="color:#bbb; font-size:16px;">▼</div>
           </div>
@@ -217,7 +312,6 @@
               </div>
               <div>
                 <div class="crm-campo"><span class="ck">Cidade / Sexo</span>${c.cidade || '—'} · ${c.sexo === 'M' ? 'Masculino' : c.sexo === 'F' ? 'Feminino' : '—'}</div>
-                <div class="crm-campo" style="margin-top:10px;"><span class="ck">Corridas</span>${c.corridas} corrida(s)</div>
                 <div class="crm-campo" style="margin-top:10px;"><span class="ck">Pontos — temporada atual</span><strong style="color:#1F4E79;">${c.pontos_atual} pts</strong></div>
                 ${c.pontos_historico > 0 ? `
                   <div class="crm-campo" style="margin-top:6px;"><span class="ck">Temporadas anteriores</span>
@@ -228,11 +322,21 @@
                 <div class="crm-campo" style="margin-top:10px;"><span class="ck">Distâncias preferidas</span>${distTags || '—'}</div>
               </div>
             </div>
-            <div style="margin-bottom:6px; font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Notas internas</div>
-            <textarea class="crm-notas-area" id="notas-${c.id}" placeholder="Adicione observações...">${c.crm_notas || ''}</textarea>
-            <div class="crm-actions">
-              <button class="btn btn-primary btn-sm" onclick="salvarCRM('${c.id}')">💾 Salvar notas</button>
-              <span class="msg-crm" id="msg-crm-${c.id}">✅ Salvo!</span>
+
+            <!-- Histórico de corridas -->
+            <div class="corridas-section">
+              <h4>🏃 Corridas registradas${temporadaFiltro ? ' — ' + temporadaFiltro : ''} (${todasCorridas.length})</h4>
+              ${corridasHtml}
+            </div>
+
+            <!-- Notas internas -->
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid #eee;">
+              <div style="margin-bottom:6px; font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Notas internas</div>
+              <textarea class="crm-notas-area" id="notas-${c.id}" placeholder="Adicione observações...">${c.crm_notas || ''}</textarea>
+              <div class="crm-actions">
+                <button class="btn btn-primary btn-sm" onclick="salvarCRM('${c.id}')">💾 Salvar notas</button>
+                <span class="msg-crm" id="msg-crm-${c.id}">✅ Salvo!</span>
+              </div>
             </div>
           </div>
         </div>`;
