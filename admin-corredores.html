@@ -264,15 +264,24 @@
             <tbody>
               ${todasCorridas.map((r, i) => {
                 const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-                const pts = r.pontos !== null && r.pontos !== undefined ? r.pontos : '—';
-                return `<tr>
+                const pts = r.pontos !== null && r.pontos !== undefined ? r.pontos : '';
+                return `<tr id="resultado-row-${r.id}">
                   <td style="color:#bbb;">${i + 1}</td>
                   <td><strong>${r.eventos?.nome || '?'}</strong>${r.numero_peito ? `<br><span style="color:#bbb;font-size:10px;">Peito #${r.numero_peito}</span>` : ''}</td>
                   <td style="white-space:nowrap;">${dataEv}</td>
                   <td>${r.distancia || r.eventos?.distancia || '—'}</td>
                   <td>${r.tempo || '—'}</td>
                   <td>${r.posicao_geral ? r.posicao_geral + 'º' : '—'}</td>
-                  <td style="font-weight:700; color:#1F4E79;">${pts}</td>
+                  <td>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                      <input type="number" id="pts-input-${r.id}" value="${pts}" min="0" max="10" step="0.5"
+                        style="width:60px; padding:3px 6px; border:1px solid #ddd; border-radius:5px; font-size:12px; font-weight:700; color:#1F4E79; font-family:inherit;"
+                        onkeydown="if(event.key==='Enter') salvarPontos('${r.id}', '${c.id}')">
+                      <button onclick="salvarPontos('${r.id}', '${c.id}')" title="Salvar"
+                        style="background:#1F4E79; color:#fff; border:none; border-radius:5px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">✓</button>
+                      <span id="pts-msg-${r.id}" style="font-size:10px; color:#1a7a4a; display:none;">✅</span>
+                    </div>
+                  </td>
                   <td><span class="status-badge status-${r.status || 'pendente'}">${r.status || 'pendente'}</span></td>
                 </tr>`;
               }).join('')}
@@ -344,6 +353,33 @@
   }
 
   function toggleCRMDetail(id) { document.getElementById(`crm-detail-${id}`).classList.toggle('aberto'); }
+
+  async function salvarPontos(resultadoId, corredorId) {
+    const input = document.getElementById(`pts-input-${resultadoId}`);
+    const msg = document.getElementById(`pts-msg-${resultadoId}`);
+    const novoPts = parseFloat(input.value);
+    if (isNaN(novoPts) || novoPts < 0) { input.style.borderColor = '#b00020'; return; }
+    input.style.borderColor = '#ddd';
+    const { error } = await sb.from('resultados').update({ pontos: novoPts }).eq('id', resultadoId);
+    if (!error) {
+      // Atualiza cache local
+      for (const cid in corridasPorCorredor) {
+        const r = corridasPorCorredor[cid].find(x => x.id === resultadoId);
+        if (r) { r.pontos = novoPts; break; }
+      }
+      // Recalcula pontos do corredor no crmDados
+      const corredor = crmDados.find(x => x.id === corredorId);
+      if (corredor) {
+        const corridas = corridasPorCorredor[corredorId] || [];
+        corredor.pontos_atual = corridas.filter(r => r.status === 'aprovado').reduce((s, r) => s + (r.pontos || 0), 0);
+        corredor.pontos_historico = corridas.filter(r => r.status === 'arquivado').reduce((s, r) => s + (r.pontos || 0), 0);
+      }
+      msg.style.display = 'inline';
+      setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    } else {
+      input.style.borderColor = '#b00020';
+    }
+  }
 
   async function salvarCRM(corredorId) {
     const notas = document.getElementById(`notas-${corredorId}`).value;
