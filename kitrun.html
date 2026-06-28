@@ -161,7 +161,8 @@
 
 <header>
   <a href="index.html" class="logo">
-    <img src="kitrun-logo.png" alt="Kit Run Express" style="height:48px; border-radius:6px;">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
   </a>
   <button class="btn-sair" id="btnSair" style="display:none;" onclick="sair()">Sair</button>
 </header>
@@ -180,8 +181,14 @@
 <!-- ── PAINEL ── -->
 <div class="painel" id="painel">
 
-  <h1 class="page-title">🏃 Kit Run Express — Painel de Eventos</h1>
-  <p class="page-sub">Selecione as corridas em que o serviço de retirada de kit estará disponível.</p>
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:6px;">
+    <img src="kitrun-logo.png" alt="Kit Run Express" style="height:64px; border-radius:8px;">
+    <div>
+      <h1 class="page-title" style="margin-bottom:2px;">Painel de Eventos</h1>
+      <p class="page-sub" style="margin-bottom:0;">Selecione as corridas em que o serviço de retirada de kit estará disponível.</p>
+    </div>
+  </div>
+  <div style="margin-bottom:24px;"></div>
 
   <!-- Seletor de corridas -->
   <div class="card">
