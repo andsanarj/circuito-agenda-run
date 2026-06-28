@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitações — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 960px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-green { background: #1a7a4a; color: #fff; }
+    .btn-green:hover { background: #145e39; }
+    .btn-red { background: #b00020; color: #fff; }
+    .btn-red:hover { background: #8a0018; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+    .status-pendente { background: #fff3e0; color: #c77700; }
+    .status-aprovado { background: #e6f9f0; color: #1a7a4a; }
+    .status-rejeitado { background: #fdecea; color: #b00020; }
+    .badge-count { background: #E8622A; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .nota-form { display: none; margin-top: 8px; }
+    .nota-form.aberta { display: block; }
+    .nota-form textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; min-height: 52px; font-family: inherit; }
+    .nota-form textarea:focus { outline: none; border-color: #1F4E79; }
+    .nota-form .btns { display: flex; gap: 8px; margin-top: 6px; }
+    .info-sol strong { display: block; font-size: 14px; }
+    .info-sol span { font-size: 12px; color: #888; display: block; }
+    .info-sol a { font-size: 12px; color: #1F4E79; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>📋 Solicitações de Organizadores</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Pedidos de inclusão de eventos no Circuito.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge-count" id="countPendentes" style="display:none;">0 novas</span>
+        <button class="btn btn-gray btn-sm" onclick="carregar()">🔄 Atualizar</button>
+      </div>
+    </div>
+    <div id="tabela"><div class="empty">Carregando...</div></div>
+    <div id="msg" class="msg"></div>
+  </div>
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregar();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregar() {
+    const { data, error } = await sb.from('organizadores')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+    const lista = data || [];
+
+    const pendentes = lista.filter(s => !s.status || s.status === 'pendente');
+    const badge = document.getElementById('countPendentes');
+    if (pendentes.length > 0) { badge.textContent = `${pendentes.length} nova${pendentes.length > 1 ? 's' : ''}`; badge.style.display = 'inline-block'; }
+    else { badge.style.display = 'none'; }
+
+    if (!lista.length) { document.getElementById('tabela').innerHTML = '<div class="empty">Nenhuma solicitação ainda.</div>'; return; }
+
+    let html = `<table><thead><tr><th>Organizador</th><th>Evento</th><th>Detalhes</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+    lista.forEach(s => {
+      const dataSol = s.created_at ? new Date(s.created_at).toLocaleDateString('pt-BR') : '—';
+      const status = s.status || 'pendente';
+      html += `
+        <tr id="row-${s.id}">
+          <td class="info-sol">
+            <strong>${s.nome_organizador || s.nome || '—'}</strong>
+            <span>${s.email || ''}</span>
+            ${s.telefone ? `<span>📞 ${s.telefone}</span>` : ''}
+          </td>
+          <td class="info-sol">
+            <strong>${s.nome_evento || s.evento || '—'}</strong>
+            ${s.data_evento ? `<span>📅 ${new Date(s.data_evento + 'T12:00:00').toLocaleDateString('pt-BR')}</span>` : ''}
+            ${s.cidade ? `<span>📍 ${s.cidade}</span>` : ''}
+            ${s.distancias ? `<span>📏 ${s.distancias}</span>` : ''}
+            ${s.site ? `<a href="${s.site}" target="_blank">🔗 Site do evento</a>` : ''}
+          </td>
+          <td class="info-sol" style="max-width:200px;">
+            ${s.mensagem || s.descricao || s.observacoes ? `<span style="font-style:italic;">"${s.mensagem || s.descricao || s.observacoes}"</span>` : '<span style="color:#ccc;">—</span>'}
+            ${s.nota_admin ? `<div style="margin-top:6px; padding:6px 8px; background:#f7f9fb; border-radius:6px; font-size:11px; color:#1F4E79;"><strong>Nota:</strong> ${s.nota_admin}</div>` : ''}
+            <div style="font-size:11px; color:#ccc; margin-top:4px;">Enviado em ${dataSol}</div>
+          </td>
+          <td><span class="status-badge status-${status}">${status}</span></td>
+          <td style="min-width:150px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${status === 'pendente' || !status ? `
+                <button class="btn btn-green btn-sm" onclick="atualizar('${s.id}','aprovado')">✅ Aprovar</button>
+                <button class="btn btn-red btn-sm" onclick="atualizar('${s.id}','rejeitado')">❌ Rejeitar</button>
+              ` : `
+                <button class="btn btn-gray btn-sm" onclick="atualizar('${s.id}','pendente')">↩ Reabrir</button>
+              `}
+              <button class="btn btn-gray btn-sm" onclick="toggleNota('${s.id}')">📝 Nota</button>
+            </div>
+            <div class="nota-form" id="nota-${s.id}">
+              <textarea id="notaTexto-${s.id}" placeholder="Adicionar nota interna...">${s.nota_admin || ''}</textarea>
+              <div class="btns">
+                <button class="btn btn-gray btn-sm" onclick="salvarNota('${s.id}')">Salvar nota</button>
+                <button class="btn btn-gray btn-sm" onclick="toggleNota('${s.id}')">Cancelar</button>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tabela').innerHTML = html;
+  }
+
+  function toggleNota(id) { document.getElementById(`nota-${id}`).classList.toggle('aberta'); }
+
+  async function atualizar(id, status) {
+    const msg = document.getElementById('msg');
+    const { error } = await sb.from('organizadores').update({ status }).eq('id', id);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      msg.textContent = status === 'aprovado' ? '✅ Solicitação aprovada!' : status === 'rejeitado' ? '❌ Solicitação rejeitada.' : '↩ Reaberta.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await carregar();
+    }
+  }
+
+  async function salvarNota(id) {
+    const nota = document.getElementById(`notaTexto-${id}`).value.trim();
+    const msg = document.getElementById('msg');
+    const { error } = await sb.from('organizadores').update({ nota_admin: nota || null }).eq('id', id);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      toggleNota(id);
+      await carregar();
+    }
+  }
+</script>
+</body>
+</html>

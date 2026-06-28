@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    label { display: block; font-size: 12px; color: #666; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #1F4E79; box-shadow: 0 0 0 3px rgba(31,78,121,0.1); }
+    textarea { min-height: 64px; resize: vertical; }
+    .btn { padding: 9px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-primary { background: #1F4E79; color: #fff; }
+    .btn-primary:hover { background: #163a5f; }
+    .btn-red { background: #b00020; color: #fff; }
+    .btn-red:hover { background: #8a0018; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 11px 12px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .pontuacao-chip { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 12px; background: #e8f4fd; color: #1F4E79; display: inline-block; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.aberto { display: flex; }
+    .modal { background: #fff; border-radius: 14px; padding: 28px; width: 90%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 20px; color: #1F4E79; margin-bottom: 18px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+    .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filtros input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; min-width: 220px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+
+  <!-- Formulário de cadastro -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🏁 Cadastrar Evento</h2>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Nome do Evento *</label>
+        <input type="text" id="evNome" placeholder="Ex: Meia de São Paulo">
+      </div>
+      <div>
+        <label>Data *</label>
+        <input type="date" id="evData">
+      </div>
+      <div>
+        <label>Distância</label>
+        <input type="text" id="evDistancia" placeholder="Ex: 21km, 5k, 10km">
+      </div>
+      <div>
+        <label>Cidade</label>
+        <input type="text" id="evCidade" placeholder="Ex: São Paulo, SP">
+      </div>
+      <div>
+        <label>Pontuação (categoria) *</label>
+        <select id="evPontuacao">
+          <option value="0.5">🥉 Bronze — 0,5 pt</option>
+          <option value="1" selected>🥈 Prata — 1 pt</option>
+          <option value="2">🥇 Ouro — 2 pts</option>
+        </select>
+      </div>
+      <div>
+        <label>Site / Link do Evento</label>
+        <input type="url" id="evSite" placeholder="https://...">
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label>Observações</label>
+      <textarea id="evObs" placeholder="Informações adicionais..."></textarea>
+    </div>
+    <div style="margin-top:18px; display:flex; gap:10px; align-items:center;">
+      <button class="btn btn-primary" onclick="salvarEvento()" id="btnSalvar">+ Cadastrar Evento</button>
+      <div id="msgEvento" class="msg" style="margin:0; flex:1;"></div>
+    </div>
+  </div>
+
+  <!-- Lista de eventos -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 Eventos Cadastrados</h2>
+      <button class="btn btn-gray btn-sm" onclick="carregarEventos()">🔄 Atualizar</button>
+    </div>
+    <div class="filtros">
+      <input type="text" id="filtroEv" placeholder="Buscar evento..." oninput="filtrarEventos()">
+    </div>
+    <div id="tabelaEventos"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+</div>
+
+<!-- Modal de edição -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)fecharModal()">
+  <div class="modal">
+    <h3>✏️ Editar Evento</h3>
+    <input type="hidden" id="editId">
+    <div class="form-grid">
+      <div>
+        <label>Nome *</label>
+        <input type="text" id="editNome">
+      </div>
+      <div>
+        <label>Data *</label>
+        <input type="date" id="editData">
+      </div>
+      <div>
+        <label>Distância</label>
+        <input type="text" id="editDistancia">
+      </div>
+      <div>
+        <label>Cidade</label>
+        <input type="text" id="editCidade">
+      </div>
+      <div>
+        <label>Pontuação *</label>
+        <select id="editPontuacao">
+          <option value="0.5">🥉 Bronze — 0,5 pt</option>
+          <option value="1">🥈 Prata — 1 pt</option>
+          <option value="2">🥇 Ouro — 2 pts</option>
+        </select>
+      </div>
+      <div>
+        <label>Site</label>
+        <input type="url" id="editSite">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label>Observações</label>
+      <textarea id="editObs"></textarea>
+    </div>
+    <div style="margin-top:18px; display:flex; gap:10px; justify-content:space-between;">
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+      <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+    </div>
+    <div id="msgEdit" class="msg"></div>
+  </div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let _eventos = [];
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregarEventos();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregarEventos() {
+    const { data, error } = await sb.from('eventos').select('*').order('data', { ascending: false });
+    if (error) { document.getElementById('tabelaEventos').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+    _eventos = data || [];
+    filtrarEventos();
+  }
+
+  function filtrarEventos() {
+    const busca = document.getElementById('filtroEv').value.toLowerCase().trim();
+    const lista = busca ? _eventos.filter(e => (e.nome || '').toLowerCase().includes(busca) || (e.cidade || '').toLowerCase().includes(busca)) : _eventos;
+    renderEventos(lista);
+  }
+
+  function renderEventos(lista) {
+    if (!lista.length) { document.getElementById('tabelaEventos').innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>'; return; }
+    const labelPts = { '0.5': '🥉 Bronze', '1': '🥈 Prata', '2': '🥇 Ouro' };
+    let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Distância</th><th>Pontuação</th><th>Ações</th></tr></thead><tbody>`;
+    lista.forEach(e => {
+      const dataFmt = e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const pts = e.pontuacao !== undefined && e.pontuacao !== null ? String(e.pontuacao) : '1';
+      html += `
+        <tr>
+          <td>
+            <strong>${e.nome}</strong>
+            ${e.cidade ? `<br><span style="font-size:11px;color:#888;">${e.cidade}</span>` : ''}
+            ${e.site ? `<br><a href="${e.site}" target="_blank" style="font-size:11px;color:#1F4E79;">🔗 site</a>` : ''}
+          </td>
+          <td style="white-space:nowrap;">${dataFmt}</td>
+          <td>${e.distancia || '—'}</td>
+          <td><span class="pontuacao-chip">${labelPts[pts] || pts + ' pt'}</span></td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-gray btn-sm" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>
+            <button class="btn btn-red btn-sm" style="margin-left:6px;" onclick="excluirEvento('${e.id}', '${(e.nome || '').replace(/'/g, "\\'")}')">🗑️</button>
+          </td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tabelaEventos').innerHTML = html;
+  }
+
+  async function salvarEvento() {
+    const nome = document.getElementById('evNome').value.trim();
+    const data = document.getElementById('evData').value;
+    const msg = document.getElementById('msgEvento');
+    if (!nome || !data) { msg.textContent = 'Nome e data são obrigatórios.'; msg.className = 'msg error'; return; }
+    const btn = document.getElementById('btnSalvar');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const payload = {
+      nome,
+      data,
+      distancia: document.getElementById('evDistancia').value.trim() || null,
+      cidade: document.getElementById('evCidade').value.trim() || null,
+      pontuacao: parseFloat(document.getElementById('evPontuacao').value),
+      site: document.getElementById('evSite').value.trim() || null,
+      observacoes: document.getElementById('evObs').value.trim() || null,
+    };
+    const { error } = await sb.from('eventos').insert([payload]);
+    btn.disabled = false; btn.textContent = '+ Cadastrar Evento';
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      msg.textContent = '✅ Evento cadastrado!'; msg.className = 'msg success';
+      ['evNome','evData','evDistancia','evCidade','evSite','evObs'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('evPontuacao').value = '1';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await carregarEventos();
+    }
+  }
+
+  function abrirEdicao(id) {
+    const e = _eventos.find(ev => ev.id === id);
+    if (!e) return;
+    document.getElementById('editId').value = e.id;
+    document.getElementById('editNome').value = e.nome || '';
+    document.getElementById('editData').value = e.data || '';
+    document.getElementById('editDistancia').value = e.distancia || '';
+    document.getElementById('editCidade').value = e.cidade || '';
+    document.getElementById('editPontuacao').value = String(e.pontuacao ?? 1);
+    document.getElementById('editSite').value = e.site || '';
+    document.getElementById('editObs').value = e.observacoes || '';
+    document.getElementById('modalOverlay').classList.add('aberto');
+    document.getElementById('msgEdit').className = 'msg';
+  }
+
+  function fecharModal() { document.getElementById('modalOverlay').classList.remove('aberto'); }
+
+  async function salvarEdicao() {
+    const id = document.getElementById('editId').value;
+    const nome = document.getElementById('editNome').value.trim();
+    const data = document.getElementById('editData').value;
+    const msg = document.getElementById('msgEdit');
+    if (!nome || !data) { msg.textContent = 'Nome e data são obrigatórios.'; msg.className = 'msg error'; return; }
+    const payload = {
+      nome,
+      data,
+      distancia: document.getElementById('editDistancia').value.trim() || null,
+      cidade: document.getElementById('editCidade').value.trim() || null,
+      pontuacao: parseFloat(document.getElementById('editPontuacao').value),
+      site: document.getElementById('editSite').value.trim() || null,
+      observacoes: document.getElementById('editObs').value.trim() || null,
+    };
+    const { error } = await sb.from('eventos').update(payload).eq('id', id);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      fecharModal();
+      await carregarEventos();
+    }
+  }
+
+  async function excluirEvento(id, nome) {
+    if (!confirm(`Excluir o evento "${nome}"?\n\nIsso não apaga resultados já cadastrados, mas pode afetar a pontuação.`)) return;
+    const { error } = await sb.from('eventos').delete().eq('id', id);
+    if (error) { alert('Erro: ' + error.message); }
+    else { await carregarEventos(); }
+  }
+</script>
+</body>
+</html>

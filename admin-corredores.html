@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corredores — Admin Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+    .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-primary { background: #1F4E79; color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-wpp { background: #25D366; color: #fff; border: none; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    /* CRM */
+    .crm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .crm-stat { background: #f7f9fb; border-radius: 8px; padding: 14px 16px; text-align: center; }
+    .crm-stat .val { font-size: 22px; font-weight: 800; color: #1F4E79; }
+    .crm-stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
+    .crm-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    .crm-filtros input, .crm-filtros select { padding: 7px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; width: auto; font-family: inherit; }
+    .crm-filtros input { min-width: 220px; }
+    .crm-card { border: 1px solid #e8edf2; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .crm-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 80px 90px 100px auto; gap: 8px; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.15s; }
+    .crm-row:hover { background: #f7f9fb; }
+    .crm-row .nome { font-weight: 700; color: #1F4E79; font-size: 14px; }
+    .crm-row .sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .crm-detail { display: none; border-top: 1px solid #f0f0f0; background: #fafbfc; padding: 18px 16px; }
+    .crm-detail.aberto { display: block; }
+    .crm-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+    .crm-campo { font-size: 13px; }
+    .crm-campo .ck { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; }
+    .crm-campo a { color: #1F4E79; text-decoration: none; }
+    .crm-campo a:hover { text-decoration: underline; }
+    .crm-notas-area { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; resize: vertical; min-height: 64px; font-family: inherit; margin-bottom: 10px; }
+    .crm-notas-area:focus { outline: none; border-color: #1F4E79; }
+    .crm-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .dist-pref-tag { display: inline-flex; align-items: center; background: #EBF3FB; color: #1F4E79; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+    .msg-crm { font-size: 12px; color: #1a7a4a; padding: 4px 0; display: none; }
+    .msg-crm.vis { display: inline; }
+    .col-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 80px 90px 100px auto; gap: 8px; padding: 8px 16px; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+    @media (max-width: 700px) {
+      .crm-row, .col-header { grid-template-columns: 1fr 1fr; }
+      .crm-stats { grid-template-columns: repeat(2, 1fr); }
+      .crm-detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>👥 Corredores — CRM</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Gerencie contatos, adicione notas e acompanhe o histórico de cada corredor.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregarCRM()">🔄 Atualizar</button>
+    </div>
+    <div class="crm-stats">
+      <div class="crm-stat"><div class="val" id="crmTotal">—</div><div class="lbl">Cadastrados</div></div>
+      <div class="crm-stat"><div class="val" id="crmAtivos">—</div><div class="lbl">Com corridas</div></div>
+      <div class="crm-stat"><div class="val" id="crmNovos">—</div><div class="lbl">Novos (30 dias)</div></div>
+      <div class="crm-stat"><div class="val" id="crmCidades">—</div><div class="lbl">Cidades</div></div>
+    </div>
+    <div class="crm-filtros">
+      <input type="text" id="crmBusca" placeholder="🔍 Buscar por nome ou e-mail..." oninput="filtrarCRM()">
+      <select id="crmFiltroCidade" onchange="filtrarCRM()"><option value="">Todas as cidades</option></select>
+      <select id="crmFiltroDist" onchange="filtrarCRM()">
+        <option value="">Todas as distâncias</option>
+        <option>5K</option><option>10K</option><option>15K</option><option>21K</option><option>42K</option>
+      </select>
+    </div>
+    <div class="col-header">
+      <span>Corredor</span><span>Contato</span><span>Cidade</span><span>Corridas</span><span>Pts atual</span><span>Pts histórico</span><span></span>
+    </div>
+    <div id="listaCRM"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let crmDados = [];
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregarCRM();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregarCRM() {
+    const { data: corredores } = await sb.from('corredores')
+      .select('id, nome, email, telefone, cidade, sexo, instagram, created_at, crm_notas, distancias_preferidas')
+      .order('created_at', { ascending: false });
+    if (!corredores) return;
+
+    const { data: resumos } = await sb.from('resultados').select('corredor_id, pontos, status, temporada');
+    const resumoMap = {};
+    (resumos || []).forEach(r => {
+      if (!resumoMap[r.corredor_id]) resumoMap[r.corredor_id] = { total: 0, pontos_atual: 0, pontos_historico: 0, por_temporada: {} };
+      resumoMap[r.corredor_id].total++;
+      if (r.status === 'aprovado') resumoMap[r.corredor_id].pontos_atual += (r.pontos || 0);
+      if (r.status === 'arquivado') {
+        resumoMap[r.corredor_id].pontos_historico += (r.pontos || 0);
+        const t = r.temporada || 'Temporada anterior';
+        resumoMap[r.corredor_id].por_temporada[t] = (resumoMap[r.corredor_id].por_temporada[t] || 0) + (r.pontos || 0);
+      }
+    });
+
+    crmDados = corredores.map(c => ({
+      ...c,
+      corridas: resumoMap[c.id]?.total || 0,
+      pontos_atual: resumoMap[c.id]?.pontos_atual || 0,
+      pontos_historico: resumoMap[c.id]?.pontos_historico || 0,
+      por_temporada: resumoMap[c.id]?.por_temporada || {},
+    }));
+
+    const agora = new Date();
+    const ha30 = new Date(agora - 30 * 24 * 60 * 60 * 1000);
+    document.getElementById('crmTotal').textContent = crmDados.length;
+    document.getElementById('crmAtivos').textContent = crmDados.filter(c => c.corridas > 0).length;
+    document.getElementById('crmNovos').textContent = crmDados.filter(c => new Date(c.created_at) >= ha30).length;
+    const cidades = [...new Set(crmDados.map(c => c.cidade).filter(Boolean))];
+    document.getElementById('crmCidades').textContent = cidades.length;
+    const sel = document.getElementById('crmFiltroCidade');
+    sel.innerHTML = '<option value="">Todas as cidades</option>';
+    cidades.sort().forEach(cidade => sel.innerHTML += `<option value="${cidade}">${cidade}</option>`);
+    filtrarCRM();
+  }
+
+  function filtrarCRM() {
+    const busca = document.getElementById('crmBusca').value.toLowerCase();
+    const cidade = document.getElementById('crmFiltroCidade').value;
+    const dist = document.getElementById('crmFiltroDist').value;
+    const filtrados = crmDados.filter(c =>
+      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca)) &&
+      (!cidade || c.cidade === cidade) &&
+      (!dist || (c.distancias_preferidas || '').includes(dist))
+    );
+    renderCRM(filtrados);
+  }
+
+  function renderCRM(lista) {
+    const div = document.getElementById('listaCRM');
+    if (lista.length === 0) { div.innerHTML = '<div class="empty">Nenhum corredor encontrado.</div>'; return; }
+    div.innerHTML = lista.map(c => {
+      const telLimpo = (c.telefone || '').replace(/\D/g, '');
+      const wppLink = telLimpo ? `https://wa.me/55${telLimpo}` : null;
+      const dataCad = new Date(c.created_at).toLocaleDateString('pt-BR');
+      const distTags = (c.distancias_preferidas || '').split(',').map(d => d.trim()).filter(Boolean)
+        .map(d => `<span class="dist-pref-tag">${d}</span>`).join(' ');
+      return `
+        <div class="crm-card" id="crm-card-${c.id}">
+          <div class="crm-row" onclick="toggleCRMDetail('${c.id}')">
+            <div><div class="nome">${c.nome}</div><div class="sub">Cadastrado em ${dataCad}</div></div>
+            <div><div style="font-size:13px;">${c.email || '—'}</div><div class="sub">${c.telefone || ''}</div></div>
+            <div style="font-size:13px;">${c.cidade || '—'}</div>
+            <div style="font-size:13px; text-align:center;">${c.corridas}</div>
+            <div style="font-size:13px; text-align:center; font-weight:700; color:#1F4E79;">${c.pontos_atual} pts</div>
+            <div style="font-size:13px; text-align:center; color:#888;">${c.pontos_historico > 0 ? c.pontos_historico + ' pts' : '—'}</div>
+            <div style="color:#bbb; font-size:16px;">▼</div>
+          </div>
+          <div class="crm-detail" id="crm-detail-${c.id}">
+            <div class="crm-detail-grid">
+              <div>
+                <div class="crm-campo"><span class="ck">E-mail</span><a href="mailto:${c.email}">${c.email || '—'}</a></div>
+                <div class="crm-campo" style="margin-top:10px;"><span class="ck">WhatsApp / Telefone</span>
+                  ${wppLink ? `<a href="${wppLink}" target="_blank" class="btn-wpp">💬 WhatsApp</a> ${c.telefone}` : (c.telefone || '—')}
+                </div>
+                <div class="crm-campo" style="margin-top:10px;"><span class="ck">Instagram</span>
+                  ${c.instagram ? `<a href="https://instagram.com/${c.instagram}" target="_blank">@${c.instagram}</a>` : '—'}
+                </div>
+              </div>
+              <div>
+                <div class="crm-campo"><span class="ck">Cidade / Sexo</span>${c.cidade || '—'} · ${c.sexo === 'M' ? 'Masculino' : c.sexo === 'F' ? 'Feminino' : '—'}</div>
+                <div class="crm-campo" style="margin-top:10px;"><span class="ck">Corridas</span>${c.corridas} corrida(s)</div>
+                <div class="crm-campo" style="margin-top:10px;"><span class="ck">Pontos — temporada atual</span><strong style="color:#1F4E79;">${c.pontos_atual} pts</strong></div>
+                ${c.pontos_historico > 0 ? `
+                  <div class="crm-campo" style="margin-top:6px;"><span class="ck">Temporadas anteriores</span>
+                    ${Object.entries(c.por_temporada).map(([t, p]) => `<div style="font-size:12px; color:#666;">${t}: <strong>${p} pt${p !== 1 ? 's' : ''}</strong></div>`).join('')}
+                  </div>
+                  <div class="crm-campo" style="margin-top:6px;"><span class="ck">Total acumulado</span><strong>${c.pontos_atual + c.pontos_historico} pts</strong></div>
+                ` : ''}
+                <div class="crm-campo" style="margin-top:10px;"><span class="ck">Distâncias preferidas</span>${distTags || '—'}</div>
+              </div>
+            </div>
+            <div style="margin-bottom:6px; font-size:11px; font-weight:700; color:#888; text-transform:uppercase;">Notas internas</div>
+            <textarea class="crm-notas-area" id="notas-${c.id}" placeholder="Adicione observações...">${c.crm_notas || ''}</textarea>
+            <div class="crm-actions">
+              <button class="btn btn-primary btn-sm" onclick="salvarCRM('${c.id}')">💾 Salvar notas</button>
+              <span class="msg-crm" id="msg-crm-${c.id}">✅ Salvo!</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleCRMDetail(id) { document.getElementById(`crm-detail-${id}`).classList.toggle('aberto'); }
+
+  async function salvarCRM(corredorId) {
+    const notas = document.getElementById(`notas-${corredorId}`).value;
+    const msg = document.getElementById(`msg-crm-${corredorId}`);
+    const { error } = await sb.from('corredores').update({ crm_notas: notas }).eq('id', corredorId);
+    if (!error) {
+      const c = crmDados.find(x => x.id === corredorId);
+      if (c) c.crm_notas = notas;
+      msg.classList.add('vis');
+      setTimeout(() => msg.classList.remove('vis'), 2500);
+    }
+  }
+</script>
+</body>
+</html>

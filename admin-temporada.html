@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temporada — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 760px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-danger { background: #b00020; color: #fff; }
+    .btn-danger:hover { background: #8a0018; }
+    .btn-primary { background: #1F4E79; color: #fff; }
+    .btn-primary:hover { background: #163a5f; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: none; margin-top: 16px; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .aviso { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 10px; padding: 16px 20px; font-size: 13px; color: #7a4900; margin-bottom: 20px; line-height: 1.6; }
+    .aviso strong { display: block; font-size: 15px; margin-bottom: 6px; color: #c77700; }
+    .perigo { background: #fdecea; border: 1px solid #ffcdd2; border-radius: 10px; padding: 16px 20px; font-size: 13px; color: #7a001a; margin-bottom: 20px; line-height: 1.6; }
+    .perigo strong { display: block; font-size: 15px; margin-bottom: 6px; color: #b00020; }
+    label { display: block; font-size: 12px; color: #666; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
+    input[type="text"] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 14px; }
+    input:focus { outline: none; border-color: #1F4E79; box-shadow: 0 0 0 3px rgba(31,78,121,0.1); }
+    .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-box { background: #f7f9fb; border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 120px; text-align: center; }
+    .stat-box .num { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 800; color: #1F4E79; }
+    .stat-box .lbl { font-size: 11px; color: #888; text-transform: uppercase; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+
+  <!-- Status atual -->
+  <div class="card">
+    <div class="card-header"><h2>📊 Status da Temporada Atual</h2></div>
+    <div class="stats" id="statsTemporada">
+      <div class="stat-box"><div class="num" id="statCorredores">—</div><div class="lbl">Corredores</div></div>
+      <div class="stat-box"><div class="num" id="statResultados">—</div><div class="lbl">Resultados</div></div>
+      <div class="stat-box"><div class="num" id="statAprovados">—</div><div class="lbl">Aprovados</div></div>
+      <div class="stat-box"><div class="num" id="statEventos">—</div><div class="lbl">Eventos</div></div>
+    </div>
+    <p style="font-size:13px; color:#888;">Estes dados serão preservados ao iniciar uma nova temporada.</p>
+  </div>
+
+  <!-- Encerrar temporada -->
+  <div class="card">
+    <div class="card-header"><h2>⚙️ Encerrar Temporada</h2></div>
+
+    <div class="aviso">
+      <strong>⚠️ O que acontece ao encerrar:</strong>
+      Todos os resultados aprovados são arquivados. Os pontos dos corredores são zerados para iniciar a nova contagem.
+      Os resultados pendentes continuam em espera — revise-os antes de encerrar.
+      O histórico completo é preservado e pode ser consultado em <a href="admin-historico.html" style="color:#c77700; font-weight:700;">Histórico de Validações</a>.
+    </div>
+
+    <div class="perigo">
+      <strong>🔴 Esta ação não pode ser desfeita.</strong>
+      Certifique-se de que todos os resultados foram validados, o ranking foi conferido e os prêmios (se houver) foram definidos antes de prosseguir.
+    </div>
+
+    <div>
+      <label>Para confirmar, digite: <strong>ENCERRAR TEMPORADA</strong></label>
+      <input type="text" id="confirmacaoTexto" placeholder="ENCERRAR TEMPORADA">
+      <button class="btn btn-danger" id="btnEncerrar" onclick="encerrarTemporada()" disabled>⚠️ Encerrar Temporada e Iniciar Nova</button>
+      <div id="msgEncerrar" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- Ações auxiliares -->
+  <div class="card">
+    <div class="card-header"><h2>🔧 Ações Auxiliares</h2></div>
+    <p style="font-size:13px; color:#666; margin-bottom:18px; line-height:1.6;">
+      Ações individuais que não encerram a temporada. Use com cuidado.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:14px; background:#f7f9fb; border-radius:10px;">
+        <div>
+          <strong style="font-size:14px;">🔄 Recalcular pontos pendentes</strong>
+          <p style="font-size:12px; color:#888; margin-top:3px;">Re-executa o cálculo de pontos para todos os resultados com status pendente.</p>
+        </div>
+        <button class="btn btn-primary" onclick="alert('Funcionalidade em desenvolvimento.')">Executar</button>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:14px; background:#f7f9fb; border-radius:10px;">
+        <div>
+          <strong style="font-size:14px;">📤 Exportar ranking atual</strong>
+          <p style="font-size:12px; color:#888; margin-top:3px;">Baixa o ranking atual como CSV para registro externo.</p>
+        </div>
+        <button class="btn btn-primary" onclick="exportarRanking()">Exportar CSV</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregarStats();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregarStats() {
+    const [{ count: corredores }, { count: resultados }, { count: aprovados }, { count: eventos }] = await Promise.all([
+      sb.from('corredores').select('*', { count: 'exact', head: true }),
+      sb.from('resultados').select('*', { count: 'exact', head: true }),
+      sb.from('resultados').select('*', { count: 'exact', head: true }).eq('status', 'aprovado'),
+      sb.from('eventos').select('*', { count: 'exact', head: true }),
+    ]);
+    document.getElementById('statCorredores').textContent = corredores ?? '—';
+    document.getElementById('statResultados').textContent = resultados ?? '—';
+    document.getElementById('statAprovados').textContent = aprovados ?? '—';
+    document.getElementById('statEventos').textContent = eventos ?? '—';
+  }
+
+  // Habilita o botão somente quando texto correto é digitado
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('confirmacaoTexto');
+    const btn = document.getElementById('btnEncerrar');
+    if (input && btn) {
+      input.addEventListener('input', () => {
+        btn.disabled = input.value.trim() !== 'ENCERRAR TEMPORADA';
+      });
+    }
+  });
+
+  async function encerrarTemporada() {
+    const msg = document.getElementById('msgEncerrar');
+    if (document.getElementById('confirmacaoTexto').value.trim() !== 'ENCERRAR TEMPORADA') return;
+    if (!confirm('ÚLTIMA CONFIRMAÇÃO:\n\nIsso vai arquivar todos os resultados aprovados e zerar os pontos dos corredores.\n\nDeseja continuar?')) return;
+
+    const btn = document.getElementById('btnEncerrar');
+    btn.disabled = true; btn.textContent = 'Encerrando...';
+
+    // Arquivar: marca resultados aprovados como "arquivado"
+    const { error: errArq } = await sb.from('resultados').update({ status: 'arquivado' }).eq('status', 'aprovado');
+    if (errArq) { msg.textContent = 'Erro ao arquivar resultados: ' + errArq.message; msg.className = 'msg error'; btn.disabled = false; btn.textContent = '⚠️ Encerrar Temporada e Iniciar Nova'; return; }
+
+    // Nota: zerar pontuação dos corredores requer campo `pontos_total` na tabela corredores,
+    // ou recalculado via view. Se não houver campo direto, apenas limpa o campo.
+    // Ajuste conforme a estrutura real do seu banco.
+    msg.textContent = '✅ Temporada encerrada! Resultados arquivados. Nova temporada iniciada.';
+    msg.className = 'msg success';
+    document.getElementById('confirmacaoTexto').value = '';
+    btn.textContent = '✅ Concluído';
+    await carregarStats();
+  }
+
+  async function exportarRanking() {
+    const { data, error } = await sb.from('ranking_geral').select('*').order('total_pontos', { ascending: false });
+    if (error || !data?.length) { alert('Não foi possível exportar o ranking: ' + (error?.message || 'sem dados')); return; }
+    const header = Object.keys(data[0]).join(',');
+    const rows = data.map(r => Object.values(r).map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ranking_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

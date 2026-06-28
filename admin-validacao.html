@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validação de Resultados — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-green { background: #1a7a4a; color: #fff; }
+    .btn-green:hover { background: #145e39; }
+    .btn-red { background: #b00020; color: #fff; }
+    .btn-red:hover { background: #8a0018; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .badge-count { background: #E8622A; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .corredor-info strong { display: block; }
+    .corredor-info span { font-size: 11px; color: #888; }
+    .resultado-detalhe { font-size: 12px; color: #555; }
+    .resultado-detalhe .campo { margin-bottom: 2px; }
+    .link-resultado { color: #1F4E79; font-size: 12px; text-decoration: none; }
+    .link-resultado:hover { text-decoration: underline; }
+    .rejeicao-form { display: none; margin-top: 8px; }
+    .rejeicao-form.aberta { display: block; }
+    .rejeicao-form textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; min-height: 52px; font-family: inherit; }
+    .rejeicao-form textarea:focus { outline: none; border-color: #1F4E79; }
+    .rejeicao-form .btns { display: flex; gap: 8px; margin-top: 6px; }
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+    .msg.success { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg.error { background: #fdecea; color: #b00020; display: block; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>✅ Validação de Resultados</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Revise cada submissão antes de aprovar. Confira o link oficial para validar as informações.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span class="badge-count" id="countPendentes">0 pendentes</span>
+        <button class="btn btn-green btn-sm" onclick="aprovarTodos()">✅ Aprovar todos</button>
+        <button class="btn btn-gray btn-sm" onclick="carregarPendentes()">🔄 Atualizar</button>
+      </div>
+    </div>
+    <div id="tabelaPendentes"><div class="empty">Carregando...</div></div>
+    <div id="msgValidacao" class="msg"></div>
+  </div>
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregarPendentes();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregarPendentes() {
+    const { data: todos } = await sb.from('resultados').select('id, status');
+    if (!todos || todos.length === 0) {
+      document.getElementById('tabelaPendentes').innerHTML = '<div class="empty">⚠️ Nenhum resultado cadastrado ainda.</div>';
+      document.getElementById('countPendentes').textContent = '0 pendentes';
+      return;
+    }
+    const porStatus = {};
+    todos.forEach(r => { porStatus[r.status] = (porStatus[r.status] || 0) + 1; });
+    const resumo = Object.entries(porStatus).map(([s, n]) => `${s}: ${n}`).join(' | ');
+
+    const { data, error } = await sb.from('resultados')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, corredores(nome, email, instagram, assinante), eventos(nome, data, distancia)')
+      .eq('status', 'pendente')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      document.getElementById('tabelaPendentes').innerHTML = `<div class="empty" style="color:#b00020;">❌ Erro: ${error.message}</div>`;
+      return;
+    }
+
+    const pendentes = data || [];
+    document.getElementById('countPendentes').textContent = `${pendentes.length} pendente${pendentes.length !== 1 ? 's' : ''}`;
+
+    if (pendentes.length === 0) {
+      document.getElementById('tabelaPendentes').innerHTML = `<div class="empty">✅ Nenhuma submissão pendente!<br><span style="font-size:12px;color:#aaa;">${resumo}</span></div>`;
+      return;
+    }
+
+    let html = `<table><thead><tr><th>Corredor</th><th>Evento</th><th>Dados informados</th><th>Ações</th></tr></thead><tbody>`;
+    pendentes.forEach(r => {
+      const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const insta = r.corredores?.instagram ? `@${r.corredores.instagram}` : '';
+      const enviado = new Date(r.created_at).toLocaleString('pt-BR');
+      html += `
+        <tr id="row-${r.id}">
+          <td class="corredor-info">
+            <strong>${r.corredores?.nome || '?'}</strong>
+            <span>${r.corredores?.email || ''}</span>
+            ${insta ? `<span>${insta}</span>` : ''}
+          </td>
+          <td>
+            <strong>${r.eventos?.nome || '?'}</strong><br>
+            <span style="font-size:11px; color:#888;">${dataEv} · ${r.eventos?.distancia || ''}</span>
+          </td>
+          <td class="resultado-detalhe">
+            <div class="campo">🏷️ <strong>Peito:</strong> ${r.numero_peito || '—'}</div>
+            ${r.distancia ? `<div class="campo">📏 <strong>Distância:</strong> ${r.distancia}</div>` : ''}
+            <div class="campo">🏁 <strong>Finalizou:</strong> ${r.finalizou ? 'Sim' : 'Não'}</div>
+            ${r.tempo ? `<div class="campo">⏱️ <strong>Tempo:</strong> ${r.tempo}</div>` : ''}
+            ${r.posicao_geral ? `<div class="campo">🥇 <strong>Posição:</strong> ${r.posicao_geral}º geral</div>` : ''}
+            ${r.url_resultado ? `<div class="campo">🔗 <a href="${r.url_resultado}" target="_blank" class="link-resultado">Ver resultado oficial ↗</a></div>` : ''}
+            <div class="campo" style="color:#aaa; margin-top:4px;">Enviado em ${enviado}</div>
+          </td>
+          <td style="min-width:180px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0})">
+                ✅ Aprovar (${r.pontos || 0} pts)
+              </button>
+              <div style="font-size:11px; padding:5px 8px; border-radius:5px; ${r.corredores?.assinante ? 'background:#e6f9f0; color:#1a7a4a;' : 'background:#f5f5f5; color:#aaa;'}; white-space:nowrap;">
+                ${r.corredores?.assinante ? '✅ Assinante (+1 pt já incluído)' : '⬜ Não é assinante'}
+              </div>
+              <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
+                <input type="checkbox" id="kitrun-${r.id}" style="width:auto; cursor:pointer;">
+                +1 pt Kit Run Express
+              </label>
+              <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">❌ Rejeitar</button>
+            </div>
+            <div class="rejeicao-form" id="rejeicao-${r.id}">
+              <textarea id="motivo-${r.id}" placeholder="Explique o motivo da rejeição..."></textarea>
+              <div class="btns">
+                <button class="btn btn-red btn-sm" onclick="rejeitar('${r.id}')">Confirmar rejeição</button>
+                <button class="btn btn-gray btn-sm" onclick="toggleRejeicao('${r.id}')">Cancelar</button>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tabelaPendentes').innerHTML = html;
+  }
+
+  function toggleRejeicao(id) { document.getElementById(`rejeicao-${id}`).classList.toggle('aberta'); }
+
+  async function aprovar(resultadoId, pontosBase) {
+    const msg = document.getElementById('msgValidacao');
+    const isKitRun = document.getElementById(`kitrun-${resultadoId}`)?.checked;
+    const pontos = (pontosBase || 0) + (isKitRun ? 1 : 0);
+    const { error } = await sb.from('resultados').update({ status: 'aprovado', pontos, validado_em: new Date().toISOString(), motivo_rejeicao: null }).eq('id', resultadoId);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      msg.textContent = `✅ Resultado aprovado com ${pontos} pts!`;
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await carregarPendentes();
+    }
+  }
+
+  async function rejeitar(resultadoId) {
+    const motivo = document.getElementById(`motivo-${resultadoId}`).value.trim();
+    const msg = document.getElementById('msgValidacao');
+    if (!motivo) { alert('Informe o motivo da rejeição.'); return; }
+    const { error } = await sb.from('resultados').update({ status: 'rejeitado', pontos: 0, motivo_rejeicao: motivo, validado_em: new Date().toISOString() }).eq('id', resultadoId);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
+    else {
+      msg.textContent = '❌ Resultado rejeitado.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 4000);
+      await carregarPendentes();
+    }
+  }
+
+  async function aprovarTodos() {
+    const msg = document.getElementById('msgValidacao');
+    if (!confirm('Aprovar todos os resultados pendentes mantendo a pontuação já calculada?')) return;
+    const { data: pendentes, error: errBusca } = await sb.from('resultados').select('id, pontos').eq('status', 'pendente');
+    if (errBusca || !pendentes?.length) { msg.textContent = pendentes?.length === 0 ? 'Nenhum resultado pendente.' : 'Erro ao buscar.'; msg.className = 'msg error'; return; }
+    const agora = new Date().toISOString();
+    const updates = pendentes.map(r => sb.from('resultados').update({ status: 'aprovado', pontos: r.pontos || 0, validado_em: agora, motivo_rejeicao: null }).eq('id', r.id));
+    const resultados = await Promise.all(updates);
+    const erro = resultados.find(res => res.error);
+    if (erro?.error) { msg.textContent = 'Erro: ' + erro.error.message; msg.className = 'msg error'; }
+    else {
+      msg.textContent = `✅ ${pendentes.length} resultado${pendentes.length !== 1 ? 's' : ''} aprovado${pendentes.length !== 1 ? 's' : ''}!`;
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 5000);
+      await carregarPendentes();
+    }
+  }
+</script>
+</body>
+</html>

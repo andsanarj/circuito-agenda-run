@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Validações — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .filtros select, .filtros input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+    .filtros select:focus, .filtros input:focus { outline: none; border-color: #1F4E79; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+    .status-aprovado { background: #e6f9f0; color: #1a7a4a; }
+    .status-rejeitado { background: #fdecea; color: #b00020; }
+    .status-pendente { background: #fff3e0; color: #c77700; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 11px 12px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .corredor-info strong { display: block; }
+    .corredor-info span { font-size: 11px; color: #888; }
+    .resultado-detalhe { font-size: 12px; color: #555; }
+    .resultado-detalhe .campo { margin-bottom: 2px; }
+    .link-resultado { color: #1F4E79; font-size: 12px; text-decoration: none; }
+    .link-resultado:hover { text-decoration: underline; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .stats-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-box { background: #f7f9fb; border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 120px; }
+    .stat-box .num { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: #1F4E79; }
+    .stat-box .lbl { font-size: 11px; color: #888; text-transform: uppercase; }
+    .motivo { font-size: 11px; color: #b00020; font-style: italic; margin-top: 3px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>📊 Histórico de Validações</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Todos os resultados aprovados e rejeitados.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregar()">🔄 Atualizar</button>
+    </div>
+
+    <div class="stats-row" id="statsRow" style="display:none;">
+      <div class="stat-box"><div class="num" id="statAprovados">0</div><div class="lbl">✅ Aprovados</div></div>
+      <div class="stat-box"><div class="num" id="statRejeitados">0</div><div class="lbl">❌ Rejeitados</div></div>
+      <div class="stat-box"><div class="num" id="statPendentes">0</div><div class="lbl">⏳ Pendentes</div></div>
+      <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total</div></div>
+    </div>
+
+    <div class="filtros">
+      <select id="filtroStatus" onchange="filtrar()">
+        <option value="">Todos os status</option>
+        <option value="aprovado">Aprovados</option>
+        <option value="rejeitado">Rejeitados</option>
+        <option value="pendente">Pendentes</option>
+      </select>
+      <input type="text" id="filtroBusca" placeholder="Buscar corredor ou evento..." oninput="filtrar()" style="min-width:220px;">
+    </div>
+
+    <div id="tabela"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let _todos = [];
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregar();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregar() {
+    const { data, error } = await sb.from('resultados')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, url_resultado, status, pontos, created_at, validado_em, motivo_rejeicao, corredores(nome, email, instagram), eventos(nome, data, distancia)')
+      .in('status', ['aprovado', 'rejeitado', 'pendente'])
+      .order('validado_em', { ascending: false, nullsFirst: false });
+
+    if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+    _todos = data || [];
+
+    // Stats
+    const ap = _todos.filter(r => r.status === 'aprovado').length;
+    const rj = _todos.filter(r => r.status === 'rejeitado').length;
+    const pe = _todos.filter(r => r.status === 'pendente').length;
+    document.getElementById('statAprovados').textContent = ap;
+    document.getElementById('statRejeitados').textContent = rj;
+    document.getElementById('statPendentes').textContent = pe;
+    document.getElementById('statTotal').textContent = _todos.length;
+    document.getElementById('statsRow').style.display = _todos.length ? 'flex' : 'none';
+
+    filtrar();
+  }
+
+  function filtrar() {
+    const status = document.getElementById('filtroStatus').value;
+    const busca = document.getElementById('filtroBusca').value.toLowerCase().trim();
+    let lista = _todos;
+    if (status) lista = lista.filter(r => r.status === status);
+    if (busca) lista = lista.filter(r =>
+      (r.corredores?.nome || '').toLowerCase().includes(busca) ||
+      (r.eventos?.nome || '').toLowerCase().includes(busca)
+    );
+    renderTabela(lista);
+  }
+
+  function renderTabela(lista) {
+    if (!lista.length) { document.getElementById('tabela').innerHTML = '<div class="empty">Nenhum resultado encontrado.</div>'; return; }
+    let html = `<table><thead><tr><th>Corredor</th><th>Evento</th><th>Resultado</th><th>Pontos</th><th>Status</th><th>Validado em</th></tr></thead><tbody>`;
+    lista.forEach(r => {
+      const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const validado = r.validado_em ? new Date(r.validado_em).toLocaleDateString('pt-BR') : '—';
+      const insta = r.corredores?.instagram ? `@${r.corredores.instagram}` : '';
+      html += `
+        <tr>
+          <td class="corredor-info">
+            <strong>${r.corredores?.nome || '?'}</strong>
+            <span>${r.corredores?.email || ''}</span>
+            ${insta ? `<span>${insta}</span>` : ''}
+          </td>
+          <td>
+            <strong>${r.eventos?.nome || '?'}</strong><br>
+            <span style="font-size:11px;color:#888;">${dataEv}</span>
+          </td>
+          <td class="resultado-detalhe">
+            ${r.numero_peito ? `<div class="campo">🏷️ Peito: ${r.numero_peito}</div>` : ''}
+            ${r.distancia ? `<div class="campo">📏 ${r.distancia}</div>` : ''}
+            <div class="campo">🏁 ${r.finalizou ? 'Finalizou' : 'Não finalizou'}</div>
+            ${r.tempo ? `<div class="campo">⏱️ ${r.tempo}</div>` : ''}
+            ${r.posicao_geral ? `<div class="campo">🥇 ${r.posicao_geral}º geral</div>` : ''}
+            ${r.url_resultado ? `<div class="campo"><a href="${r.url_resultado}" target="_blank" class="link-resultado">Ver resultado ↗</a></div>` : ''}
+          </td>
+          <td style="font-weight:700; font-size:16px; text-align:center; color:#1F4E79;">
+            ${r.pontos !== null && r.pontos !== undefined ? r.pontos : '—'}
+          </td>
+          <td>
+            <span class="status-badge status-${r.status}">${r.status}</span>
+            ${r.motivo_rejeicao ? `<div class="motivo">"${r.motivo_rejeicao}"</div>` : ''}
+          </td>
+          <td style="font-size:12px; color:#888;">${validado}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tabela').innerHTML = html;
+  }
+</script>
+</body>
+</html>
