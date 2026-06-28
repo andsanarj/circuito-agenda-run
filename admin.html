@@ -845,7 +845,7 @@
     // Agora buscar só os pendentes com detalhes
     const { data, error } = await sb
       .from('resultados')
-      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, created_at, corredores(nome, email, instagram), eventos(nome, data, distancia)')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, corredores(nome, email, instagram, assinante), eventos(nome, data, distancia)')
       .eq('status', 'pendente')
       .order('created_at', { ascending: true });
 
@@ -909,15 +909,14 @@
             ${r.url_resultado ? `<div class="campo">🔗 <a href="${r.url_resultado}" target="_blank" class="link-resultado">Ver resultado oficial ↗</a></div>` : ''}
             <div class="campo" style="color:#aaa; margin-top:4px;">Enviado em ${enviado}</div>
           </td>
-          <td style="min-width:160px;">
+          <td style="min-width:180px;">
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}')">
-                ✅ Aprovar (2 pts)
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0})">
+                ✅ Aprovar (${r.pontos || 0} pts)
               </button>
-              <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
-                <input type="checkbox" id="instagram-${r.id}" style="width:auto; cursor:pointer;">
-                +1 pt assinante @AGENDA_RUN_SP
-              </label>
+              <div style="font-size:11px; padding:5px 8px; border-radius:5px; ${r.corredores?.assinante ? 'background:#e6f9f0; color:#1a7a4a;' : 'background:#f5f5f5; color:#aaa;'}; white-space:nowrap;">
+                ${r.corredores?.assinante ? '✅ Assinante (+1 pt já incluído)' : '⬜ Não é assinante'}
+              </div>
               <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
                 <input type="checkbox" id="kitrun-${r.id}" style="width:auto; cursor:pointer;">
                 +1 pt Kit Run Express
@@ -947,11 +946,12 @@
     form.classList.toggle('aberta');
   }
 
-  async function aprovar(resultadoId) {
+  async function aprovar(resultadoId, pontosBase) {
     const msg = document.getElementById('msgValidacao');
-    const isAssinante = document.getElementById(`instagram-${resultadoId}`)?.checked;
-    const isKitRun   = document.getElementById(`kitrun-${resultadoId}`)?.checked;
-    const pontos = 2 + (isAssinante ? 1 : 0) + (isKitRun ? 1 : 0);
+    // pontosBase já vem calculado do perfil.html (base + assinante automático)
+    // Kit Run pode ser adicionado manualmente se não foi detectado automaticamente
+    const isKitRun = document.getElementById(`kitrun-${resultadoId}`)?.checked;
+    const pontos = (pontosBase || 0) + (isKitRun ? 1 : 0);
 
     const { error } = await sb.from('resultados').update({
       status: 'aprovado',
@@ -1001,10 +1001,10 @@
   // ── APROVAR TODOS PENDENTES ───────────────────────────────────
   async function aprovarTodos() {
     const msg = document.getElementById('msgValidacao');
-    if (!confirm('Aprovar todos os resultados pendentes com 2 pts (sem bônus)?')) return;
+    if (!confirm('Aprovar todos os resultados pendentes mantendo a pontuação já calculada?')) return;
 
     const { data: pendentes, error: errBusca } = await sb
-      .from('resultados').select('id').eq('status', 'pendente');
+      .from('resultados').select('id, pontos').eq('status', 'pendente');
 
     if (errBusca || !pendentes || pendentes.length === 0) {
       msg.textContent = pendentes?.length === 0 ? 'Nenhum resultado pendente.' : 'Erro ao buscar pendentes.';
@@ -1012,11 +1012,20 @@
       return;
     }
 
-    const ids = pendentes.map(r => r.id);
-    const { error } = await sb.from('resultados').update({
-      status: 'aprovado', pontos: 2,
-      validado_em: new Date().toISOString(), motivo_rejeicao: null,
-    }).in('id', ids);
+    // Aprovar cada um mantendo seu próprio pontos já calculado
+    const agora = new Date().toISOString();
+    const updates = pendentes.map(r =>
+      sb.from('resultados').update({
+        status: 'aprovado',
+        pontos: r.pontos || 0,
+        validado_em: agora,
+        motivo_rejeicao: null,
+      }).eq('id', r.id)
+    );
+    const resultados = await Promise.all(updates);
+    const erros = resultados.filter(res => res.error);
+    const ids = pendentes.map(r => r.id); // para compatibilidade abaixo
+    const error = erros.length > 0 ? erros[0].error : null;
 
     if (error) {
       msg.textContent = 'Erro: ' + error.message;
