@@ -148,6 +148,14 @@
       .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking, cupom_desconto, pontuacao')
       .order('data', { ascending: true });
 
+    // Buscar eventos com serviço Kit Run Express
+    const { data: kitRunEventos } = await sb
+      .from('kit_run_eventos')
+      .select('evento_id, valor')
+      .not('evento_id', 'is', null);
+    const kitRunMap = {};
+    (kitRunEventos || []).forEach(k => { if (k.evento_id) kitRunMap[k.evento_id] = k; });
+
     // Buscar inscrições do corredor (se logado)
     let mapaResultados = {};
     if (corredorId) {
@@ -196,6 +204,14 @@
         ? `<span class="meta-chip" style="background:#fff8e1; color:#b07800; font-weight:700;">🏷️ Cupom de desconto: ${ev.cupom_desconto}</span>`
         : '';
 
+      // Kit Run Express
+      const kitRun = kitRunMap[ev.id];
+      const kitRunTag = kitRun
+        ? `<span class="meta-chip" style="background:#0F2D4A; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+             <img src="kitrun-logo.png" style="height:16px; border-radius:3px; vertical-align:middle;"> Retirada de kit disponível${kitRun.valor ? ' · R$ ' + parseFloat(kitRun.valor).toFixed(2).replace('.', ',') : ''}
+           </span>`
+        : '';
+
       // Badge de status
       const statusMap = {
         na_lista:  '',
@@ -238,7 +254,7 @@
             <div class="ev-main">
               <div class="evento-info">
                 <div class="ev-nome">${ev.nome} ${ptsBadge}</div>
-                <div class="ev-meta">${chips}${cupomTag}</div>
+                <div class="ev-meta">${chips}${cupomTag}${kitRunTag}</div>
                 ${statusBadge}
               </div>
             </div>
