@@ -99,7 +99,13 @@
     .msg-form.error { background: #fdecea; color: #b00020; display: block; }
     .info-pontos-form { background: #EBF3FB; border-radius: 7px; padding: 10px 14px; font-size: 12px; color: #1F4E79; margin-bottom: 14px; }
 
-    /* Histórico */
+    /* Selo de assinante */
+  .selo-assinante { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; }
+  .selo-bronze { background: linear-gradient(135deg, #e8d5b7, #c8a87a); color: #6b4c1e; }
+  .selo-prata  { background: linear-gradient(135deg, #d8e8f0, #a0c4d8); color: #1F4E79; }
+  .selo-ouro   { background: linear-gradient(135deg, #fff3c0, #ffe066); color: #7a5800; }
+  .selo-elite  { background: linear-gradient(135deg, #b8f0ff, #4CBFCB); color: #0a3d47; border: 1px solid #4CBFCB; }
+  /* Histórico */
     .historico-vazio { text-align: center; padding: 32px; color: #aaa; }
     .historico-vazio .icon { font-size: 36px; margin-bottom: 8px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -343,7 +349,7 @@
 
     const { data: corredor } = await client
       .from('corredores')
-      .select('*')
+      .select('*, assinante_desde')
       .eq('user_id', session.user.id)
       .single();
 
@@ -897,6 +903,26 @@
   }
 
   // ── ASSINATURA ───────────────────────────────────────────────
+  function calcularNivelAssinante(assinante_desde) {
+    if (!assinante_desde) return 0;
+    const inicio = new Date(assinante_desde + 'T12:00:00');
+    const meses = Math.floor((new Date() - inicio) / (1000 * 60 * 60 * 24 * 30.44)) + 1;
+    return Math.max(meses, 1);
+  }
+
+  function renderSeloAssinante(nivel) {
+    if (!nivel || nivel === 0) return '';
+    if (nivel >= 13) {
+      return `<span class="selo-assinante selo-elite">💎 Elite <span style="letter-spacing:1px;font-size:10px;">●●●●</span></span>`;
+    }
+    let tier, step, icon, cls;
+    if (nivel <= 4)      { tier = 'Bronze'; step = nivel;     icon = '🥉'; cls = 'selo-bronze'; }
+    else if (nivel <= 8) { tier = 'Prata';  step = nivel - 4; icon = '🥈'; cls = 'selo-prata';  }
+    else                 { tier = 'Ouro';   step = nivel - 8; icon = '🥇'; cls = 'selo-ouro';   }
+    const dots = Array.from({length: 4}, (_, i) => i < step ? '●' : '○').join('');
+    return `<span class="selo-assinante ${cls}">${icon} ${tier} <span style="letter-spacing:1px;font-size:10px;">${dots}</span></span>`;
+  }
+
   function exibirStatusAssinatura(corredor) {
     const status = document.getElementById('statusAssinatura');
     const texto  = document.getElementById('textoAssinatura');
@@ -904,7 +930,9 @@
     const badge  = document.getElementById('badgeAssinante');
 
     if (corredor.assinante) {
-      status.textContent = '⭐ Você é assinante do Circuito!';
+      const nivel = calcularNivelAssinante(corredor.assinante_desde);
+      const seloHtml = corredor.assinante_desde ? renderSeloAssinante(nivel) : '';
+      status.innerHTML = `⭐ Você é assinante do Circuito! ${seloHtml}`;
       status.style.color = '#1a7a4a';
       texto.textContent = corredor.assinante_ate
         ? `Ativo até ${new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR')} · +1 ponto bônus em cada corrida`

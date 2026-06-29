@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assinantes — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-box { background: #f7f9fb; border-radius: 10px; padding: 14px 18px; text-align: center; }
+    .stat-box .num { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: #1F4E79; }
+    .stat-box .lbl { font-size: 11px; color: #888; text-transform: uppercase; }
+    .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filtros input, .filtros select { padding: 7px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; font-family: inherit; }
+    .filtros input { min-width: 200px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .corredor-info strong { display: block; }
+    .corredor-info span { font-size: 11px; color: #888; }
+    .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .status-ativo { background: #e6f9f0; color: #1a7a4a; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+    .status-inativo { background: #f0f0f0; color: #888; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+    /* ── SELOS ── */
+    .selo { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; white-space: nowrap; }
+    .selo-bronze { background: linear-gradient(135deg, #e8d5b7, #c8a87a); color: #6b4c1e; }
+    .selo-prata  { background: linear-gradient(135deg, #d8e8f0, #a0c4d8); color: #1F4E79; }
+    .selo-ouro   { background: linear-gradient(135deg, #fff3c0, #ffe066); color: #7a5800; }
+    .selo-elite  { background: linear-gradient(135deg, #b8f0ff, #4CBFCB); color: #0a3d47; border: 1px solid #4CBFCB; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>⭐ Assinantes do Circuito</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Corredores com assinatura ativa e histórico de fidelidade.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregar()">🔄 Atualizar</button>
+    </div>
+
+    <div class="stats" id="statsRow">
+      <div class="stat-box"><div class="num" id="statAtivos">—</div><div class="lbl">⭐ Ativos</div></div>
+      <div class="stat-box"><div class="num" id="statInativos">—</div><div class="lbl">Inativos</div></div>
+      <div class="stat-box"><div class="num" id="statMRR">—</div><div class="lbl">MRR estimado</div></div>
+      <div class="stat-box"><div class="num" id="statMedia">—</div><div class="lbl">Meses médio</div></div>
+    </div>
+
+    <!-- Legenda dos selos -->
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:center;">
+      <span style="font-size:11px; color:#888; font-weight:700; text-transform:uppercase; margin-right:4px;">Níveis:</span>
+      <span class="selo selo-bronze">🥉 Bronze <span style="letter-spacing:1px;font-size:10px;">●●●●</span> meses 1–4</span>
+      <span class="selo selo-prata">🥈 Prata <span style="letter-spacing:1px;font-size:10px;">●●●●</span> meses 5–8</span>
+      <span class="selo selo-ouro">🥇 Ouro <span style="letter-spacing:1px;font-size:10px;">●●●●</span> meses 9–12</span>
+      <span class="selo selo-elite">💎 Elite <span style="letter-spacing:1px;font-size:10px;">●●●●</span> mês 12+</span>
+    </div>
+
+    <div class="filtros">
+      <input type="text" id="filtroBusca" placeholder="Buscar corredor..." oninput="filtrar()">
+      <select id="filtroStatus" onchange="filtrar()">
+        <option value="">Todos</option>
+        <option value="ativo">Apenas ativos</option>
+        <option value="inativo">Apenas inativos</option>
+      </select>
+    </div>
+
+    <div id="tabela"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let _todos = [];
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregar();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  function calcularNivel(assinante_desde) {
+    if (!assinante_desde) return 0;
+    const inicio = new Date(assinante_desde + 'T12:00:00');
+    const agora = new Date();
+    const meses = Math.floor((agora - inicio) / (1000 * 60 * 60 * 24 * 30.44)) + 1;
+    return Math.max(meses, 1);
+  }
+
+  function renderSelo(nivel, ativo) {
+    if (!nivel || nivel === 0) return '<span style="color:#ccc;font-size:12px;">—</span>';
+    const opacity = ativo ? '' : 'opacity:0.45;';
+    if (nivel >= 13) {
+      return `<span class="selo selo-elite" style="${opacity}">💎 Elite <span style="letter-spacing:1px;font-size:10px;">●●●●</span></span>`;
+    }
+    let tier, step, icon, cls;
+    if (nivel <= 4)      { tier = 'Bronze'; step = nivel;     icon = '🥉'; cls = 'selo-bronze'; }
+    else if (nivel <= 8) { tier = 'Prata';  step = nivel - 4; icon = '🥈'; cls = 'selo-prata';  }
+    else                 { tier = 'Ouro';   step = nivel - 8; icon = '🥇'; cls = 'selo-ouro';   }
+    const dots = Array.from({length: 4}, (_, i) => i < step ? '●' : '○').join('');
+    return `<span class="selo ${cls}" style="${opacity}">${icon} ${tier} <span style="letter-spacing:1px;font-size:10px;">${dots}</span></span>`;
+  }
+
+  async function carregar() {
+    const { data, error } = await sb.from('corredores')
+      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id')
+      .or('assinante.eq.true,assinante_desde.not.is.null')
+      .order('assinante_desde', { ascending: true });
+
+    if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+    _todos = data || [];
+
+    const ativos = _todos.filter(c => c.assinante);
+    const inativos = _todos.filter(c => !c.assinante);
+    const mrr = ativos.length * 9.99;
+    const niveis = _todos.filter(c => c.assinante_desde).map(c => calcularNivel(c.assinante_desde));
+    const media = niveis.length ? (niveis.reduce((s, n) => s + n, 0) / niveis.length).toFixed(1) : '—';
+
+    document.getElementById('statAtivos').textContent = ativos.length;
+    document.getElementById('statInativos').textContent = inativos.length;
+    document.getElementById('statMRR').textContent = 'R$ ' + mrr.toFixed(2).replace('.', ',');
+    document.getElementById('statMedia').textContent = media + (media !== '—' ? ' meses' : '');
+
+    filtrar();
+  }
+
+  function filtrar() {
+    const busca = document.getElementById('filtroBusca').value.toLowerCase();
+    const status = document.getElementById('filtroStatus').value;
+    let lista = _todos.filter(c =>
+      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca)) &&
+      (!status || (status === 'ativo' ? c.assinante : !c.assinante))
+    );
+    renderTabela(lista);
+  }
+
+  function renderTabela(lista) {
+    if (!lista.length) { document.getElementById('tabela').innerHTML = '<div class="empty">Nenhum assinante encontrado.</div>'; return; }
+    let html = `<table><thead><tr><th>Corredor</th><th>Assinante desde</th><th>Válido até</th><th>Nível / Selo</th><th>Status</th><th>Assinatura</th></tr></thead><tbody>`;
+    lista.forEach(c => {
+      const desde = c.assinante_desde ? new Date(c.assinante_desde + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const ate = c.assinante_ate ? new Date(c.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const nivel = c.assinante_desde ? calcularNivel(c.assinante_desde) : 0;
+      const insta = c.instagram ? `@${c.instagram}` : '';
+      html += `
+        <tr>
+          <td class="corredor-info">
+            <strong>${c.nome}</strong>
+            <span>${c.email || ''}</span>
+            ${insta ? `<span>${insta}</span>` : ''}
+          </td>
+          <td style="font-size:13px;">${desde}</td>
+          <td style="font-size:13px; ${!c.assinante ? 'color:#bbb;' : ''}">${ate}</td>
+          <td>${renderSelo(nivel, c.assinante)}</td>
+          <td>${c.assinante ? '<span class="status-ativo">✅ Ativo</span>' : '<span class="status-inativo">Inativo</span>'}</td>
+          <td style="font-size:11px; color:#bbb;">${c.asaas_subscription_id ? c.asaas_subscription_id.substring(0, 20) + '...' : '—'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tabela').innerHTML = html;
+  }
+</script>
+</body>
+</html>
