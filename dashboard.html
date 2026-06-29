@@ -191,9 +191,9 @@
       <div class="card-body">
         <div id="proximasEventos" class="loading">Carregando...</div>
         <div class="legenda-pts">
-          <span><span class="pts-badge pts-bronze">🥉 Bronze</span> 0,5 pt</span>
-          <span><span class="pts-badge pts-prata">🥈 Prata</span> 1 pt</span>
-          <span><span class="pts-badge pts-ouro">🥇 Ouro</span> 2 pts</span>
+          <span><span class="pts-badge pts-bronze">⭐ Comum</span> 0,5 pt</span>
+          <span><span class="pts-badge pts-prata">⭐⭐ Destaque</span> 1 pt</span>
+          <span><span class="pts-badge pts-ouro">⭐⭐⭐ Premium</span> 2 pts</span>
         </div>
       </div>
     </div>
@@ -365,10 +365,10 @@
       const pts = parseFloat(ev.pontuacao);
       const ptsBadge = !isNaN(pts)
         ? pts === 0.5
-          ? `<span class="pts-badge pts-bronze">🥉 Bronze</span>`
+          ? `<span class="pts-badge pts-bronze">⭐ Comum</span>`
           : pts === 2
-            ? `<span class="pts-badge pts-ouro">🥇 Ouro</span>`
-            : `<span class="pts-badge pts-prata">🥈 Prata</span>`
+            ? `<span class="pts-badge pts-ouro">⭐⭐⭐ Premium</span>`
+            : `<span class="pts-badge pts-prata">⭐⭐ Destaque</span>`
         : '';
 
       const botao = jaInscrito

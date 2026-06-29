@@ -97,9 +97,9 @@
       <div>
         <label>Pontuação (categoria) *</label>
         <select id="evPontuacao">
-          <option value="0.5">🥉 Bronze — 0,5 pt</option>
-          <option value="1" selected>🥈 Prata — 1 pt</option>
-          <option value="2">🥇 Ouro — 2 pts</option>
+          <option value="0.5">⭐ Comum — 0,5 pt</option>
+          <option value="1" selected>⭐⭐ Destaque — 1 pt</option>
+          <option value="2">⭐⭐⭐ Premium — 2 pts</option>
         </select>
       </div>
       <div>
@@ -156,9 +156,9 @@
       <div>
         <label>Pontuação *</label>
         <select id="editPontuacao">
-          <option value="0.5">🥉 Bronze — 0,5 pt</option>
-          <option value="1">🥈 Prata — 1 pt</option>
-          <option value="2">🥇 Ouro — 2 pts</option>
+          <option value="0.5">⭐ Comum — 0,5 pt</option>
+          <option value="1">⭐⭐ Destaque — 1 pt</option>
+          <option value="2">⭐⭐⭐ Premium — 2 pts</option>
         </select>
       </div>
       <div>
@@ -214,7 +214,7 @@
 
   function renderEventos(lista) {
     if (!lista.length) { document.getElementById('tabelaEventos').innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>'; return; }
-    const labelPts = { '0.5': '🥉 Bronze', '1': '🥈 Prata', '2': '🥇 Ouro' };
+    const labelPts = { '0.5': '⭐ Comum', '1': '⭐⭐ Destaque', '2': '⭐⭐⭐ Premium' };
     let html = `<table><thead><tr><th>Evento</th><th>Data</th><th>Distância</th><th>Pontuação</th><th>Ações</th></tr></thead><tbody>`;
     lista.forEach(e => {
       const dataFmt = e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';

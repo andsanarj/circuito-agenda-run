@@ -596,7 +596,7 @@
   function gerarInfoPontos(eventoId) {
     const ev = _eventosCache[eventoId];
     const base = ev?.pontuacao ?? 1;
-    const labelBase = base === 0.5 ? '🥉 Bronze — 0,5 pt' : base === 2 ? '🥇 Ouro — 2 pts' : '🥈 Prata — 1 pt';
+    const labelBase = base === 0.5 ? '⭐ Comum — 0,5 pt' : base === 2 ? '⭐⭐⭐ Premium — 2 pts' : '⭐⭐ Destaque — 1 pt';
     let bonusAssinanteHtml;
     if (corredorAssinanteGlobal) {
       const bonus = getBonusAssinante();

@@ -194,9 +194,9 @@
       // Badge de pontuação
       const pts = parseFloat(ev.pontuacao);
       const ptsBadge = !isNaN(pts)
-        ? pts === 0.5 ? `<span class="pts-badge-ev pts-bronze">🥉 Bronze</span>`
-        : pts === 2   ? `<span class="pts-badge-ev pts-ouro">🥇 Ouro</span>`
-        :               `<span class="pts-badge-ev pts-prata">🥈 Prata</span>`
+        ? pts === 0.5 ? `<span class="pts-badge-ev pts-bronze">⭐ Comum</span>`
+        : pts === 2   ? `<span class="pts-badge-ev pts-ouro">⭐⭐⭐ Premium</span>`
+        :               `<span class="pts-badge-ev pts-prata">⭐⭐ Destaque</span>`
         : '';
 
       // Cupom
