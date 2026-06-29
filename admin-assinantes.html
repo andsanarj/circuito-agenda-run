@@ -150,13 +150,13 @@
   }
 
   async function carregar() {
+    // Buscar todos os corredores e filtrar no cliente (evita problemas de sintaxe OR+null no PostgREST)
     const { data, error } = await sb.from('corredores')
-      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id')
-      .or('assinante.eq.true,assinante_desde.not.is.null')
-      .order('assinante_desde', { ascending: true });
+      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id');
 
     if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
-    _todos = data || [];
+    _todos = (data || []).filter(c => c.assinante || c.assinante_desde)
+      .sort((a, b) => (a.assinante_desde || '').localeCompare(b.assinante_desde || ''));
 
     const ativos = _todos.filter(c => c.assinante);
     const inativos = _todos.filter(c => !c.assinante);
