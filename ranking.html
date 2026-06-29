@@ -203,6 +203,12 @@
       color: #bbb;
       padding: 12px 20px;
     }
+    /* ── SELO ASSINANTE ── */
+    .selo-assinante { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; white-space: nowrap; margin-left: 4px; vertical-align: middle; }
+    .selo-bronze { background: linear-gradient(135deg, #e8d5b7, #c8a87a); color: #6b4c1e; }
+    .selo-prata  { background: linear-gradient(135deg, #d8e8f0, #a0c4d8); color: #1F4E79; }
+    .selo-ouro   { background: linear-gradient(135deg, #fff3c0, #ffe066); color: #7a5800; }
+    .selo-elite  { background: linear-gradient(135deg, #b8f0ff, #4CBFCB); color: #0a3d47; border: 1px solid #4CBFCB; }
     footer {
       text-align: center;
       padding: 24px;
@@ -336,7 +342,7 @@
   async function carregarRanking() {
     const { data, error } = await client
       .from('ranking_geral')
-      .select('id, nome, cidade, sexo, instagram, total_pontos, eventos_participados, posicao')
+      .select('id, nome, cidade, sexo, instagram, assinante, assinante_desde, total_pontos, eventos_participados, posicao')
       .order('total_pontos', { ascending: false });
 
     if (error) {
@@ -449,9 +455,10 @@
       const perfilUrl = r.instagram
         ? `corredor.html?u=${r.instagram}`
         : r.id ? `corredor.html?id=${r.id}` : null;
+      const seloHtml = renderSelo(r.assinante, r.assinante_desde);
       const nomeHtml = perfilUrl
-        ? `<a href="${perfilUrl}" style="font-weight:600; color:#1a1a1a; text-decoration:none;" class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</a>`
-        : `<span class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</span>`;
+        ? `<a href="${perfilUrl}" style="font-weight:600; color:#1a1a1a; text-decoration:none;" class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</a>${seloHtml}`
+        : `<span class="nome-corredor">${r.nome ? r.nome.split(' ')[0] : '—'}</span>${seloHtml}`;
       html += `<tr>
         <td><span class="pos ${posClass}">${posIcon}</span></td>
         <td>
@@ -479,6 +486,27 @@
       return matchBusca && matchSexo;
     });
     renderizar(filtrado);
+  }
+
+  function calcularNivel(assinante_desde) {
+    if (!assinante_desde) return 0;
+    const inicio = new Date(assinante_desde + 'T12:00:00');
+    const meses = Math.floor((new Date() - inicio) / (1000 * 60 * 60 * 24 * 30.44)) + 1;
+    return Math.max(meses, 1);
+  }
+
+  function renderSelo(assinante, assinante_desde) {
+    if (!assinante || !assinante_desde) return '';
+    const nivel = calcularNivel(assinante_desde);
+    if (nivel >= 13) {
+      return `<span class="selo-assinante selo-elite">💎 Elite</span>`;
+    }
+    let tier, step, icon, cls;
+    if (nivel <= 4)      { tier = 'Bronze'; step = nivel;     icon = '🥉'; cls = 'selo-bronze'; }
+    else if (nivel <= 8) { tier = 'Prata';  step = nivel - 4; icon = '🥈'; cls = 'selo-prata';  }
+    else                 { tier = 'Ouro';   step = nivel - 8; icon = '🥇'; cls = 'selo-ouro';   }
+    const dots = Array.from({length: 4}, (_, i) => i < step ? '●' : '○').join('');
+    return `<span class="selo-assinante ${cls}">${icon} ${dots}</span>`;
   }
 
   document.getElementById('busca').addEventListener('input', aplicarFiltros);
