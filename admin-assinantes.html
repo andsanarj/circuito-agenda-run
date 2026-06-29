@@ -150,11 +150,23 @@
   }
 
   async function carregar() {
-    // Buscar todos os corredores e filtrar no cliente (evita problemas de sintaxe OR+null no PostgREST)
+    document.getElementById('tabela').innerHTML = '<div class="empty">Carregando...</div>';
+
     const { data, error } = await sb.from('corredores')
       .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id');
 
-    if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+    // DEBUG temporário
+    document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#333; text-align:left; padding:16px; font-size:12px; font-family:monospace;">
+      <strong>DEBUG:</strong><br>
+      error: ${error ? error.message : 'nenhum'}<br>
+      total corredores: ${(data || []).length}<br>
+      assinantes (assinante=true): ${(data || []).filter(c => c.assinante === true).length}<br>
+      com assinante_desde: ${(data || []).filter(c => c.assinante_desde).length}<br>
+      <br>Primeiros 3 registros:<br>
+      <pre>${JSON.stringify((data || []).slice(0, 3).map(c => ({id: c.id?.substring(0,8), nome: c.nome, assinante: c.assinante, assinante_desde: c.assinante_desde})), null, 2)}</pre>
+    </div>`;
+
+    if (error) return;
     _todos = (data || []).filter(c => c.assinante || c.assinante_desde)
       .sort((a, b) => (a.assinante_desde || '').localeCompare(b.assinante_desde || ''));
 
