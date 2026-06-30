@@ -140,8 +140,9 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let crmDados = [];
   let todasTemporadas = [];
-  // corridas por corredor: { [corredor_id]: [...resultados] }
   let corridasPorCorredor = {};
+  let naListaPorCorredor = {};      // status='na_lista'
+  let kitInteressePorCorredor = {}; // kit_run_interesses
 
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -162,15 +163,30 @@
 
     // Busca todos os resultados com dados do evento
     const { data: resumos } = await sb.from('resultados')
-      .select('id, corredor_id, pontos, status, temporada, numero_peito, distancia, finalizou, tempo, posicao_geral, url_resultado, created_at, eventos(nome, data, distancia)')
+      .select('id, corredor_id, pontos, status, temporada, numero_peito, distancia, finalizou, tempo, posicao_geral, url_resultado, created_at, eventos(nome, data, distancia, cidade)')
       .order('created_at', { ascending: false });
 
+    // Busca interesses no Kit Run Express
+    const { data: kitInteresses } = await sb.from('kit_run_interesses')
+      .select('corredor_id, created_at, kit_run_eventos(corrida, data, local, valor, evento_id, eventos(nome))');
+
+    kitInteressePorCorredor = {};
+    (kitInteresses || []).forEach(k => {
+      if (!kitInteressePorCorredor[k.corredor_id]) kitInteressePorCorredor[k.corredor_id] = [];
+      kitInteressePorCorredor[k.corredor_id].push(k);
+    });
+
     corridasPorCorredor = {};
+    naListaPorCorredor = {};
     const resumoMap = {};
     const temporadasSet = new Set();
 
     (resumos || []).forEach(r => {
-      // agrupa por corredor
+      if (r.status === 'na_lista') {
+        if (!naListaPorCorredor[r.corredor_id]) naListaPorCorredor[r.corredor_id] = [];
+        naListaPorCorredor[r.corredor_id].push(r);
+        return;
+      }
       if (!corridasPorCorredor[r.corredor_id]) corridasPorCorredor[r.corredor_id] = [];
       corridasPorCorredor[r.corredor_id].push(r);
 
@@ -338,6 +354,45 @@
               <h4>🏃 Corridas registradas${temporadaFiltro ? ' — ' + temporadaFiltro : ''} (${todasCorridas.length})</h4>
               ${corridasHtml}
             </div>
+
+            <!-- Eventos: Quero Participar -->
+            ${(() => {
+              const naLista = naListaPorCorredor[c.id] || [];
+              if (!naLista.length) return `<div class="corridas-section"><h4>📋 Eventos confirmados (0)</h4><p style="font-size:12px;color:#bbb;padding:8px 0;">Nenhum evento marcado.</p></div>`;
+              return `<div class="corridas-section">
+                <h4>📋 Eventos com intenção de participar (${naLista.length})</h4>
+                <table class="corridas-table">
+                  <thead><tr><th>Evento</th><th>Data</th><th>Cidade</th></tr></thead>
+                  <tbody>
+                    ${naLista.map(r => {
+                      const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                      return `<tr><td><strong>${r.eventos?.nome || '?'}</strong></td><td>${dataEv}</td><td>${r.eventos?.cidade || '—'}</td></tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>`;
+            })()}
+
+            <!-- Interesse Kit Run Express -->
+            ${(() => {
+              const kits = kitInteressePorCorredor[c.id] || [];
+              if (!kits.length) return `<div class="corridas-section"><h4>📦 Kit Run Express (0)</h4><p style="font-size:12px;color:#bbb;padding:8px 0;">Sem interesse registrado.</p></div>`;
+              return `<div class="corridas-section">
+                <h4>📦 Interesse no Kit Run Express (${kits.length})</h4>
+                <table class="corridas-table">
+                  <thead><tr><th>Corrida</th><th>Data</th><th>Local</th><th>Valor</th></tr></thead>
+                  <tbody>
+                    ${kits.map(k => {
+                      const ke = k.kit_run_eventos;
+                      const nomeEv = ke?.eventos?.nome || ke?.corrida || '?';
+                      const dataKit = ke?.data ? new Date(ke.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                      const valor = ke?.valor ? `R$ ${parseFloat(ke.valor).toFixed(2).replace('.',',')}` : '—';
+                      return `<tr><td><strong>${nomeEv}</strong></td><td>${dataKit}</td><td>${ke?.local || '—'}</td><td>${valor}</td></tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>`;
+            })()}
 
             <!-- Notas internas -->
             <div style="margin-top:16px; padding-top:14px; border-top:1px solid #eee;">
