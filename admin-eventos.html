@@ -45,6 +45,8 @@
     tr:last-child td { border-bottom: none; }
     .pontuacao-chip { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 12px; background: #e8f4fd; color: #1F4E79; display: inline-block; }
     .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
+    .dist-pill { background:#f0f4f8; border:1px solid #ddd; color:#444; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; cursor:pointer; }
+    .dist-pill:hover { background:#e0e8f0; }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
     .modal-overlay.aberto { display: flex; }
     .modal { background: #fff; border-radius: 14px; padding: 28px; width: 90%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
@@ -88,13 +90,22 @@
       </div>
       <div>
         <label>Distância</label>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; padding:9px 0;">
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="3K" style="width:auto;padding:0;"> 3K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="5K" style="width:auto;padding:0;"> 5K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="10K" style="width:auto;padding:0;"> 10K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="15K" style="width:auto;padding:0;"> 15K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="21K" style="width:auto;padding:0;"> 21K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="42K" style="width:auto;padding:0;"> 42K</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <input type="text" id="evDistInput" placeholder="Ex: 10K, Meia..." maxlength="10" style="flex:1;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarDistEv();}">
+          <button type="button" onclick="adicionarDistEv()" style="background:#1F4E79;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Adicionar</button>
+        </div>
+        <div id="evDistTagBox" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px;margin-bottom:8px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span onclick="adicionarDistEvValor('3K')"  class="dist-pill">3K</span>
+          <span onclick="adicionarDistEvValor('5K')"  class="dist-pill">5K</span>
+          <span onclick="adicionarDistEvValor('7K')"  class="dist-pill">7K</span>
+          <span onclick="adicionarDistEvValor('8K')"  class="dist-pill">8K</span>
+          <span onclick="adicionarDistEvValor('10K')" class="dist-pill">10K</span>
+          <span onclick="adicionarDistEvValor('12K')" class="dist-pill">12K</span>
+          <span onclick="adicionarDistEvValor('15K')" class="dist-pill">15K</span>
+          <span onclick="adicionarDistEvValor('21K')" class="dist-pill">21K</span>
+          <span onclick="adicionarDistEvValor('42K')" class="dist-pill">42K</span>
         </div>
       </div>
       <div>
@@ -154,13 +165,22 @@
       </div>
       <div>
         <label>Distância</label>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; padding:9px 0;">
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="3K" style="width:auto;padding:0;"> 3K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="5K" style="width:auto;padding:0;"> 5K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="10K" style="width:auto;padding:0;"> 10K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="15K" style="width:auto;padding:0;"> 15K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="21K" style="width:auto;padding:0;"> 21K</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="42K" style="width:auto;padding:0;"> 42K</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <input type="text" id="editDistInput" placeholder="Ex: 10K, Meia..." maxlength="10" style="flex:1;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarDistEdit();}">
+          <button type="button" onclick="adicionarDistEdit()" style="background:#1F4E79;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Adicionar</button>
+        </div>
+        <div id="editDistTagBox" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px;margin-bottom:8px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span onclick="adicionarDistEditValor('3K')"  class="dist-pill">3K</span>
+          <span onclick="adicionarDistEditValor('5K')"  class="dist-pill">5K</span>
+          <span onclick="adicionarDistEditValor('7K')"  class="dist-pill">7K</span>
+          <span onclick="adicionarDistEditValor('8K')"  class="dist-pill">8K</span>
+          <span onclick="adicionarDistEditValor('10K')" class="dist-pill">10K</span>
+          <span onclick="adicionarDistEditValor('12K')" class="dist-pill">12K</span>
+          <span onclick="adicionarDistEditValor('15K')" class="dist-pill">15K</span>
+          <span onclick="adicionarDistEditValor('21K')" class="dist-pill">21K</span>
+          <span onclick="adicionarDistEditValor('42K')" class="dist-pill">42K</span>
         </div>
       </div>
       <div>
@@ -263,7 +283,7 @@
     const payload = {
       nome,
       data,
-      distancia: [...document.querySelectorAll('.evDistCheck:checked')].map(c => c.value).join(', ') || null,
+      distancia: distEvLista.join(', ') || null,
       cidade: document.getElementById('evCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('evPontuacao').value),
       site: document.getElementById('evSite').value.trim() || null,
@@ -275,7 +295,7 @@
     else {
       msg.textContent = '✅ Evento cadastrado!'; msg.className = 'msg success';
       ['evNome','evData','evCidade','evSite','evObs'].forEach(id => document.getElementById(id).value = '');
-      document.querySelectorAll('.evDistCheck').forEach(c => c.checked = false);
+      distEvLista = []; renderDistEvTagBox();
       document.getElementById('evPontuacao').value = '1';
       setTimeout(() => { msg.className = 'msg'; }, 4000);
       await carregarEventos();
@@ -288,8 +308,8 @@
     document.getElementById('editId').value = e.id;
     document.getElementById('editNome').value = e.nome || '';
     document.getElementById('editData').value = e.data || '';
-    const distSalvas = (e.distancia || '').split(',').map(s => s.trim());
-    document.querySelectorAll('.editDistCheck').forEach(c => c.checked = distSalvas.includes(c.value));
+    distEditLista = (e.distancia || '').split(',').map(s => s.trim()).filter(Boolean);
+    renderDistEditTagBox();
     document.getElementById('editCidade').value = e.cidade || '';
     document.getElementById('editPontuacao').value = String(e.pontuacao ?? 1);
     document.getElementById('editSite').value = e.site || '';
@@ -309,7 +329,7 @@
     const payload = {
       nome,
       data,
-      distancia: [...document.querySelectorAll('.editDistCheck:checked')].map(c => c.value).join(', ') || null,
+      distancia: distEditLista.join(', ') || null,
       cidade: document.getElementById('editCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('editPontuacao').value),
       site: document.getElementById('editSite').value.trim() || null,
@@ -329,6 +349,48 @@
     if (error) { alert('Erro: ' + error.message); }
     else { await carregarEventos(); }
   }
+
+  // ── Distâncias — formulário cadastro ──
+  let distEvLista = [];
+  function renderDistEvTagBox() {
+    document.getElementById('evDistTagBox').innerHTML = distEvLista.map(d =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;background:#1F4E79;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">
+        ${d}<button type="button" onclick="removerDistEv('${d}')" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;line-height:1;padding:0;">×</button>
+      </span>`).join('');
+  }
+  function adicionarDistEv() {
+    const input = document.getElementById('evDistInput');
+    const val = input.value.trim().toUpperCase().replace(/\s/g,'');
+    if (val) adicionarDistEvValor(val);
+    input.value = ''; input.focus();
+  }
+  function adicionarDistEvValor(val) {
+    val = val.trim().toUpperCase();
+    if (!val || distEvLista.includes(val)) return;
+    distEvLista.push(val); renderDistEvTagBox();
+  }
+  function removerDistEv(val) { distEvLista = distEvLista.filter(d => d !== val); renderDistEvTagBox(); }
+
+  // ── Distâncias — formulário edição ──
+  let distEditLista = [];
+  function renderDistEditTagBox() {
+    document.getElementById('editDistTagBox').innerHTML = distEditLista.map(d =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;background:#1F4E79;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;">
+        ${d}<button type="button" onclick="removerDistEdit('${d}')" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;line-height:1;padding:0;">×</button>
+      </span>`).join('');
+  }
+  function adicionarDistEdit() {
+    const input = document.getElementById('editDistInput');
+    const val = input.value.trim().toUpperCase().replace(/\s/g,'');
+    if (val) adicionarDistEditValor(val);
+    input.value = ''; input.focus();
+  }
+  function adicionarDistEditValor(val) {
+    val = val.trim().toUpperCase();
+    if (!val || distEditLista.includes(val)) return;
+    distEditLista.push(val); renderDistEditTagBox();
+  }
+  function removerDistEdit(val) { distEditLista = distEditLista.filter(d => d !== val); renderDistEditTagBox(); }
 </script>
 </body>
 </html>
