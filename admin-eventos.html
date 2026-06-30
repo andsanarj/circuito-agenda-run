@@ -125,9 +125,15 @@
         <input type="url" id="evSite" placeholder="https://...">
       </div>
     </div>
-    <div style="margin-top:14px;">
-      <label>Observações</label>
-      <textarea id="evObs" placeholder="Informações adicionais..."></textarea>
+    <div class="form-grid" style="margin-top:14px;">
+      <div>
+        <label>Cupom de Desconto</label>
+        <input type="text" id="evCupom" placeholder="Ex: CIRCUITO10">
+      </div>
+      <div>
+        <label>Observações</label>
+        <textarea id="evObs" placeholder="Informações adicionais..." style="min-height:42px;"></textarea>
+      </div>
     </div>
     <div style="margin-top:18px; display:flex; gap:10px; align-items:center;">
       <button class="btn btn-primary" onclick="salvarEvento()" id="btnSalvar">+ Cadastrar Evento</button>
@@ -200,9 +206,15 @@
         <input type="url" id="editSite">
       </div>
     </div>
-    <div style="margin-top:12px;">
-      <label>Observações</label>
-      <textarea id="editObs"></textarea>
+    <div class="form-grid" style="margin-top:12px;">
+      <div>
+        <label>Cupom de Desconto</label>
+        <input type="text" id="editCupom" placeholder="Ex: CIRCUITO10">
+      </div>
+      <div>
+        <label>Observações</label>
+        <textarea id="editObs" style="min-height:42px;"></textarea>
+      </div>
     </div>
     <div style="margin-top:18px; display:flex; gap:10px; justify-content:space-between;">
       <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
@@ -287,6 +299,7 @@
       cidade: document.getElementById('evCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('evPontuacao').value),
       site: document.getElementById('evSite').value.trim() || null,
+      cupom_desconto: document.getElementById('evCupom').value.trim() || null,
       observacoes: document.getElementById('evObs').value.trim() || null,
     };
     const { error } = await sb.from('eventos').insert([payload]);
@@ -294,7 +307,7 @@
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
     else {
       msg.textContent = '✅ Evento cadastrado!'; msg.className = 'msg success';
-      ['evNome','evData','evCidade','evSite','evObs'].forEach(id => document.getElementById(id).value = '');
+      ['evNome','evData','evCidade','evSite','evCupom','evObs'].forEach(id => document.getElementById(id).value = '');
       distEvLista = []; renderDistEvTagBox();
       document.getElementById('evPontuacao').value = '1';
       setTimeout(() => { msg.className = 'msg'; }, 4000);
@@ -313,6 +326,7 @@
     document.getElementById('editCidade').value = e.cidade || '';
     document.getElementById('editPontuacao').value = String(e.pontuacao ?? 1);
     document.getElementById('editSite').value = e.site || '';
+    document.getElementById('editCupom').value = e.cupom_desconto || '';
     document.getElementById('editObs').value = e.observacoes || '';
     document.getElementById('modalOverlay').classList.add('aberto');
     document.getElementById('msgEdit').className = 'msg';
@@ -333,6 +347,7 @@
       cidade: document.getElementById('editCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('editPontuacao').value),
       site: document.getElementById('editSite').value.trim() || null,
+      cupom_desconto: document.getElementById('editCupom').value.trim() || null,
       observacoes: document.getElementById('editObs').value.trim() || null,
     };
     const { error } = await sb.from('eventos').update(payload).eq('id', id);
