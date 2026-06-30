@@ -145,7 +145,7 @@
     // Buscar todos os eventos
     const { data: eventos } = await sb
       .from('eventos')
-      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, url_runking, cupom_desconto, pontuacao')
+      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, site, url_runking, cupom_desconto, pontuacao')
       .order('data', { ascending: true });
 
     // Buscar eventos com serviço Kit Run Express
@@ -242,8 +242,9 @@
         botao = `<button class="btn-participar" onclick="entrarNaLista('${ev.id}', this)">+ Quero participar</button>`;
       }
 
-      const linkInscricao = ev.link_inscricao
-        ? `<a href="${ev.link_inscricao}" target="_blank" class="link-perfil" style="margin-top:4px;">🔗 Inscrições abertas →</a>`
+      const urlInscricao = ev.site || ev.link_inscricao || '';
+      const linkInscricao = urlInscricao
+        ? `<a href="${urlInscricao}" target="_blank" class="link-perfil" style="margin-top:4px;">🔗 Inscrições abertas →</a>`
         : '';
 
       return `
