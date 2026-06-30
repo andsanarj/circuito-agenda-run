@@ -88,7 +88,14 @@
       </div>
       <div>
         <label>Distância</label>
-        <input type="text" id="evDistancia" placeholder="Ex: 21km, 5k, 10km">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; padding:9px 0;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="3K" style="width:auto;padding:0;"> 3K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="5K" style="width:auto;padding:0;"> 5K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="10K" style="width:auto;padding:0;"> 10K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="15K" style="width:auto;padding:0;"> 15K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="21K" style="width:auto;padding:0;"> 21K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="evDistCheck" value="42K" style="width:auto;padding:0;"> 42K</label>
+        </div>
       </div>
       <div>
         <label>Cidade</label>
@@ -147,7 +154,14 @@
       </div>
       <div>
         <label>Distância</label>
-        <input type="text" id="editDistancia">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; padding:9px 0;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="3K" style="width:auto;padding:0;"> 3K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="5K" style="width:auto;padding:0;"> 5K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="10K" style="width:auto;padding:0;"> 10K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="15K" style="width:auto;padding:0;"> 15K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="21K" style="width:auto;padding:0;"> 21K</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:#333;font-weight:500;cursor:pointer;"><input type="checkbox" class="editDistCheck" value="42K" style="width:auto;padding:0;"> 42K</label>
+        </div>
       </div>
       <div>
         <label>Cidade</label>
@@ -249,7 +263,7 @@
     const payload = {
       nome,
       data,
-      distancia: document.getElementById('evDistancia').value.trim() || null,
+      distancia: [...document.querySelectorAll('.evDistCheck:checked')].map(c => c.value).join(', ') || null,
       cidade: document.getElementById('evCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('evPontuacao').value),
       site: document.getElementById('evSite').value.trim() || null,
@@ -260,7 +274,8 @@
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
     else {
       msg.textContent = '✅ Evento cadastrado!'; msg.className = 'msg success';
-      ['evNome','evData','evDistancia','evCidade','evSite','evObs'].forEach(id => document.getElementById(id).value = '');
+      ['evNome','evData','evCidade','evSite','evObs'].forEach(id => document.getElementById(id).value = '');
+      document.querySelectorAll('.evDistCheck').forEach(c => c.checked = false);
       document.getElementById('evPontuacao').value = '1';
       setTimeout(() => { msg.className = 'msg'; }, 4000);
       await carregarEventos();
@@ -273,7 +288,8 @@
     document.getElementById('editId').value = e.id;
     document.getElementById('editNome').value = e.nome || '';
     document.getElementById('editData').value = e.data || '';
-    document.getElementById('editDistancia').value = e.distancia || '';
+    const distSalvas = (e.distancia || '').split(',').map(s => s.trim());
+    document.querySelectorAll('.editDistCheck').forEach(c => c.checked = distSalvas.includes(c.value));
     document.getElementById('editCidade').value = e.cidade || '';
     document.getElementById('editPontuacao').value = String(e.pontuacao ?? 1);
     document.getElementById('editSite').value = e.site || '';
@@ -293,7 +309,7 @@
     const payload = {
       nome,
       data,
-      distancia: document.getElementById('editDistancia').value.trim() || null,
+      distancia: [...document.querySelectorAll('.editDistCheck:checked')].map(c => c.value).join(', ') || null,
       cidade: document.getElementById('editCidade').value.trim() || null,
       pontuacao: parseFloat(document.getElementById('editPontuacao').value),
       site: document.getElementById('editSite').value.trim() || null,
