@@ -953,10 +953,13 @@
       status.innerHTML = `⭐ Você é assinante do Circuito! ${seloHtml}`;
       status.style.color = '#1a7a4a';
       const ate = corredor.assinante_ate ? `Ativo até ${new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR')} · ` : '';
-      const extras = isOuroElite
-        ? '🎁 Sorteios de cortesias · Sorteios de produtos Agenda Run'
-        : '🎁 Sorteios de cortesias';
-      texto.innerHTML = `${ate}${bonusPts} bônus por evento · 1 retirada gratuita a cada 2 meses · 50% desconto nas demais<br>${extras}`;
+      const retirada = nivel >= 9 ? '1 retirada gratuita por mês' : nivel >= 5 ? '1 retirada gratuita a cada 2 meses' : '1 retirada gratuita a cada 3 meses';
+      const extras = nivel >= 13
+        ? '🎁 Sorteios de cortesias e produtos Agenda Run · 1 boné ou 1 camiseta Agenda Run'
+        : isOuroElite
+          ? '🎁 Sorteios de cortesias e produtos Agenda Run'
+          : '🎁 Sorteios de cortesias';
+      texto.innerHTML = `${ate}${bonusPts} bônus por evento · ${retirada} · 50% desconto nas demais<br>${extras}`;
       badge.style.display = 'inline-block';
       document.getElementById('btnAreaAssinantes').style.display = 'inline-block';
     } else {
