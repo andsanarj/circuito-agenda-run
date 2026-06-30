@@ -607,7 +607,9 @@
       bonusAssinanteHtml = `<span style="color:#999;">+0,5 ou +1 pt bônus assinante (você não é assinante)</span>`;
     }
     const nivelKit = corredorAssinanteGlobal ? calcularNivelAssinante(corredorAssinanteDesdeGlobal) : 0;
-    const labelKit = (corredorAssinanteGlobal && nivelKit <= 8) ? '+0,5 pt Kit Run Express' : '+1 pt Kit Run Express';
+    const labelKit = !corredorAssinanteGlobal
+      ? '+0,5 pt Kit Run Express'
+      : nivelKit <= 8 ? '+1 pt Kit Run Express' : '+1,5 pt Kit Run Express';
     return `🏆 Pontuação deste evento: <strong>${labelBase}</strong> &nbsp;·&nbsp; ${bonusAssinanteHtml} &nbsp;·&nbsp; ${labelKit} &nbsp;·&nbsp; <em>(pontos salvos agora, contam no ranking após aprovação)</em>`;
   }
 
@@ -693,7 +695,10 @@
           .eq('corredor_id', corredorIdGlobal)
           .in('kit_run_evento_id', kitIds)
           .maybeSingle();
-        if (kitInteresse) bonusKitRun = corredorAssinanteGlobal && calcularNivelAssinante(corredorAssinanteDesdeGlobal) <= 8 ? 0.5 : 1;
+        if (kitInteresse) {
+          if (!corredorAssinanteGlobal) bonusKitRun = 0.5;
+          else bonusKitRun = calcularNivelAssinante(corredorAssinanteDesdeGlobal) <= 8 ? 1 : 1.5;
+        }
       }
     }
     const pontosCalculados = basePts + bonusAssinante + bonusKitRun;
