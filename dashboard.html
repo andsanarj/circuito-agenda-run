@@ -275,7 +275,7 @@
       carregarRanking(corredor.id),
       carregarProximasEventos(corredor.id),
       carregarMinhasCorridas(corredor.id),
-      carregarKitRunDashboard(corredor.id, corredor.assinante),
+      carregarKitRunDashboard(corredor.id, corredor.assinante, corredor.assinante_desde),
     ]);
   }
 
@@ -429,7 +429,14 @@
     }).join('');
   }
 
-  async function carregarKitRunDashboard(corredorIdParam, isAssinante) {
+  async function carregarKitRunDashboard(corredorIdParam, isAssinante, assinante_desde) {
+    function calcularNivelKit(desde) {
+      if (!desde) return 1;
+      const meses = (new Date() - new Date(desde)) / (1000 * 60 * 60 * 24 * 30.44);
+      return Math.max(1, Math.floor(meses) + 1);
+    }
+    const nivelKit = isAssinante ? calcularNivelKit(assinante_desde) : 0;
+    const retiradaTexto = nivelKit >= 9 ? '1 retirada gratuita por mês' : nivelKit >= 5 ? '1 retirada gratuita a cada 2 meses' : '1 retirada gratuita a cada 3 meses';
     const div = document.getElementById('kitRunDashboard');
 
     const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -490,7 +497,7 @@
       <div class="kitrun-beneficios" style="margin:0 0 4px;">
         <div class="b-title">🎁 Seus benefícios ativos</div>
         <ul>
-          <li><strong>1 retirada gratuita</strong> a cada 2 meses</li>
+          <li><strong>${retiradaTexto}</strong></li>
           <li><strong>50% de desconto</strong> nas demais retiradas</li>
         </ul>
       </div>
