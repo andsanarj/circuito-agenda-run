@@ -398,6 +398,102 @@
   </div>
 </section>
 
+<!-- ══ FAQ ══════════════════════════════════════════════════════════ -->
+<section style="padding:80px 20px; background:#f0f4f8;">
+  <div style="max-width:780px; margin:0 auto;">
+    <h2 style="font-size:2.2rem; text-align:center; color:#1F4E79; margin-bottom:8px;">Perguntas Frequentes</h2>
+    <p style="text-align:center; color:#888; font-size:15px; margin-bottom:48px;">Ficou com dúvida? Veja as respostas abaixo.</p>
+
+    <div id="faq-lista"></div>
+  </div>
+</section>
+
+<style>
+  .faq-item { background:#fff; border-radius:10px; margin-bottom:10px; box-shadow:0 1px 6px rgba(0,0,0,0.06); overflow:hidden; }
+  .faq-pergunta { width:100%; background:none; border:none; padding:18px 22px; text-align:left; font-size:15px; font-weight:700; color:#1F4E79; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; font-family:'Inter',sans-serif; }
+  .faq-pergunta:hover { background:#f7f9fb; }
+  .faq-icone { font-size:18px; color:#E8622A; flex-shrink:0; transition:transform 0.25s; }
+  .faq-resposta { display:none; padding:0 22px 18px; font-size:14px; color:#444; line-height:1.75; border-top:1px solid #f0f0f0; }
+  .faq-resposta.aberta { display:block; }
+  .faq-item.aberto .faq-icone { transform:rotate(45deg); }
+</style>
+
+<script>
+  const faqItens = [
+    {
+      p: "O que é o Circuito Agenda Run?",
+      r: "O Circuito Agenda Run é uma plataforma de ranking para corredores de rua da Grande São Paulo. Você participa de corridas parceiras, registra sua presença no site e acumula pontos em um ranking geral. Quanto mais você corre — e em eventos mais valorizados — mais sobe na classificação."
+    },
+    {
+      p: "Como faço meu cadastro?",
+      r: "Acesse <strong>circuito.agendarun.com.br</strong>, clique em <strong>\"Criar conta grátis\"</strong> e preencha seus dados. O cadastro é gratuito e leva menos de 2 minutos."
+    },
+    {
+      p: "Como registro minha participação em uma corrida?",
+      r: "Após correr, acesse seu <strong>Perfil</strong>, vá até a seção <strong>\"Minhas Corridas\"</strong> e registre o evento em que você participou. Informe a distância, seu número de peito e, se tiver, o link do resultado. Após análise, os pontos são aprovados e entram no ranking."
+    },
+    {
+      p: "Nem todas as corridas contam para o Circuito?",
+      r: "Correto. Somente os <strong>eventos parceiros cadastrados</strong> na plataforma contam para o ranking. Essa curadoria é intencional: queremos valorizar quem participa dos eventos certos e tornar a disputa mais competitiva. Confira os eventos da temporada na aba <strong>Eventos</strong>."
+    },
+    {
+      p: "Como funciona a pontuação?",
+      r: "Cada evento tem uma categoria que define quantos pontos vale: <br><br>⭐ <strong>Evento Comum</strong> — 0,5 ponto<br>⭐⭐ <strong>Evento Destaque</strong> — 1 ponto<br>⭐⭐⭐ <strong>Evento Premium</strong> — 2 pontos<br><br>Além disso, assinantes ganham pontos bônus e o serviço Kit Run Express também acrescenta pontos."
+    },
+    {
+      p: "O que é a assinatura do Circuito?",
+      r: "A assinatura é opcional e custa <strong>R$ 9,99/mês</strong>. Ela dá acesso a benefícios extras como bônus de pontos por evento, condições especiais no serviço de retirada de kit (Kit Run Express) e participação em sorteios exclusivos. Quanto mais tempo você for assinante, mais benefícios acumula (Bronze → Prata → Ouro → Elite)."
+    },
+    {
+      p: "O que muda conforme o nível da assinatura?",
+      r: "🥉 <strong>Bronze (1–4 meses)</strong> — +0,5 pt por evento · 1 retirada gratuita a cada 3 meses · 50% desconto nas demais · sorteios de cortesias<br><br>🥈 <strong>Prata (5–8 meses)</strong> — +0,5 pt por evento · 1 retirada gratuita a cada 2 meses · 50% desconto · sorteios de cortesias<br><br>🥇 <strong>Ouro (9–12 meses)</strong> — +1 pt por evento · 1 retirada gratuita por mês · 50% desconto · sorteios de cortesias e produtos Agenda Run<br><br>💎 <strong>Elite (13+ meses)</strong> — +1 pt por evento · 1 retirada gratuita por mês · 50% desconto · sorteios · 🎁 1 boné ou 1 camiseta Agenda Run por temporada"
+    },
+    {
+      p: "O que é o Kit Run Express?",
+      r: "É um serviço de retirada de kit de corrida. Em vez de você ir pessoalmente buscar seu kit antes da prova, o Kit Run Express retira por você. Assinantes têm condições especiais: <br><br>• Sem assinatura: +0,5 pt ao usar o serviço<br>• Assinante: +1 pt + retirada gratuita conforme seu nível"
+    },
+    {
+      p: "Como funciona o desempate no ranking?",
+      r: "Se dois ou mais corredores terminarem com a mesma pontuação, o desempate é feito nesta ordem:<br><br>1º — Maior número de eventos participados na temporada<br>2º — Maior pontuação em eventos Premium (⭐⭐⭐)<br>3º — Maior soma de quilômetros percorridos nos eventos do Circuito"
+    },
+    {
+      p: "Posso cancelar a assinatura a qualquer momento?",
+      r: "Sim. Você pode cancelar quando quiser. <strong>Atenção:</strong> corredores que cancelarem a assinatura antes do encerramento da temporada terão o bônus de pontos removido de todas as corridas registradas naquela temporada."
+    },
+    {
+      p: "Quanto tempo demora para os pontos aparecerem no ranking?",
+      r: "Após você registrar sua participação, o resultado passa por uma análise. Assim que aprovado, os pontos entram automaticamente no ranking. Normalmente o processo é feito em poucas horas."
+    },
+    {
+      p: "Tenho alguma dúvida que não está aqui. O que faço?",
+      r: "Fale diretamente com a gente! Envie uma mensagem para <a href='mailto:agendarun@agendarun.com.br' style='color:#1F4E79; font-weight:700;'>agendarun@agendarun.com.br</a> ou entre em contato pelo Instagram. Respondemos o mais rápido possível. 🙏"
+    }
+  ];
+
+  const lista = document.getElementById('faq-lista');
+  faqItens.forEach((item, i) => {
+    lista.innerHTML += `
+      <div class="faq-item" id="faq-${i}">
+        <button class="faq-pergunta" onclick="toggleFaq(${i})">
+          <span>${item.p}</span>
+          <span class="faq-icone">+</span>
+        </button>
+        <div class="faq-resposta" id="faq-r-${i}">${item.r}</div>
+      </div>`;
+  });
+
+  function toggleFaq(i) {
+    const item = document.getElementById('faq-' + i);
+    const resp = document.getElementById('faq-r-' + i);
+    const aberto = resp.classList.contains('aberta');
+    // Fecha todos
+    document.querySelectorAll('.faq-resposta').forEach(r => r.classList.remove('aberta'));
+    document.querySelectorAll('.faq-item').forEach(r => r.classList.remove('aberto'));
+    // Abre o clicado (se estava fechado)
+    if (!aberto) { resp.classList.add('aberta'); item.classList.add('aberto'); }
+  }
+</script>
+
 <!-- ══ FOOTER ══════════════════════════════════════════════════════ -->
 <footer>
   <p>
