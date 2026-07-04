@@ -97,6 +97,23 @@
     .loading { text-align: center; padding: 28px; color: #aaa; font-size: 13px; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
 
+    /* Banner assinatura */
+    .banner-assinatura { max-width: 1040px; margin: 24px auto 0; padding: 0 20px; }
+    .banner-ass-nao { background: linear-gradient(135deg, #1F4E79, #0d2d4a); border-radius: 14px; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .banner-ass-nao .b-txt { color: #fff; }
+    .banner-ass-nao .b-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .banner-ass-nao .b-sub { font-size: 13px; color: #a8c8e8; line-height: 1.5; }
+    .banner-ass-nao .b-sub strong { color: #4CBFCB; }
+    .btn-assinar-banner { background: #E8622A; color: #fff; border: none; padding: 11px 28px; border-radius: 25px; font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block; white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+    .btn-assinar-banner:hover { background: #c94f1f; }
+    .banner-ass-sim { background: linear-gradient(135deg, #0a3d1f, #1a5c30); border-radius: 14px; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+    .banner-ass-sim .b-info { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .banner-ass-sim .b-selo-area { font-size: 13px; color: #a8e6c0; }
+    .banner-ass-sim .b-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+    .banner-ass-sim .b-sub { font-size: 12px; color: #6dd4a0; margin-top: 2px; }
+    .btn-area-exc { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .btn-area-exc:hover { background: rgba(255,255,255,0.25); }
+
     /* Kit Run Express no dashboard */
     .kitrun-lock {
       padding: 22px; background: linear-gradient(135deg, #fff8f6, #fff3ef);
@@ -176,6 +193,9 @@
     </div>
   </div>
 </div>
+
+<!-- Banner Assinatura -->
+<div class="banner-assinatura" id="bannerAssinatura" style="display:none;"></div>
 
 <div class="page">
 
@@ -269,6 +289,7 @@
     const primeiroNome = corredor.nome.split(' ')[0];
     document.getElementById('heroNome').textContent = corredor.nome;
     if (corredor.assinante) document.getElementById('btnAreaAssinantes').style.display = 'inline-block';
+    renderBannerAssinatura(corredor);
     document.title = primeiroNome + ' — Circuito Agenda Run';
 
     await Promise.all([
@@ -526,6 +547,40 @@
   }
 
   init();
+
+  function renderBannerAssinatura(corredor) {
+    const banner = document.getElementById('bannerAssinatura');
+    banner.style.display = 'block';
+
+    if (!corredor.assinante) {
+      banner.innerHTML = `
+        <div class="banner-ass-nao">
+          <div class="b-txt">
+            <div class="b-titulo">⭐ Assine o Circuito e pontue mais!</div>
+            <div class="b-sub">
+              Por <strong>R$ 9,99/mês</strong> você ganha bônus de pontos em cada corrida, retirada gratuita de kit e acesso a sorteios exclusivos.
+            </div>
+          </div>
+          <a href="perfil.html#assinatura" class="btn-assinar-banner">Assinar agora</a>
+        </div>`;
+    } else {
+      const nivel = corredor.assinante_desde
+        ? Math.max(1, Math.floor((new Date() - new Date(corredor.assinante_desde)) / (1000*60*60*24*30.44)) + 1)
+        : 1;
+      const tier = nivel >= 13 ? '💎 Elite' : nivel >= 9 ? '🥇 Ouro' : nivel >= 5 ? '🥈 Prata' : '🥉 Bronze';
+      const bonus = nivel >= 9 ? '+1 pt por evento' : '+0,5 pt por evento';
+      banner.innerHTML = `
+        <div class="banner-ass-sim">
+          <div class="b-info">
+            <div>
+              <div class="b-titulo">✅ Assinatura ativa — ${tier}</div>
+              <div class="b-sub">${bonus} · Retirada gratuita de kit · Sorteios exclusivos</div>
+            </div>
+          </div>
+          <a href="assinantes.html" class="btn-area-exc">Área exclusiva →</a>
+        </div>`;
+    }
+  }
 </script>
 </body>
 </html>
