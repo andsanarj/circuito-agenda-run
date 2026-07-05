@@ -573,7 +573,7 @@
 
     const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
       sb.from('sorteios')
-        .select('id, titulo, premio, data_sorteio, status')
+        .select('id, titulo, premio, data_evento, local, data_sorteio, status')
         .eq('status', 'aberto')
         .order('created_at', { ascending: false })
         .limit(3),
@@ -594,16 +594,20 @@
 
     div.innerHTML = sorteios.map(s => {
       const inscrito = _sorteiosDashInscrito.has(s.id);
-      const dataFmt = fmt(s.data_sorteio);
       const btn = inscrito
         ? `<button class="btn-sorteio-dash inscrito" onclick="toggleSorteioDash('${s.id}', this)">✓ Inscrito</button>`
         : `<button class="btn-sorteio-dash" onclick="toggleSorteioDash('${s.id}', this)">🎰 Participar</button>`;
+      const metaParts = [
+        s.data_evento  ? `🏃 ${fmt(s.data_evento)}` : null,
+        s.local        ? `📍 ${s.local}` : null,
+        s.data_sorteio ? `🎰 ${fmt(s.data_sorteio)}` : null,
+      ].filter(Boolean).join(' · ');
       return `
         <div class="sorteio-dash-item">
           <div class="sorteio-dash-info">
             <div class="sorteio-dash-nome">${s.titulo}</div>
             <div class="sorteio-dash-premio">🎁 ${s.premio}</div>
-            ${dataFmt ? `<div class="sorteio-dash-data">📅 ${dataFmt}</div>` : ''}
+            ${metaParts ? `<div class="sorteio-dash-data">${metaParts}</div>` : ''}
           </div>
           ${btn}
         </div>`;

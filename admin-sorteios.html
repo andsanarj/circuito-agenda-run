@@ -27,12 +27,17 @@
     input:focus,select:focus,textarea:focus { outline:none; border-color:#1F4E79; box-shadow:0 0 0 3px rgba(31,78,121,0.08); }
     textarea { min-height:60px; resize:vertical; }
     .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    @media(max-width:640px){ .form-grid,.form-grid-3{ grid-template-columns:1fr; } }
     .btn { padding:9px 18px; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
     .btn-primary { background:#1F4E79; color:#fff; }
     .btn-primary:hover { background:#163a5f; }
     .btn-orange { background:#E8622A; color:#fff; }
     .btn-orange:hover { background:#c94f1f; }
     .btn-gray { background:#f0f4f8; color:#444; border:1px solid #ddd; }
+    .btn-gray:hover { background:#e2e8f0; }
+    .btn-red { background:#fdecea; color:#b00020; border:1px solid #f5c6c6; }
+    .btn-red:hover { background:#fbd5d2; }
     .btn-sm { padding:5px 12px; font-size:12px; }
     .btn:disabled { opacity:0.5; cursor:not-allowed; }
     .msg { padding:10px 14px; border-radius:8px; font-size:13px; margin-top:10px; display:none; }
@@ -54,9 +59,15 @@
     .badge-prata   { background:#d8e8f0; color:#1F4E79; }
     .badge-ouro    { background:#fff3c0; color:#7a5800; }
     .badge-elite   { background:#b8f0ff; color:#0a3d47; }
-    .status-aberto   { background:#e6f9f0; color:#1a7a4a; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+    .status-aberto    { background:#e6f9f0; color:#1a7a4a; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
     .status-encerrado { background:#f0f0f0; color:#888; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
     .ganhador-box { background:linear-gradient(135deg,#fff3c0,#ffe066); border-radius:8px; padding:12px 16px; margin-top:12px; font-size:13px; font-weight:700; color:#7a5800; }
+    .acoes-sorteio { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+    /* Painel de edição inline */
+    .edit-panel { border-top:2px solid #e8edf2; background:#fff; padding:20px; display:none; }
+    .edit-panel.aberto { display:block; }
+    .edit-panel h4 { font-family:'Barlow Condensed',sans-serif; font-size:16px; color:#1F4E79; margin-bottom:14px; }
 
     footer { text-align:center; padding:24px; color:#999; font-size:13px; }
   </style>
@@ -104,8 +115,16 @@
         </select>
       </div>
       <div>
+        <label>Data do evento</label>
+        <input type="date" id="novaDataEvento">
+      </div>
+      <div>
+        <label>Local do evento</label>
+        <input type="text" id="novoLocal" placeholder="Ex: Parque Villa-Lobos — SP">
+      </div>
+      <div>
         <label>Data do sorteio</label>
-        <input type="date" id="novaData">
+        <input type="date" id="novaDataSorteio">
       </div>
     </div>
     <div style="margin-top:14px;">
@@ -159,28 +178,43 @@
     prata: 'badge-prata', ouro: 'badge-ouro', elite: 'badge-elite'
   };
 
+  const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+  // ── Criar ──────────────────────────────────────────────────────
   async function criarSorteio() {
-    const titulo = document.getElementById('novoTitulo').value.trim();
-    const premio = document.getElementById('novoPremio').value.trim();
-    const nivel  = document.getElementById('novoNivel').value;
-    const data   = document.getElementById('novaData').value || null;
-    const desc   = document.getElementById('novaDesc').value.trim() || null;
-    const msg    = document.getElementById('msgCriar');
-    const btn    = document.getElementById('btnCriar');
+    const titulo      = document.getElementById('novoTitulo').value.trim();
+    const premio      = document.getElementById('novoPremio').value.trim();
+    const nivel       = document.getElementById('novoNivel').value;
+    const dataEvento  = document.getElementById('novaDataEvento').value || null;
+    const local       = document.getElementById('novoLocal').value.trim() || null;
+    const dataSorteio = document.getElementById('novaDataSorteio').value || null;
+    const desc        = document.getElementById('novaDesc').value.trim() || null;
+    const msg         = document.getElementById('msgCriar');
+    const btn         = document.getElementById('btnCriar');
+
     if (!titulo || !premio) { msg.textContent = 'Título e prêmio são obrigatórios.'; msg.className = 'msg error'; return; }
     btn.disabled = true; btn.textContent = 'Salvando...';
-    const { error } = await sb.from('sorteios').insert([{ titulo, premio, nivel_minimo: nivel, data_sorteio: data, descricao: desc }]);
+
+    const { error } = await sb.from('sorteios').insert([{
+      titulo, premio, nivel_minimo: nivel,
+      data_evento: dataEvento, local,
+      data_sorteio: dataSorteio, descricao: desc
+    }]);
+
     btn.disabled = false; btn.textContent = '+ Criar Sorteio';
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; return; }
+
     msg.textContent = '✅ Sorteio criado!'; msg.className = 'msg success';
-    ['novoTitulo','novoPremio','novaData','novaDesc'].forEach(id => document.getElementById(id).value = '');
+    ['novoTitulo','novoPremio','novaDataEvento','novoLocal','novaDataSorteio','novaDesc'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('novoNivel').value = 'todos';
     setTimeout(() => msg.className = 'msg', 3000);
     carregarSorteios();
   }
 
+  // ── Carregar lista ─────────────────────────────────────────────
   async function carregarSorteios() {
     document.getElementById('listaSorteios').innerHTML = '<div class="empty">Carregando...</div>';
+
     const { data: sorteios } = await sb.from('sorteios')
       .select('*, ganhador:ganhador_id(nome)')
       .order('created_at', { ascending: false });
@@ -190,7 +224,6 @@
       return;
     }
 
-    // Buscar inscrições com dados do corredor
     const { data: inscricoes } = await sb.from('sorteio_inscricoes')
       .select('sorteio_id, corredor_id, corredores(nome, email)');
 
@@ -200,57 +233,146 @@
       inscMap[i.sorteio_id].push(i);
     });
 
-    document.getElementById('listaSorteios').innerHTML = sorteios.map(s => {
-      const inscs = inscMap[s.id] || [];
-      const dataFmt = s.data_sorteio ? new Date(s.data_sorteio + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-      const statusHtml = s.status === 'aberto'
-        ? '<span class="status-aberto">🟢 Aberto</span>'
-        : '<span class="status-encerrado">⚫ Encerrado</span>';
-      const ganhadorBox = s.ganhador
-        ? `<div class="ganhador-box">🏆 Ganhador: <strong>${s.ganhador.nome}</strong></div>`
-        : '';
-      const inscritosHtml = inscs.length
-        ? `<div class="inscritos-lista">${inscs.map((i,n) => `${n+1}. ${i.corredores?.nome || '?'} <span style="color:#aaa;font-size:11px;">${i.corredores?.email || ''}</span>`).join('<br>')}</div>`
-        : '<div style="font-size:12px;color:#bbb;">Nenhum inscrito ainda.</div>';
-      const btnSortear = s.status === 'aberto' && inscs.length > 0
-        ? `<button class="btn btn-orange btn-sm" onclick="realizarSorteio('${s.id}')" style="margin-top:12px;">🎰 Realizar Sorteio</button>`
-        : '';
-      const btnEncerrar = s.status === 'aberto'
-        ? `<button class="btn btn-gray btn-sm" onclick="encerrarSorteio('${s.id}')" style="margin-top:12px; margin-left:8px;">Encerrar sem sortear</button>`
-        : '';
-
-      return `
-        <div class="sorteio-card">
-          <div class="sorteio-head">
-            <div>
-              <div class="sorteio-titulo">${s.titulo}</div>
-              <div class="sorteio-premio">🎁 ${s.premio}</div>
-              <div class="sorteio-meta">
-                <span>${statusHtml}</span>
-                <span><span class="badge-nivel ${nivelBadge[s.nivel_minimo]}">${nivelLabel[s.nivel_minimo]}</span></span>
-                <span>📅 ${dataFmt}</span>
-                <span>👥 ${inscs.length} inscrito${inscs.length !== 1 ? 's' : ''}</span>
-              </div>
-              ${s.descricao ? `<div style="font-size:12px;color:#888;margin-top:6px;">${s.descricao}</div>` : ''}
-            </div>
-          </div>
-          <div class="sorteio-body">
-            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px;">Inscritos</div>
-            ${inscritosHtml}
-            ${ganhadorBox}
-            <div>${btnSortear}${btnEncerrar}</div>
-          </div>
-        </div>`;
-    }).join('');
+    document.getElementById('listaSorteios').innerHTML = sorteios.map(s => renderSorteioCard(s, inscMap[s.id] || [])).join('');
   }
 
+  function renderSorteioCard(s, inscs) {
+    const statusHtml = s.status === 'aberto'
+      ? '<span class="status-aberto">🟢 Aberto</span>'
+      : '<span class="status-encerrado">⚫ Encerrado</span>';
+
+    const ganhadorBox = s.ganhador
+      ? `<div class="ganhador-box">🏆 Ganhador: <strong>${s.ganhador.nome}</strong></div>`
+      : '';
+
+    const inscritosHtml = inscs.length
+      ? `<div class="inscritos-lista">${inscs.map((i,n) => `${n+1}. ${i.corredores?.nome || '?'} <span style="color:#aaa;font-size:11px;">${i.corredores?.email || ''}</span>`).join('<br>')}</div>`
+      : '<div style="font-size:12px;color:#bbb;">Nenhum inscrito ainda.</div>';
+
+    const btnSortear = s.status === 'aberto' && inscs.length > 0
+      ? `<button class="btn btn-orange btn-sm" onclick="realizarSorteio('${s.id}')">🎰 Realizar Sorteio</button>`
+      : '';
+    const btnEncerrar = s.status === 'aberto'
+      ? `<button class="btn btn-gray btn-sm" onclick="encerrarSorteio('${s.id}')">Encerrar</button>`
+      : '';
+    const btnEditar = s.status === 'aberto'
+      ? `<button class="btn btn-gray btn-sm" onclick="toggleEditar('${s.id}')">✏️ Editar</button>`
+      : '';
+
+    const localHtml = s.local ? `<span>📍 ${s.local}</span>` : '';
+    const dataEv    = s.data_evento  ? `<span>🏃 Evento: ${fmt(s.data_evento)}</span>` : '';
+    const dataSor   = s.data_sorteio ? `<span>🎰 Sorteio: ${fmt(s.data_sorteio)}</span>` : '';
+
+    const editPanel = `
+      <div class="edit-panel" id="edit-${s.id}">
+        <h4>✏️ Editar Sorteio</h4>
+        <div class="form-grid" style="margin-bottom:14px;">
+          <div>
+            <label>Título *</label>
+            <input type="text" id="e-titulo-${s.id}" value="${esc(s.titulo)}">
+          </div>
+          <div>
+            <label>Prêmio *</label>
+            <input type="text" id="e-premio-${s.id}" value="${esc(s.premio)}">
+          </div>
+          <div>
+            <label>Nível mínimo</label>
+            <select id="e-nivel-${s.id}">
+              ${['todos','bronze','prata','ouro','elite'].map(v =>
+                `<option value="${v}" ${s.nivel_minimo===v?'selected':''}>${nivelLabel[v]}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div>
+            <label>Data do evento</label>
+            <input type="date" id="e-data-evento-${s.id}" value="${s.data_evento || ''}">
+          </div>
+          <div>
+            <label>Local do evento</label>
+            <input type="text" id="e-local-${s.id}" value="${esc(s.local || '')}" placeholder="Ex: Parque Villa-Lobos — SP">
+          </div>
+          <div>
+            <label>Data do sorteio</label>
+            <input type="date" id="e-data-sorteio-${s.id}" value="${s.data_sorteio || ''}">
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Descrição</label>
+          <textarea id="e-desc-${s.id}">${esc(s.descricao || '')}</textarea>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="salvarEdicao('${s.id}')">💾 Salvar</button>
+          <button class="btn btn-gray btn-sm" onclick="toggleEditar('${s.id}')">Cancelar</button>
+        </div>
+        <div class="msg" id="msg-edit-${s.id}"></div>
+      </div>`;
+
+    return `
+      <div class="sorteio-card" id="card-${s.id}">
+        <div class="sorteio-head">
+          <div>
+            <div class="sorteio-titulo">${s.titulo}</div>
+            <div class="sorteio-premio">🎁 ${s.premio}</div>
+            <div class="sorteio-meta">
+              <span>${statusHtml}</span>
+              <span><span class="badge-nivel ${nivelBadge[s.nivel_minimo]}">${nivelLabel[s.nivel_minimo]}</span></span>
+              ${dataEv}${localHtml}${dataSor}
+              <span>👥 ${inscs.length} inscrito${inscs.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${s.descricao ? `<div style="font-size:12px;color:#888;margin-top:6px;">${s.descricao}</div>` : ''}
+          </div>
+        </div>
+        <div class="sorteio-body">
+          <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px;">Inscritos</div>
+          ${inscritosHtml}
+          ${ganhadorBox}
+          <div class="acoes-sorteio">${btnEditar}${btnSortear}${btnEncerrar}</div>
+        </div>
+        ${editPanel}
+      </div>`;
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ── Editar ─────────────────────────────────────────────────────
+  function toggleEditar(id) {
+    const panel = document.getElementById('edit-' + id);
+    panel.classList.toggle('aberto');
+  }
+
+  async function salvarEdicao(id) {
+    const titulo      = document.getElementById(`e-titulo-${id}`).value.trim();
+    const premio      = document.getElementById(`e-premio-${id}`).value.trim();
+    const nivel       = document.getElementById(`e-nivel-${id}`).value;
+    const dataEvento  = document.getElementById(`e-data-evento-${id}`).value || null;
+    const local       = document.getElementById(`e-local-${id}`).value.trim() || null;
+    const dataSorteio = document.getElementById(`e-data-sorteio-${id}`).value || null;
+    const desc        = document.getElementById(`e-desc-${id}`).value.trim() || null;
+    const msg         = document.getElementById(`msg-edit-${id}`);
+
+    if (!titulo || !premio) { msg.textContent = 'Título e prêmio são obrigatórios.'; msg.className = 'msg error'; return; }
+
+    const { error } = await sb.from('sorteios').update({
+      titulo, premio, nivel_minimo: nivel,
+      data_evento: dataEvento, local,
+      data_sorteio: dataSorteio, descricao: desc
+    }).eq('id', id);
+
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; return; }
+
+    msg.textContent = '✅ Salvo!'; msg.className = 'msg success';
+    setTimeout(() => carregarSorteios(), 1000);
+  }
+
+  // ── Sortear / Encerrar ─────────────────────────────────────────
   async function realizarSorteio(id) {
-    const inscs = document.querySelectorAll; // usaremos dados já carregados
     const { data: inscricoes } = await sb.from('sorteio_inscricoes')
       .select('corredor_id, corredores(nome)').eq('sorteio_id', id);
     if (!inscricoes?.length) return;
     const sorteado = inscricoes[Math.floor(Math.random() * inscricoes.length)];
-    if (!confirm(`Sortear agora entre ${inscricoes.length} inscritos?\nO resultado não pode ser desfeito.`)) return;
+    if (!confirm(`Sortear agora entre ${inscricoes.length} inscrito${inscricoes.length!==1?'s':''}?\nO resultado não pode ser desfeito.`)) return;
     await sb.from('sorteios').update({ ganhador_id: sorteado.corredor_id, status: 'encerrado' }).eq('id', id);
     alert(`🏆 Ganhador: ${sorteado.corredores?.nome}`);
     carregarSorteios();

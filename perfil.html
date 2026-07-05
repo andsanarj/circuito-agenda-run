@@ -1074,7 +1074,7 @@
 
     const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
       client.from('sorteios')
-        .select('id, titulo, premio, data_sorteio, status')
+        .select('id, titulo, premio, data_evento, local, data_sorteio, status')
         .eq('status', 'aberto')
         .order('created_at', { ascending: false })
         .limit(3),
@@ -1090,20 +1090,23 @@
       return;
     }
 
+    const fmtS = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : null;
     div.innerHTML = sorteios.map(s => {
-      const dataFmt = s.data_sorteio
-        ? `📅 Sorteio em ${new Date(s.data_sorteio + 'T12:00:00').toLocaleDateString('pt-BR')}`
-        : '';
       const inscrito = _sorteiosInscrito.has(s.id);
       const btn = inscrito
         ? `<button class="btn-sorteio-perfil inscrito" onclick="toggleSorteioPerfil('${s.id}', this)">✓ Inscrito</button>`
         : `<button class="btn-sorteio-perfil" onclick="toggleSorteioPerfil('${s.id}', this)">🎰 Participar</button>`;
+      const metaParts = [
+        s.data_evento  ? `🏃 ${fmtS(s.data_evento)}` : null,
+        s.local        ? `📍 ${s.local}` : null,
+        s.data_sorteio ? `🎰 Sorteio: ${fmtS(s.data_sorteio)}` : null,
+      ].filter(Boolean).join(' · ');
       return `
         <div class="sorteio-row">
           <div class="sorteio-row-info">
             <div class="sorteio-row-nome">${s.titulo}</div>
             <div class="sorteio-row-premio">🎁 ${s.premio}</div>
-            ${dataFmt ? `<div class="sorteio-row-data">${dataFmt}</div>` : ''}
+            ${metaParts ? `<div class="sorteio-row-data">${metaParts}</div>` : ''}
           </div>
           ${btn}
         </div>`;

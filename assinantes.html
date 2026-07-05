@@ -363,7 +363,9 @@
             ${s.descricao ? `<div class="sorteio-desc">${s.descricao}</div>` : ''}
             <div class="sorteio-meta">
               <span><span class="badge-nivel ${nivelBadge[s.nivel_minimo]}">${nivelLabel[s.nivel_minimo]}</span></span>
-              ${s.data_sorteio ? `<span>📅 ${fmt(s.data_sorteio)}</span>` : ''}
+              ${s.data_evento  ? `<span>🏃 Evento: ${fmt(s.data_evento)}</span>` : ''}
+              ${s.local        ? `<span>📍 ${s.local}</span>` : ''}
+              ${s.data_sorteio ? `<span>🎰 Sorteio: ${fmt(s.data_sorteio)}</span>` : ''}
               <span>👥 ${qtd} inscrito${qtd !== 1 ? 's' : ''}</span>
             </div>
             ${ganhadorHtml}
