@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorteios — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter','Segoe UI',sans-serif; background:#f0f4f8; min-height:100vh; }
+    h1,h2,h3 { font-family:'Barlow Condensed',sans-serif; }
+    header { background:#0F2D4A; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:3px solid #E8622A; }
+    header .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    header .logo img { height:36px; }
+    header .logo span { color:#fff; font-weight:700; font-size:15px; }
+    .badge-admin { background:#E8622A; color:#fff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; text-transform:uppercase; }
+    .btn-sair { background:rgba(255,255,255,0.15); color:#fff; border:none; padding:7px 14px; border-radius:20px; font-size:13px; cursor:pointer; }
+    .btn-voltar { color:#fff; font-size:13px; font-weight:600; text-decoration:none; background:rgba(255,255,255,0.1); padding:7px 14px; border-radius:20px; }
+    .container { max-width:1000px; margin:32px auto; padding:0 20px; }
+    .card { background:#fff; border-radius:12px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,0.07); margin-bottom:24px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #f0f0f0; flex-wrap:wrap; gap:10px; }
+    h2 { font-size:22px; color:#1F4E79; }
+    label { display:block; font-size:12px; color:#666; font-weight:600; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.3px; }
+    input,select,textarea { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; }
+    input:focus,select:focus,textarea:focus { outline:none; border-color:#1F4E79; box-shadow:0 0 0 3px rgba(31,78,121,0.08); }
+    textarea { min-height:60px; resize:vertical; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .btn { padding:9px 18px; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+    .btn-primary { background:#1F4E79; color:#fff; }
+    .btn-primary:hover { background:#163a5f; }
+    .btn-orange { background:#E8622A; color:#fff; }
+    .btn-orange:hover { background:#c94f1f; }
+    .btn-gray { background:#f0f4f8; color:#444; border:1px solid #ddd; }
+    .btn-sm { padding:5px 12px; font-size:12px; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .msg { padding:10px 14px; border-radius:8px; font-size:13px; margin-top:10px; display:none; }
+    .msg.success { background:#e6f9f0; color:#1a7a4a; display:block; }
+    .msg.error { background:#fdecea; color:#b00020; display:block; }
+    .empty { text-align:center; color:#bbb; padding:32px; font-size:14px; }
+
+    /* Cards de sorteio */
+    .sorteio-card { border:1px solid #e8edf2; border-radius:10px; margin-bottom:14px; overflow:hidden; }
+    .sorteio-head { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start; padding:16px 20px; }
+    .sorteio-titulo { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:800; color:#1F4E79; }
+    .sorteio-premio { font-size:13px; color:#E8622A; font-weight:700; margin-top:2px; }
+    .sorteio-meta { font-size:12px; color:#888; margin-top:4px; display:flex; gap:12px; flex-wrap:wrap; }
+    .sorteio-body { border-top:1px solid #f0f0f0; background:#fafbfc; padding:16px 20px; }
+    .inscritos-lista { font-size:13px; color:#444; line-height:1.8; }
+    .badge-nivel { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; }
+    .badge-todos   { background:#e8f4fd; color:#1F4E79; }
+    .badge-bronze  { background:#e8d5b7; color:#6b4c1e; }
+    .badge-prata   { background:#d8e8f0; color:#1F4E79; }
+    .badge-ouro    { background:#fff3c0; color:#7a5800; }
+    .badge-elite   { background:#b8f0ff; color:#0a3d47; }
+    .status-aberto   { background:#e6f9f0; color:#1a7a4a; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+    .status-encerrado { background:#f0f0f0; color:#888; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+    .ganhador-box { background:linear-gradient(135deg,#fff3c0,#ffe066); border-radius:8px; padding:12px 16px; margin-top:12px; font-size:13px; font-weight:700; color:#7a5800; }
+
+    footer { text-align:center; padding:24px; color:#999; font-size:13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center;padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+
+  <!-- Criar sorteio -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🎰 Criar Sorteio</h2>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Título *</label>
+        <input type="text" id="novoTitulo" placeholder="Ex: Sorteio de Julho">
+      </div>
+      <div>
+        <label>Prêmio *</label>
+        <input type="text" id="novoPremio" placeholder="Ex: Cortesia Hello Kitty Fun Run">
+      </div>
+      <div>
+        <label>Nível mínimo</label>
+        <select id="novoNivel">
+          <option value="todos">Todos os assinantes</option>
+          <option value="bronze">Bronze ou superior</option>
+          <option value="prata">Prata ou superior</option>
+          <option value="ouro">Ouro ou superior</option>
+          <option value="elite">Apenas Elite</option>
+        </select>
+      </div>
+      <div>
+        <label>Data do sorteio</label>
+        <input type="date" id="novaData">
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label>Descrição (opcional)</label>
+      <textarea id="novaDesc" placeholder="Detalhes sobre o prêmio ou regras adicionais..."></textarea>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-primary" onclick="criarSorteio()" id="btnCriar">+ Criar Sorteio</button>
+      <div class="msg" id="msgCriar"></div>
+    </div>
+  </div>
+
+  <!-- Lista de sorteios -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🎁 Sorteios</h2>
+      <button class="btn btn-gray btn-sm" onclick="carregarSorteios()">🔄 Atualizar</button>
+    </div>
+    <div id="listaSorteios"><div class="empty">Carregando...</div></div>
+  </div>
+
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || session.user.email !== ADMIN_EMAIL) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    carregarSorteios();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  const nivelLabel = {
+    todos: 'Todos os assinantes', bronze: 'Bronze ou superior',
+    prata: 'Prata ou superior', ouro: 'Ouro ou superior', elite: 'Apenas Elite'
+  };
+  const nivelBadge = {
+    todos: 'badge-todos', bronze: 'badge-bronze',
+    prata: 'badge-prata', ouro: 'badge-ouro', elite: 'badge-elite'
+  };
+
+  async function criarSorteio() {
+    const titulo = document.getElementById('novoTitulo').value.trim();
+    const premio = document.getElementById('novoPremio').value.trim();
+    const nivel  = document.getElementById('novoNivel').value;
+    const data   = document.getElementById('novaData').value || null;
+    const desc   = document.getElementById('novaDesc').value.trim() || null;
+    const msg    = document.getElementById('msgCriar');
+    const btn    = document.getElementById('btnCriar');
+    if (!titulo || !premio) { msg.textContent = 'Título e prêmio são obrigatórios.'; msg.className = 'msg error'; return; }
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const { error } = await sb.from('sorteios').insert([{ titulo, premio, nivel_minimo: nivel, data_sorteio: data, descricao: desc }]);
+    btn.disabled = false; btn.textContent = '+ Criar Sorteio';
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; return; }
+    msg.textContent = '✅ Sorteio criado!'; msg.className = 'msg success';
+    ['novoTitulo','novoPremio','novaData','novaDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('novoNivel').value = 'todos';
+    setTimeout(() => msg.className = 'msg', 3000);
+    carregarSorteios();
+  }
+
+  async function carregarSorteios() {
+    document.getElementById('listaSorteios').innerHTML = '<div class="empty">Carregando...</div>';
+    const { data: sorteios } = await sb.from('sorteios')
+      .select('*, ganhador:ganhador_id(nome)')
+      .order('created_at', { ascending: false });
+
+    if (!sorteios?.length) {
+      document.getElementById('listaSorteios').innerHTML = '<div class="empty">Nenhum sorteio criado ainda.</div>';
+      return;
+    }
+
+    // Buscar inscrições com dados do corredor
+    const { data: inscricoes } = await sb.from('sorteio_inscricoes')
+      .select('sorteio_id, corredor_id, corredores(nome, email)');
+
+    const inscMap = {};
+    (inscricoes || []).forEach(i => {
+      if (!inscMap[i.sorteio_id]) inscMap[i.sorteio_id] = [];
+      inscMap[i.sorteio_id].push(i);
+    });
+
+    document.getElementById('listaSorteios').innerHTML = sorteios.map(s => {
+      const inscs = inscMap[s.id] || [];
+      const dataFmt = s.data_sorteio ? new Date(s.data_sorteio + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const statusHtml = s.status === 'aberto'
+        ? '<span class="status-aberto">🟢 Aberto</span>'
+        : '<span class="status-encerrado">⚫ Encerrado</span>';
+      const ganhadorBox = s.ganhador
+        ? `<div class="ganhador-box">🏆 Ganhador: <strong>${s.ganhador.nome}</strong></div>`
+        : '';
+      const inscritosHtml = inscs.length
+        ? `<div class="inscritos-lista">${inscs.map((i,n) => `${n+1}. ${i.corredores?.nome || '?'} <span style="color:#aaa;font-size:11px;">${i.corredores?.email || ''}</span>`).join('<br>')}</div>`
+        : '<div style="font-size:12px;color:#bbb;">Nenhum inscrito ainda.</div>';
+      const btnSortear = s.status === 'aberto' && inscs.length > 0
+        ? `<button class="btn btn-orange btn-sm" onclick="realizarSorteio('${s.id}')" style="margin-top:12px;">🎰 Realizar Sorteio</button>`
+        : '';
+      const btnEncerrar = s.status === 'aberto'
+        ? `<button class="btn btn-gray btn-sm" onclick="encerrarSorteio('${s.id}')" style="margin-top:12px; margin-left:8px;">Encerrar sem sortear</button>`
+        : '';
+
+      return `
+        <div class="sorteio-card">
+          <div class="sorteio-head">
+            <div>
+              <div class="sorteio-titulo">${s.titulo}</div>
+              <div class="sorteio-premio">🎁 ${s.premio}</div>
+              <div class="sorteio-meta">
+                <span>${statusHtml}</span>
+                <span><span class="badge-nivel ${nivelBadge[s.nivel_minimo]}">${nivelLabel[s.nivel_minimo]}</span></span>
+                <span>📅 ${dataFmt}</span>
+                <span>👥 ${inscs.length} inscrito${inscs.length !== 1 ? 's' : ''}</span>
+              </div>
+              ${s.descricao ? `<div style="font-size:12px;color:#888;margin-top:6px;">${s.descricao}</div>` : ''}
+            </div>
+          </div>
+          <div class="sorteio-body">
+            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px;">Inscritos</div>
+            ${inscritosHtml}
+            ${ganhadorBox}
+            <div>${btnSortear}${btnEncerrar}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function realizarSorteio(id) {
+    const inscs = document.querySelectorAll; // usaremos dados já carregados
+    const { data: inscricoes } = await sb.from('sorteio_inscricoes')
+      .select('corredor_id, corredores(nome)').eq('sorteio_id', id);
+    if (!inscricoes?.length) return;
+    const sorteado = inscricoes[Math.floor(Math.random() * inscricoes.length)];
+    if (!confirm(`Sortear agora entre ${inscricoes.length} inscritos?\nO resultado não pode ser desfeito.`)) return;
+    await sb.from('sorteios').update({ ganhador_id: sorteado.corredor_id, status: 'encerrado' }).eq('id', id);
+    alert(`🏆 Ganhador: ${sorteado.corredores?.nome}`);
+    carregarSorteios();
+  }
+
+  async function encerrarSorteio(id) {
+    if (!confirm('Encerrar este sorteio sem realizar o sorteio?')) return;
+    await sb.from('sorteios').update({ status: 'encerrado' }).eq('id', id);
+    carregarSorteios();
+  }
+</script>
+</body>
+</html>

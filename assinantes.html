@@ -84,6 +84,27 @@
     .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
     .loading { text-align: center; padding: 80px; color: #888; font-size: 15px; }
 
+    /* Sorteios */
+    .sorteio-item { border: 1px solid #e8edf2; border-radius: 10px; padding: 20px; margin-bottom: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .sorteio-item:last-child { margin-bottom: 0; }
+    .sorteio-info { flex: 1; min-width: 200px; }
+    .sorteio-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; color: #1F4E79; margin-bottom: 4px; }
+    .sorteio-premio { font-size: 13px; color: #E8622A; font-weight: 700; margin-bottom: 6px; }
+    .sorteio-meta { font-size: 12px; color: #888; display: flex; gap: 12px; flex-wrap: wrap; }
+    .sorteio-desc { font-size: 13px; color: #666; margin-top: 6px; line-height: 1.5; }
+    .btn-sorteio { background: #1F4E79; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0; }
+    .btn-sorteio:hover { background: #163a5f; }
+    .btn-sorteio.inscrito { background: #e6f9f0; color: #1a7a4a; border: 1px solid #1a7a4a; }
+    .btn-sorteio.inscrito:hover { background: #fdecea; color: #b00020; border-color: #b00020; }
+    .badge-nivel { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .badge-todos   { background: #e8f4fd; color: #1F4E79; }
+    .badge-bronze  { background: #e8d5b7; color: #6b4c1e; }
+    .badge-prata   { background: #d8e8f0; color: #1F4E79; }
+    .badge-ouro    { background: #fff3c0; color: #7a5800; }
+    .badge-elite   { background: #b8f0ff; color: #0a3d47; }
+    .sorteio-encerrado { opacity: 0.6; }
+    .ganhador-chip { display: inline-block; background: linear-gradient(135deg,#fff3c0,#ffe066); color: #7a5800; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-top: 8px; }
+
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
   </style>
 </head>
@@ -136,6 +157,20 @@
       </div>
     </div>
 
+    <!-- Sorteios -->
+    <div class="card">
+      <div class="card-header">
+        <h2>🎰 Sorteios Exclusivos</h2>
+        <span>Só para assinantes</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size:14px; color:#555; margin-bottom:18px;">
+          Sorteios exclusivos para membros do Circuito. Clique em <strong>Quero participar</strong> para entrar no sorteio!
+        </p>
+        <div id="listaSorteios" class="loading">Carregando sorteios...</div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -171,6 +206,7 @@
       corredorIdGlobal = corredor.id;
       document.getElementById('conteudo').style.display = 'block';
       carregarKitRun(corredor.id);
+      carregarSorteios(corredor.id);
     }
   }
 
@@ -265,6 +301,118 @@
       btn.textContent = '+ Tenho interesse';
       btn.disabled = false;
       btn.onclick = () => registrarInteresse(eventoId, btn);
+    }
+  }
+
+  const nivelLabel = {
+    todos: 'Todos os assinantes', bronze: 'Bronze ou superior',
+    prata: 'Prata ou superior', ouro: 'Ouro ou superior', elite: 'Apenas Elite'
+  };
+  const nivelBadge = {
+    todos: 'badge-todos', bronze: 'badge-bronze',
+    prata: 'badge-prata', ouro: 'badge-ouro', elite: 'badge-elite'
+  };
+
+  async function carregarSorteios(corredorId) {
+    const div = document.getElementById('listaSorteios');
+
+    const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
+      sb.from('sorteios')
+        .select('*, ganhador:ganhador_id(nome)')
+        .order('created_at', { ascending: false }),
+      sb.from('sorteio_inscricoes')
+        .select('sorteio_id')
+        .eq('corredor_id', corredorId)
+    ]);
+
+    if (!sorteios || sorteios.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhum sorteio disponível no momento.</div>';
+      return;
+    }
+
+    // Buscar contagem de inscritos por sorteio
+    const { data: todasInscs } = await sb.from('sorteio_inscricoes').select('sorteio_id');
+    const contagem = {};
+    (todasInscs || []).forEach(i => { contagem[i.sorteio_id] = (contagem[i.sorteio_id] || 0) + 1; });
+
+    const inscrito = new Set((minhasInscs || []).map(i => i.sorteio_id));
+    const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    div.innerHTML = sorteios.map(s => {
+      const encerrado = s.status === 'encerrado';
+      const estaInscrito = inscrito.has(s.id);
+      const qtd = contagem[s.id] || 0;
+      const ganhadorHtml = s.ganhador
+        ? `<div class="ganhador-chip">🏆 Ganhador: ${s.ganhador.nome}</div>`
+        : '';
+
+      let btnHtml;
+      if (encerrado) {
+        btnHtml = `<span style="font-size:12px; color:#888; font-weight:600;">Encerrado</span>`;
+      } else if (estaInscrito) {
+        btnHtml = `<button class="btn-sorteio inscrito" onclick="cancelarSorteio('${s.id}', this)">✓ Quero participar</button>`;
+      } else {
+        btnHtml = `<button class="btn-sorteio" onclick="participarSorteio('${s.id}', this)">🎰 Quero participar</button>`;
+      }
+
+      return `
+        <div class="sorteio-item${encerrado ? ' sorteio-encerrado' : ''}" id="sorteio-${s.id}">
+          <div class="sorteio-info">
+            <div class="sorteio-titulo">${s.titulo}</div>
+            <div class="sorteio-premio">🎁 ${s.premio}</div>
+            ${s.descricao ? `<div class="sorteio-desc">${s.descricao}</div>` : ''}
+            <div class="sorteio-meta">
+              <span><span class="badge-nivel ${nivelBadge[s.nivel_minimo]}">${nivelLabel[s.nivel_minimo]}</span></span>
+              ${s.data_sorteio ? `<span>📅 ${fmt(s.data_sorteio)}</span>` : ''}
+              <span>👥 ${qtd} inscrito${qtd !== 1 ? 's' : ''}</span>
+            </div>
+            ${ganhadorHtml}
+          </div>
+          <div style="flex-shrink:0; padding-top:4px;">${btnHtml}</div>
+        </div>`;
+    }).join('');
+  }
+
+  async function participarSorteio(sorteioId, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Registrando...';
+    const { error } = await sb.from('sorteio_inscricoes').insert([{
+      sorteio_id: sorteioId,
+      corredor_id: corredorIdGlobal
+    }]);
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = '🎰 Quero participar';
+      alert('Erro: ' + error.message);
+    } else {
+      btn.className = 'btn-sorteio inscrito';
+      btn.textContent = '✓ Quero participar';
+      btn.disabled = false;
+      btn.onclick = () => cancelarSorteio(sorteioId, btn);
+      // Atualiza contagem
+      const meta = document.querySelector(`#sorteio-${sorteioId} .sorteio-meta span:last-child`);
+      if (meta && meta.textContent.includes('inscrito')) {
+        const atual = parseInt(meta.textContent) || 0;
+        meta.textContent = `👥 ${atual + 1} inscrito${atual + 1 !== 1 ? 's' : ''}`;
+      }
+    }
+  }
+
+  async function cancelarSorteio(sorteioId, btn) {
+    if (!confirm('Cancelar sua participação neste sorteio?')) return;
+    btn.disabled = true;
+    const { error } = await sb.from('sorteio_inscricoes')
+      .delete()
+      .eq('sorteio_id', sorteioId)
+      .eq('corredor_id', corredorIdGlobal);
+    if (error) {
+      btn.disabled = false;
+      alert('Erro: ' + error.message);
+    } else {
+      btn.className = 'btn-sorteio';
+      btn.textContent = '🎰 Quero participar';
+      btn.disabled = false;
+      btn.onclick = () => participarSorteio(sorteioId, btn);
     }
   }
 
