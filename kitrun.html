@@ -148,6 +148,37 @@
     .inter-insta { font-size: 12px; color: #1F4E79; margin-top: 2px; }
     .modal-empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
 
+    /* Abas */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #e8edf2; margin-bottom: 20px; }
+    .tab-btn {
+      background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px;
+      padding: 9px 20px; font-size: 14px; font-weight: 700; color: #888; cursor: pointer;
+      font-family: inherit; transition: color 0.15s;
+    }
+    .tab-btn.ativo { color: #1F4E79; border-bottom-color: #1F4E79; }
+    .tab-panel { display: none; }
+    .tab-panel.ativo { display: block; }
+
+    /* Form manual */
+    .form-manual { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:600px){ .form-manual { grid-template-columns: 1fr; } }
+    .form-manual label { display: block; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+    .form-manual input, .form-manual textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 13px; font-family: inherit; color: #333;
+    }
+    .form-manual input:focus, .form-manual textarea:focus { outline: none; border-color: #1F4E79; }
+    .form-manual textarea { min-height: 56px; resize: vertical; }
+    .btn-cadastrar-manual {
+      background: #E8622A; color: #fff; border: none; padding: 10px 24px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 4px;
+    }
+    .btn-cadastrar-manual:hover { background: #c94f1f; }
+    .btn-cadastrar-manual:disabled { background: #aaa; cursor: not-allowed; }
+    .msg-manual { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 7px; display: none; }
+    .msg-manual.ok  { background: #e6f9f0; color: #1a7a4a; display: block; }
+    .msg-manual.err { background: #fdecea; color: #b00020; display: block; }
+
     @media (max-width: 600px) {
       .picker-item { flex-direction: column; align-items: flex-start; }
       table { font-size: 13px; }
@@ -193,11 +224,53 @@
   <!-- Seletor de corridas -->
   <div class="card">
     <h3 class="card-title">➕ Adicionar corrida ao serviço</h3>
-    <div class="picker-search">
-      <input type="text" id="buscaCorrida" placeholder="Buscar corrida pelo nome..." oninput="filtrarCorridas()">
+
+    <div class="tabs">
+      <button class="tab-btn ativo" onclick="trocarAba('circuito', this)">🏆 Eventos do Circuito</button>
+      <button class="tab-btn" onclick="trocarAba('externa', this)">📝 Corrida externa</button>
     </div>
-    <div class="eventos-picker" id="eventosPicker">
-      <div class="picker-loading">Carregando corridas...</div>
+
+    <!-- Aba: Eventos do Circuito -->
+    <div class="tab-panel ativo" id="tab-circuito">
+      <div class="picker-search">
+        <input type="text" id="buscaCorrida" placeholder="Buscar pelo nome do evento..." oninput="filtrarCorridas()">
+      </div>
+      <div class="eventos-picker" id="eventosPicker">
+        <div class="picker-loading">Carregando corridas...</div>
+      </div>
+    </div>
+
+    <!-- Aba: Corrida externa -->
+    <div class="tab-panel" id="tab-externa">
+      <p style="font-size:13px; color:#666; margin-bottom:16px;">
+        Preencha os dados da corrida que <strong>não está no Circuito</strong> mas que a Kit Run Express irá atuar.
+      </p>
+      <div class="form-manual">
+        <div style="grid-column: 1 / -1;">
+          <label>Nome da corrida *</label>
+          <input type="text" id="extNome" placeholder="Ex: Corrida Empresarial TIM">
+        </div>
+        <div>
+          <label>Data do evento *</label>
+          <input type="date" id="extData">
+        </div>
+        <div>
+          <label>Local / cidade</label>
+          <input type="text" id="extLocal" placeholder="Ex: São Paulo — SP">
+        </div>
+        <div>
+          <label>Valor do serviço (R$)</label>
+          <input type="number" id="extValor" placeholder="Ex: 29.90" step="0.01" min="0">
+        </div>
+        <div>
+          <label>Observação</label>
+          <input type="text" id="extObs" placeholder="Informação adicional...">
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn-cadastrar-manual" id="btnCadastrarExt" onclick="cadastrarExterna()">+ Adicionar corrida externa</button>
+        <div class="msg-manual" id="msgManual"></div>
+      </div>
     </div>
   </div>
 
@@ -263,6 +336,51 @@
   }
 
   if (localStorage.getItem('kitrun_auth') === 'ok') mostrarPainel();
+
+  // ── ABAS ─────────────────────────────────────────────────────
+  function trocarAba(aba, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('ativo'));
+    btn.classList.add('ativo');
+    document.getElementById('tab-' + aba).classList.add('ativo');
+  }
+
+  // ── CADASTRAR CORRIDA EXTERNA ─────────────────────────────────
+  async function cadastrarExterna() {
+    const nome  = document.getElementById('extNome').value.trim();
+    const data  = document.getElementById('extData').value || null;
+    const local = document.getElementById('extLocal').value.trim() || null;
+    const valor = document.getElementById('extValor').value ? parseFloat(document.getElementById('extValor').value) : null;
+    const obs   = document.getElementById('extObs').value.trim() || null;
+    const msg   = document.getElementById('msgManual');
+    const btn   = document.getElementById('btnCadastrarExt');
+
+    if (!nome) { msg.textContent = 'O nome da corrida é obrigatório.'; msg.className = 'msg-manual err'; return; }
+    if (!data) { msg.textContent = 'A data do evento é obrigatória.'; msg.className = 'msg-manual err'; return; }
+
+    btn.disabled = true; btn.textContent = 'Adicionando...';
+
+    const { error } = await sb.from('kit_run_eventos').insert([{
+      corrida: nome,
+      data,
+      local,
+      valor,
+      observacao: obs,
+      evento_id: null   // sem vínculo ao Circuito
+    }]);
+
+    btn.disabled = false; btn.textContent = '+ Adicionar corrida externa';
+
+    if (error) {
+      msg.textContent = 'Erro: ' + error.message; msg.className = 'msg-manual err';
+      return;
+    }
+
+    msg.textContent = '✅ Corrida adicionada com sucesso!'; msg.className = 'msg-manual ok';
+    ['extNome','extData','extLocal','extValor','extObs'].forEach(id => document.getElementById(id).value = '');
+    setTimeout(() => msg.className = 'msg-manual', 3000);
+    await carregarAtivos();
+  }
 
   // ── PICKER DE CORRIDAS ────────────────────────────────────────
   async function carregarPicker() {
