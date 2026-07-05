@@ -131,6 +131,25 @@
     .dist-sug-btn:hover { background: #EBF3FB; border-color: #1F4E79; color: #1F4E79; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     .loading { text-align: center; padding: 60px; color: #888; }
+    /* Bloco Sorteios */
+    .sorteios-bloco { background: #fff; border-radius: 12px; padding: 22px 28px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .sorteios-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 800; color: #1F4E79; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+    .sorteios-titulo a { font-size: 13px; font-weight: 600; color: #E8622A; text-decoration: none; }
+    .sorteio-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; flex-wrap: wrap; }
+    .sorteio-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .sorteio-row-info { flex: 1; min-width: 180px; }
+    .sorteio-row-nome { font-size: 14px; font-weight: 700; color: #1F4E79; }
+    .sorteio-row-premio { font-size: 12px; color: #E8622A; font-weight: 600; margin-top: 2px; }
+    .sorteio-row-data { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .btn-sorteio-perfil { background: #1F4E79; color: #fff; border: none; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0; }
+    .btn-sorteio-perfil:hover { background: #163a5f; }
+    .btn-sorteio-perfil.inscrito { background: #e6f9f0; color: #1a7a4a; border: 1px solid #1a7a4a; }
+    .btn-sorteio-perfil.inscrito:hover { background: #fdecea; color: #b00020; border-color: #b00020; }
+    .sorteios-lock { background: linear-gradient(135deg, #f8fafc, #f0f4f8); border-radius: 10px; padding: 22px 20px; text-align: center; }
+    .sorteios-lock .lock-icon { font-size: 28px; margin-bottom: 8px; }
+    .sorteios-lock p { font-size: 13px; color: #666; margin-bottom: 14px; line-height: 1.5; max-width: 340px; margin-left: auto; margin-right: auto; }
+    .btn-assinar-sorteio { display: inline-block; background: #E8622A; color: #fff; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 700; text-decoration: none; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; }
+    .btn-assinar-sorteio:hover { background: #c94f1f; }
   </style>
 </head>
 <body>
@@ -209,6 +228,15 @@
       </div>
     </div>
     <div id="msgAssinatura" style="display:none; margin-top:10px; font-size:13px; padding:10px; border-radius:6px;"></div>
+  </div>
+
+  <!-- ── SORTEIOS ────────────────────────────────────────────── -->
+  <div class="sorteios-bloco" id="blocoSorteios" style="display:none;">
+    <div class="sorteios-titulo">
+      🎰 Sorteios Exclusivos
+      <a href="assinantes.html">Ver todos →</a>
+    </div>
+    <div id="sorteiosConteudo"></div>
   </div>
 
   <!-- ── MINHAS CORRIDAS ──────────────────────────────────────── -->
@@ -418,10 +446,11 @@
       document.getElementById('ptsHistoricoLabel').style.display = 'block';
     }
 
-    // Carregar eventos e histórico em paralelo
+    // Carregar eventos, histórico e sorteios em paralelo
     await Promise.all([
       carregarEventos(corredor.id),
       carregarHistorico(corredor.id),
+      carregarSorteiosPerfil(corredor.id, !!corredor.assinante),
     ]);
 
     document.getElementById('loading').style.display = 'none';
@@ -1023,6 +1052,86 @@
     }).catch(() => {
       prompt('Copie o link do seu perfil:', url);
     });
+  }
+
+  // ── SORTEIOS ────────────────────────────────────────────────
+  let _sorteiosInscrito = new Set();
+
+  async function carregarSorteiosPerfil(corredorId, isAssinante) {
+    const bloco = document.getElementById('blocoSorteios');
+    const div   = document.getElementById('sorteiosConteudo');
+    bloco.style.display = 'block';
+
+    if (!isAssinante) {
+      div.innerHTML = `
+        <div class="sorteios-lock">
+          <div class="lock-icon">🔒</div>
+          <p>Os sorteios são exclusivos para assinantes do Circuito. Assine por <strong>R$ 9,99/mês</strong> e participe de sorteios de cortesias e produtos Agenda Run!</p>
+          <button class="btn-assinar-sorteio" onclick="assinar()">⭐ Quero assinar</button>
+        </div>`;
+      return;
+    }
+
+    const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
+      client.from('sorteios')
+        .select('id, titulo, premio, data_sorteio, status')
+        .eq('status', 'aberto')
+        .order('created_at', { ascending: false })
+        .limit(3),
+      client.from('sorteio_inscricoes')
+        .select('sorteio_id')
+        .eq('corredor_id', corredorId)
+    ]);
+
+    _sorteiosInscrito = new Set((minhasInscs || []).map(i => i.sorteio_id));
+
+    if (!sorteios || sorteios.length === 0) {
+      div.innerHTML = '<p style="font-size:13px; color:#aaa; padding:8px 0;">Nenhum sorteio aberto no momento.</p>';
+      return;
+    }
+
+    div.innerHTML = sorteios.map(s => {
+      const dataFmt = s.data_sorteio
+        ? `📅 Sorteio em ${new Date(s.data_sorteio + 'T12:00:00').toLocaleDateString('pt-BR')}`
+        : '';
+      const inscrito = _sorteiosInscrito.has(s.id);
+      const btn = inscrito
+        ? `<button class="btn-sorteio-perfil inscrito" onclick="toggleSorteioPerfil('${s.id}', this)">✓ Inscrito</button>`
+        : `<button class="btn-sorteio-perfil" onclick="toggleSorteioPerfil('${s.id}', this)">🎰 Participar</button>`;
+      return `
+        <div class="sorteio-row">
+          <div class="sorteio-row-info">
+            <div class="sorteio-row-nome">${s.titulo}</div>
+            <div class="sorteio-row-premio">🎁 ${s.premio}</div>
+            ${dataFmt ? `<div class="sorteio-row-data">${dataFmt}</div>` : ''}
+          </div>
+          ${btn}
+        </div>`;
+    }).join('');
+  }
+
+  async function toggleSorteioPerfil(sorteioId, btn) {
+    const inscrito = _sorteiosInscrito.has(sorteioId);
+    if (inscrito) {
+      if (!confirm('Cancelar sua participação neste sorteio?')) return;
+      btn.disabled = true;
+      await client.from('sorteio_inscricoes').delete()
+        .eq('sorteio_id', sorteioId).eq('corredor_id', corredorIdGlobal);
+      _sorteiosInscrito.delete(sorteioId);
+      btn.className = 'btn-sorteio-perfil';
+      btn.textContent = '🎰 Participar';
+      btn.onclick = () => toggleSorteioPerfil(sorteioId, btn);
+    } else {
+      btn.disabled = true;
+      await client.from('sorteio_inscricoes').insert([{
+        sorteio_id: sorteioId, corredor_id: corredorIdGlobal
+      }]);
+      _sorteiosInscrito.add(sorteioId);
+      btn.className = 'btn-sorteio-perfil inscrito';
+      btn.textContent = '✓ Inscrito';
+      btn.onclick = () => toggleSorteioPerfil(sorteioId, btn);
+    }
+    btn.disabled = false;
   }
 
   async function sair() {
