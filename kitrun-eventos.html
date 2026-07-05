@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kit Run Express — Eventos | Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; color: #222; min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3, h4 { font-family: 'Barlow Condensed', sans-serif; }
+
+    /* ── HEADER ── */
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: color 0.15s; }
+    header nav a:hover { color: #fff; }
+    .btn-nav-orange { background: #E8622A; color: #fff !important; font-weight: 700 !important; border-radius: 20px !important; padding: 7px 18px !important; }
+    .btn-nav-orange:hover { background: #c94f1f !important; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0F2D4A 0%, #1a3d5c 100%);
+      padding: 40px 24px 32px;
+      border-bottom: 3px solid #E8622A;
+    }
+    .hero-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+    .hero-logo { height: 80px; border-radius: 10px; flex-shrink: 0; }
+    .hero-text h1 { font-size: clamp(28px, 5vw, 42px); color: #fff; line-height: 1.05; margin-bottom: 6px; }
+    .hero-text h1 span { color: #E8622A; }
+    .hero-text p { font-size: 14px; color: #a8c8e8; line-height: 1.6; max-width: 480px; }
+
+    /* ── BENEFÍCIO BANNER (assinantes) ── */
+    .beneficio-banner {
+      background: linear-gradient(135deg, #1a5c30, #0a3d1f);
+      padding: 14px 24px;
+    }
+    .beneficio-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .beneficio-inner p { font-size: 13px; color: #a8e6c0; }
+    .beneficio-inner strong { color: #fff; }
+    .btn-assinar-banner { background: #E8622A; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 16px; border-radius: 20px; text-decoration: none; white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; }
+    .btn-assinar-banner:hover { background: #c94f1f; }
+
+    /* ── CONTEÚDO ── */
+    .container { max-width: 900px; margin: 32px auto; padding: 0 20px; flex: 1; }
+
+    /* ── FILTROS ── */
+    .filtros { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .filtros input {
+      flex: 1; min-width: 200px; padding: 10px 14px;
+      border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit;
+      background: #fff;
+    }
+    .filtros input:focus { outline: none; border-color: #1F4E79; }
+    .filtros select {
+      padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px;
+      font-family: inherit; background: #fff; cursor: pointer;
+    }
+    .contador { font-size: 13px; color: #888; white-space: nowrap; }
+
+    /* ── CARDS DE EVENTO ── */
+    .eventos-lista { display: flex; flex-direction: column; gap: 14px; }
+
+    .ev-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border: 1.5px solid #e8edf2;
+      overflow: hidden;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .ev-card:hover { border-color: #4CBFCB; transform: translateY(-1px); }
+    .ev-card.encerrado { opacity: 0.65; }
+
+    .ev-card-body { display: flex; align-items: flex-start; gap: 0; }
+
+    /* Caixa de data */
+    .ev-data-box {
+      background: #1F4E79; color: #fff;
+      min-width: 72px; padding: 16px 12px;
+      text-align: center; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ev-data-box .dia { font-size: 30px; font-weight: 900; line-height: 1; font-family: 'Barlow Condensed', sans-serif; }
+    .ev-data-box .mes { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; margin-top: 2px; }
+    .ev-data-box .ano { font-size: 11px; color: #7aa8c8; margin-top: 1px; }
+    .ev-data-box.passado { background: #888; }
+
+    /* Info */
+    .ev-info { flex: 1; padding: 16px 20px; min-width: 0; }
+    .ev-nome { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #1F4E79; margin-bottom: 6px; line-height: 1.1; }
+    .ev-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .ev-chip { background: #f0f4f8; color: #555; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+    .ev-chip.valor { background: #e6f9f0; color: #1a7a4a; font-weight: 700; }
+    .ev-chip.prazo { background: #fff8e1; color: #b07800; font-weight: 700; }
+    .ev-chip.prazo.vencido { background: #fdecea; color: #b00020; }
+    .ev-chip.circuito { background: #EBF3FB; color: #1F4E79; font-weight: 700; }
+    .ev-obs { font-size: 12px; color: #666; line-height: 1.5; margin-top: 4px; }
+
+    /* Ação (coluna direita) */
+    .ev-acao { padding: 16px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; flex-shrink: 0; }
+    .btn-interesse {
+      background: #EBF3FB; color: #1F4E79; border: none;
+      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-interesse:hover { background: #d0e8f8; }
+    .btn-interesse.ativo { background: #e6f9f0; color: #1a7a4a; }
+    .btn-interesse.ativo:hover { background: #fdecea; color: #b00020; }
+    .tag-encerrado { font-size: 12px; color: #aaa; font-weight: 600; }
+    .btn-login-interesse {
+      background: #E8622A; color: #fff; border: none;
+      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; font-family: inherit; text-decoration: none;
+      display: inline-block; text-align: center;
+    }
+    .btn-login-interesse:hover { background: #c94f1f; }
+    .nota-assinante { font-size: 11px; color: #aaa; text-align: right; max-width: 120px; line-height: 1.4; }
+
+    /* ── VAZIO / LOADING ── */
+    .empty { text-align: center; padding: 60px 20px; color: #bbb; font-size: 15px; }
+    .empty .icon { font-size: 40px; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 60px 20px; color: #999; font-size: 14px; }
+
+    /* ── INFO SOBRE O SERVIÇO ── */
+    .info-section { background: #fff; border-radius: 12px; padding: 28px 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-top: 32px; margin-bottom: 32px; }
+    .info-section h2 { font-size: 22px; color: #1F4E79; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .info-item { display: flex; align-items: flex-start; gap: 12px; }
+    .info-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+    .info-item h4 { font-size: 15px; color: #1F4E79; margin-bottom: 3px; }
+    .info-item p { font-size: 13px; color: #666; line-height: 1.5; }
+
+    @media(max-width: 600px) {
+      .ev-card-body { flex-direction: column; }
+      .ev-data-box { flex-direction: row; gap: 8px; min-width: unset; padding: 12px 16px; width: 100%; justify-content: flex-start; }
+      .ev-acao { flex-direction: row; align-items: center; border-top: 1px solid #f0f0f0; padding: 12px 16px; }
+    }
+
+    footer { text-align: center; padding: 28px; color: #999; font-size: 13px; margin-top: auto; background: #fff; border-top: 1px solid #e8edf2; }
+    footer a { color: #1F4E79; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="eventos.html">📅 Eventos</a>
+    <a href="assinatura.html" class="btn-nav-orange" id="navAssinar">⭐ Assinatura</a>
+    <a href="perfil.html" id="navPerfil" style="display:none;">👤 Meu Perfil</a>
+  </nav>
+</header>
+
+<!-- Banner de benefício para não assinantes (mostrado após verificar sessão) -->
+<div class="beneficio-banner" id="bannerBeneficio" style="display:none;">
+  <div class="beneficio-inner">
+    <p id="textoBanner"></p>
+    <a href="assinatura.html" class="btn-assinar-banner" id="linkBanner">⭐ Conhecer a assinatura</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Hero Kit Run -->
+  <div class="hero" style="border-radius:12px; margin-bottom:24px; border:none;">
+    <div class="hero-inner">
+      <img src="kitrun-logo.png" alt="Kit Run Express" class="hero-logo">
+      <div class="hero-text">
+        <h1>Kit Run <span>Express</span></h1>
+        <p>Serviço de retirada de kit para corredores. Confira os eventos em que estaremos atuando e faça seu pedido com antecedência.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <input type="text" id="busca" placeholder="🔍 Buscar evento..." oninput="filtrar()">
+    <select id="filtroStatus" onchange="filtrar()">
+      <option value="proximos">Próximos eventos</option>
+      <option value="todos">Todos os eventos</option>
+      <option value="passados">Eventos passados</option>
+    </select>
+    <span class="contador" id="contador"></span>
+  </div>
+
+  <!-- Lista de eventos -->
+  <div class="eventos-lista" id="listaEventos">
+    <div class="loading">Carregando eventos...</div>
+  </div>
+
+  <!-- Info sobre o serviço -->
+  <div class="info-section">
+    <h2>📦 Como funciona o serviço</h2>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-icon">📋</div>
+        <div>
+          <h4>Registre seu interesse</h4>
+          <p>Clique em "Tenho interesse" no evento desejado. Assinantes do Circuito têm condições especiais.</p>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📦</div>
+        <div>
+          <h4>A Kit Run retira para você</h4>
+          <p>No dia da retirada de kit, nossa equipe busca o seu kit no local do evento.</p>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">🚗</div>
+        <div>
+          <h4>Entrega ou retirada</h4>
+          <p>Combine a forma de receber seu kit diretamente com a equipe da Kit Run Express.</p>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">⭐</div>
+        <div>
+          <h4>Benefício para assinantes</h4>
+          <p>Assinantes do Circuito têm 1 retirada gratuita por período e 50% de desconto nas demais.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Circuito Agenda Run · Kit Run Express · <a href="mailto:agendarun@agendarun.com.br">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let _eventos = [];
+  let _interesseIds = new Set(); // kit_run_evento_ids com interesse do usuário logado
+  let _corredorId = null;
+  let _isAssinante = false;
+  let _isLogado = false;
+
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+  // ── Init ─────────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (session) {
+      _isLogado = true;
+      document.getElementById('navPerfil').style.display = 'inline';
+      document.getElementById('navAssinar').style.display = 'none';
+
+      const { data: corredor } = await sb
+        .from('corredores')
+        .select('id, assinante')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (corredor) {
+        _corredorId = corredor.id;
+        _isAssinante = !!corredor.assinante;
+
+        // Buscar interesses do corredor
+        const { data: interesses } = await sb
+          .from('kit_run_interesses')
+          .select('kit_run_evento_id')
+          .eq('corredor_id', corredor.id);
+        _interesseIds = new Set((interesses || []).map(i => i.kit_run_evento_id));
+      }
+
+      // Banner para não assinante logado
+      if (!_isAssinante) {
+        document.getElementById('textoBanner').innerHTML =
+          '📦 Assinantes têm <strong>retirada gratuita de kit</strong> e <strong>50% de desconto</strong> nas demais. A partir de R$ 9,99/mês.';
+        document.getElementById('bannerBeneficio').style.display = 'block';
+      }
+    } else {
+      // Visitante não logado
+      document.getElementById('textoBanner').innerHTML =
+        '📦 <strong>Assinantes do Circuito</strong> têm retirada gratuita de kit e 50% de desconto. <a href="assinatura.html" style="color:#fff; text-decoration:underline;">Saiba mais</a>';
+      document.getElementById('linkBanner').textContent = '⭐ Assinar por R$ 9,99/mês';
+      document.getElementById('bannerBeneficio').style.display = 'block';
+    }
+
+    await carregarEventos();
+  }
+
+  // ── Carregar eventos ──────────────────────────────────────────
+  async function carregarEventos() {
+    const { data, error } = await sb
+      .from('kit_run_eventos')
+      .select('*, eventos(nome, pontuacao)')
+      .order('data', { ascending: true });
+
+    if (error || !data) {
+      document.getElementById('listaEventos').innerHTML = '<div class="empty"><div class="icon">😕</div><p>Erro ao carregar eventos.</p></div>';
+      return;
+    }
+
+    _eventos = data;
+    filtrar();
+  }
+
+  // ── Filtrar ───────────────────────────────────────────────────
+  function filtrar() {
+    const busca = document.getElementById('busca').value.toLowerCase();
+    const status = document.getElementById('filtroStatus').value;
+
+    let lista = _eventos.filter(ev => {
+      if (busca && !ev.corrida.toLowerCase().includes(busca)) return false;
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      if (status === 'proximos') return !dataEv || dataEv >= hoje;
+      if (status === 'passados') return dataEv && dataEv < hoje;
+      return true;
+    });
+
+    document.getElementById('contador').textContent = `${lista.length} evento${lista.length !== 1 ? 's' : ''}`;
+    renderEventos(lista);
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function renderEventos(lista) {
+    const div = document.getElementById('listaEventos');
+
+    if (!lista.length) {
+      div.innerHTML = `<div class="empty"><div class="icon">📦</div><p>Nenhum evento encontrado.</p></div>`;
+      return;
+    }
+
+    const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    div.innerHTML = lista.map(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const passado = dataEv && dataEv < hoje;
+      const dia = dataEv ? String(dataEv.getDate()).padStart(2, '0') : '—';
+      const mes = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '';
+      const ano = dataEv ? dataEv.getFullYear() : '';
+
+      const prazoDate = ev.pedidos_ate ? new Date(ev.pedidos_ate + 'T12:00:00') : null;
+      const prazoVencido = prazoDate && prazoDate < hoje;
+
+      // Chips de info
+      const chips = [
+        ev.local ? `<span class="ev-chip">📍 ${ev.local}</span>` : '',
+        ev.valor != null
+          ? `<span class="ev-chip valor">💰 R$ ${parseFloat(ev.valor).toFixed(2).replace('.', ',')}</span>`
+          : '',
+        ev.pedidos_ate
+          ? `<span class="ev-chip prazo ${prazoVencido ? 'vencido' : ''}">⏰ Pedidos até ${fmt(ev.pedidos_ate)}${prazoVencido ? ' · Encerrado' : ''}</span>`
+          : '',
+        ev.evento_id
+          ? `<span class="ev-chip circuito">🏆 Evento do Circuito</span>`
+          : '',
+      ].filter(Boolean).join('');
+
+      // Botão de interesse
+      const temInteresse = _interesseIds.has(ev.id);
+      let acaoHtml;
+      if (passado || prazoVencido) {
+        acaoHtml = `<span class="tag-encerrado">Encerrado</span>`;
+      } else if (!_isLogado) {
+        acaoHtml = `
+          <a href="login.html?redirect=kitrun-eventos.html" class="btn-login-interesse">Entrar para se inscrever</a>
+          <div class="nota-assinante">Assinantes têm condições especiais</div>`;
+      } else if (temInteresse) {
+        acaoHtml = `<button class="btn-interesse ativo" onclick="cancelarInteresse('${ev.id}', this)">✓ Tenho interesse</button>`;
+      } else {
+        acaoHtml = `<button class="btn-interesse" onclick="registrarInteresse('${ev.id}', this)">+ Tenho interesse</button>`;
+        if (!_isAssinante) {
+          acaoHtml += `<div class="nota-assinante">Assinantes têm condições especiais</div>`;
+        }
+      }
+
+      return `
+        <div class="ev-card${passado ? ' encerrado' : ''}" id="evcard-${ev.id}">
+          <div class="ev-card-body">
+            <div class="ev-data-box${passado ? ' passado' : ''}">
+              <div class="dia">${dia}</div>
+              <div class="mes">${mes}</div>
+              <div class="ano">${ano}</div>
+            </div>
+            <div class="ev-info">
+              <div class="ev-nome">${ev.corrida}</div>
+              <div class="ev-chips">${chips}</div>
+              ${ev.observacao ? `<div class="ev-obs">ℹ️ ${ev.observacao}</div>` : ''}
+            </div>
+            <div class="ev-acao">${acaoHtml}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Interesse ─────────────────────────────────────────────────
+  async function registrarInteresse(eventoId, btn) {
+    if (!_corredorId) { window.location.href = 'login.html?redirect=kitrun-eventos.html'; return; }
+    btn.disabled = true; btn.textContent = '…';
+    const { error } = await sb.from('kit_run_interesses').insert([{
+      corredor_id: _corredorId,
+      kit_run_evento_id: eventoId
+    }]);
+    if (error) { btn.disabled = false; btn.textContent = '+ Tenho interesse'; alert('Erro: ' + error.message); return; }
+    _interesseIds.add(eventoId);
+    btn.className = 'btn-interesse ativo';
+    btn.textContent = '✓ Tenho interesse';
+    btn.disabled = false;
+    btn.onclick = () => cancelarInteresse(eventoId, btn);
+  }
+
+  async function cancelarInteresse(eventoId, btn) {
+    if (!confirm('Cancelar seu interesse neste evento?')) return;
+    btn.disabled = true;
+    const { error } = await sb.from('kit_run_interesses').delete()
+      .eq('corredor_id', _corredorId).eq('kit_run_evento_id', eventoId);
+    if (error) { btn.disabled = false; alert('Erro: ' + error.message); return; }
+    _interesseIds.delete(eventoId);
+    btn.className = 'btn-interesse';
+    btn.textContent = '+ Tenho interesse';
+    btn.disabled = false;
+    btn.onclick = () => registrarInteresse(eventoId, btn);
+  }
+
+  init();
+</script>
+</body>
+</html>
