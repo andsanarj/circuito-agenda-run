@@ -33,11 +33,26 @@
     .filtros input, .filtros select { padding: 7px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; font-family: inherit; }
     .filtros input { min-width: 200px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
+    th:hover { background: #eef2f7; }
+    th .sort-icon { margin-left: 4px; font-size: 10px; color: #bbb; }
+    th.sorted-asc .sort-icon::after { content: '▲'; color: #1F4E79; }
+    th.sorted-desc .sort-icon::after { content: '▼'; color: #1F4E79; }
+    th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: '⇅'; }
     td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
     .corredor-info strong { display: block; }
-    .corredor-info span { font-size: 11px; color: #888; }
+    .corredor-info span { font-size: 11px; color: #888; display: block; }
+    /* Toggle controle */
+    .toggle-input { display: none; }
+    .toggle-label { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
+    .toggle-label .track { position: absolute; inset: 0; background: #ddd; border-radius: 24px; transition: background 0.2s; }
+    .toggle-input:checked + .toggle-label .track { background: #1F4E79; }
+    .toggle-label .thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle-input:checked + .toggle-label .thumb { left: 23px; }
+    .ctrl-label { font-size: 12px; font-weight: 600; color: #bbb; margin-left: 6px; }
+    .ctrl-label.sim { color: #1F4E79; }
     .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
     .status-ativo { background: #e6f9f0; color: #1a7a4a; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
     .status-inativo { background: #f0f0f0; color: #888; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
@@ -128,6 +143,8 @@
   const ADMIN_EMAIL  = 'agendarun1@gmail.com';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let _todos = [];
+  let _sortCol = 'assinante_desde';
+  let _sortDir = 'asc';
 
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -167,7 +184,7 @@
     document.getElementById('tabela').innerHTML = '<div class="empty">Carregando...</div>';
 
     const { data, error } = await sb.from('corredores')
-      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id');
+      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id, admin_controle');
 
     if (error) return;
     _todos = (data || []).filter(c => c.assinante || c.assinante_desde)
@@ -197,14 +214,53 @@
     renderTabela(lista);
   }
 
+  function ordenar(col) {
+    _sortDir = _sortCol === col ? (_sortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+    _sortCol = col;
+    filtrar();
+  }
+
+  function sortClass(col) {
+    if (_sortCol !== col) return '';
+    return _sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc';
+  }
+
+  function sortLista(lista) {
+    return [...lista].sort((a, b) => {
+      let va = a[_sortCol] ?? '';
+      let vb = b[_sortCol] ?? '';
+      if (typeof va === 'boolean') { va = va ? 1 : 0; vb = vb ? 1 : 0; }
+      else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+      if (va < vb) return _sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return _sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
   function renderTabela(lista) {
     if (!lista.length) { document.getElementById('tabela').innerHTML = '<div class="empty">Nenhum assinante encontrado.</div>'; return; }
-    let html = `<table><thead><tr><th>Corredor</th><th>Assinante desde</th><th>Válido até</th><th>Nível / Selo</th><th>Status</th><th>Assinatura</th></tr></thead><tbody>`;
-    lista.forEach(c => {
+    const sorted = sortLista(lista);
+    const cols = [
+      { key: 'nome',            label: 'Corredor' },
+      { key: 'assinante_desde', label: 'Assinante desde' },
+      { key: 'assinante_ate',   label: 'Válido até' },
+      { key: null,              label: 'Nível / Selo' },
+      { key: 'assinante',       label: 'Status' },
+      { key: null,              label: 'Assinatura' },
+      { key: 'admin_controle',  label: '✅ Meu controle' },
+    ];
+    const thead = cols.map(c => c.key
+      ? `<th class="${sortClass(c.key)}" onclick="ordenar('${c.key}')">${c.label}<span class="sort-icon"></span></th>`
+      : `<th>${c.label}</th>`
+    ).join('');
+
+    let html = `<table><thead><tr>${thead}</tr></thead><tbody>`;
+    sorted.forEach(c => {
       const desde = c.assinante_desde ? new Date(c.assinante_desde + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-      const ate = c.assinante_ate ? new Date(c.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const ate   = c.assinante_ate   ? new Date(c.assinante_ate   + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const nivel = c.assinante_desde ? calcularNivel(c.assinante_desde) : 0;
       const insta = c.instagram ? `@${c.instagram}` : '';
+      const ctrl  = c.admin_controle;
       html += `
         <tr>
           <td class="corredor-info">
@@ -217,10 +273,29 @@
           <td>${renderSelo(nivel, c.assinante)}</td>
           <td>${c.assinante ? '<span class="status-ativo">✅ Ativo</span>' : '<span class="status-inativo">Inativo</span>'}</td>
           <td>${c.asaas_subscription_id ? `<a href="https://www.asaas.com/subscriptions/${c.asaas_subscription_id}" target="_blank" style="font-size:12px;color:#1F4E79;font-weight:600;text-decoration:none;">🔗 Ver no Asaas</a>` : '<span style="color:#ccc;font-size:12px;">—</span>'}</td>
+          <td>
+            <div style="display:flex;align-items:center;">
+              <input type="checkbox" class="toggle-input" id="ctrl-${c.id}" ${ctrl ? 'checked' : ''}
+                onchange="salvarControle('${c.id}', this.checked)">
+              <label class="toggle-label" for="ctrl-${c.id}">
+                <span class="track"></span><span class="thumb"></span>
+              </label>
+              <span class="ctrl-label ${ctrl ? 'sim' : ''}" id="ctrl-label-${c.id}">${ctrl ? 'Sim' : 'Não'}</span>
+            </div>
+          </td>
         </tr>`;
     });
     html += '</tbody></table>';
     document.getElementById('tabela').innerHTML = html;
+  }
+
+  async function salvarControle(id, valor) {
+    const label = document.getElementById('ctrl-label-' + id);
+    label.textContent = valor ? 'Sim' : 'Não';
+    label.className = 'ctrl-label' + (valor ? ' sim' : '');
+    await sb.from('corredores').update({ admin_controle: valor }).eq('id', id);
+    const c = _todos.find(x => x.id === id);
+    if (c) c.admin_controle = valor;
   }
 </script>
 </body>
