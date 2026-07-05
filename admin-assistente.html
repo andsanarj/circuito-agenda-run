@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistente — Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+
+    /* Login */
+    .login-box { max-width: 400px; margin: 80px auto; background: #fff; border-radius: 14px; padding: 36px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+    .login-box h2 { font-size: 24px; color: #1F4E79; margin-bottom: 8px; }
+    .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .login-box input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
+    .login-box input:focus { outline: none; border-color: #1F4E79; }
+    .btn-login { width: 100%; background: #1F4E79; color: #fff; border: none; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-login:hover { background: #163a5f; }
+    .msg-login { font-size: 13px; color: #b00020; margin-top: 10px; min-height: 18px; }
+
+    /* Filtros */
+    .filtros { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .filtros input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; min-width: 240px; }
+    .filtros input:focus { outline: none; border-color: #1F4E79; }
+    .contador { font-size: 13px; color: #888; margin-left: auto; }
+
+    /* Tabela */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { background: #f7f9fb; color: #555; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 14px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
+    thead th:hover { background: #eef2f7; }
+    thead th .sort-icon { margin-left: 4px; color: #bbb; font-size: 10px; }
+    thead th.sorted-asc .sort-icon::after { content: '▲'; color: #1F4E79; }
+    thead th.sorted-desc .sort-icon::after { content: '▼'; color: #1F4E79; }
+    thead th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: '⇅'; }
+    td { padding: 12px 14px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
+
+    /* Toggle WhatsApp */
+    .wpp-toggle { display: flex; align-items: center; gap: 8px; }
+    .toggle-input { display: none; }
+    .toggle-label {
+      position: relative; display: inline-block;
+      width: 44px; height: 24px; cursor: pointer;
+    }
+    .toggle-label .track {
+      position: absolute; inset: 0; background: #ddd; border-radius: 24px; transition: background 0.2s;
+    }
+    .toggle-input:checked + .toggle-label .track { background: #25D366; }
+    .toggle-label .thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; background: #fff; border-radius: 50%;
+      transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-input:checked + .toggle-label .thumb { left: 23px; }
+    .wpp-label { font-size: 12px; font-weight: 600; color: #888; }
+    .wpp-label.sim { color: #25D366; }
+
+    .empty { text-align: center; color: #bbb; padding: 40px; font-size: 14px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge">👤 Assistente</span>
+    <button class="btn-sair" onclick="sair()" id="btnSair" style="display:none;">Sair</button>
+  </div>
+</header>
+
+<!-- Tela de login -->
+<div id="telaLogin">
+  <div class="login-box">
+    <h2>🔒 Área Restrita</h2>
+    <p>Entre com seu e-mail e senha para acessar.</p>
+    <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="email">
+    <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') fazerLogin()">
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="msg-login" id="msgLogin"></div>
+  </div>
+</div>
+
+<!-- Conteúdo -->
+<div id="conteudo" style="display:none;">
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>📋 Assinantes Ativos</h2>
+          <p style="font-size:13px; color:#888; margin-top:2px;">Marque após adicionar cada assinante no grupo do WhatsApp.</p>
+        </div>
+        <button style="background:#f0f4f8; border:1px solid #ddd; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;" onclick="carregar()">🔄 Atualizar</button>
+      </div>
+
+      <div class="filtros">
+        <input type="text" id="busca" placeholder="🔍 Buscar por nome, e-mail ou Instagram..." oninput="filtrar()">
+        <span class="contador" id="contador"></span>
+      </div>
+
+      <div id="tabela"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Assistente</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const EMAILS_PERMITIDOS = ['agendarun1@gmail.com', 'amandafrancoroberti@yahoo.com'];
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let _dados = [];
+  let _sortCol = 'nome';
+  let _sortDir = 'asc';
+
+  // ── Auth ──────────────────────────────────────────────────────
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session && EMAILS_PERMITIDOS.includes(session.user.email)) {
+      mostrarConteudo();
+    }
+  });
+
+  async function fazerLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    const msg   = document.getElementById('msgLogin');
+    msg.textContent = '';
+    if (!email || !senha) { msg.textContent = 'Preencha e-mail e senha.'; return; }
+    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+    if (error) { msg.textContent = 'E-mail ou senha incorretos.'; return; }
+    if (!EMAILS_PERMITIDOS.includes(email)) {
+      await sb.auth.signOut();
+      msg.textContent = 'Acesso não autorizado para este e-mail.';
+      return;
+    }
+    mostrarConteudo();
+  }
+
+  function mostrarConteudo() {
+    document.getElementById('telaLogin').style.display = 'none';
+    document.getElementById('conteudo').style.display  = 'block';
+    document.getElementById('btnSair').style.display   = 'inline-block';
+    carregar();
+  }
+
+  async function sair() {
+    await sb.auth.signOut();
+    window.location.reload();
+  }
+
+  // ── Dados ─────────────────────────────────────────────────────
+  async function carregar() {
+    document.getElementById('tabela').innerHTML = '<div class="empty">Carregando...</div>';
+    const { data, error } = await sb.from('corredores')
+      .select('id, nome, email, telefone, instagram, assinante_desde, wpp_adicionado')
+      .eq('assinante', true)
+      .order('nome');
+    if (error || !data) { document.getElementById('tabela').innerHTML = '<div class="empty">Erro ao carregar dados.</div>'; return; }
+    _dados = data;
+    filtrar();
+  }
+
+  function filtrar() {
+    const busca = document.getElementById('busca').value.toLowerCase();
+    const filtrados = _dados.filter(c =>
+      !busca ||
+      (c.nome || '').toLowerCase().includes(busca) ||
+      (c.email || '').toLowerCase().includes(busca) ||
+      (c.instagram || '').toLowerCase().includes(busca)
+    );
+    renderTabela(filtrados);
+  }
+
+  // ── Ordenação ─────────────────────────────────────────────────
+  function ordenar(col) {
+    if (_sortCol === col) {
+      _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      _sortCol = col;
+      _sortDir = 'asc';
+    }
+    filtrar();
+  }
+
+  function sortIcon(col) {
+    if (_sortCol !== col) return 'sorted-none';
+    return _sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc';
+  }
+
+  function sortDados(lista) {
+    return [...lista].sort((a, b) => {
+      let va = a[_sortCol] ?? '';
+      let vb = b[_sortCol] ?? '';
+      // wpp_adicionado: boolean
+      if (typeof va === 'boolean') { va = va ? 1 : 0; vb = vb ? 1 : 0; }
+      else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+      if (va < vb) return _sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return _sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function renderTabela(lista) {
+    const sorted = sortDados(lista);
+    document.getElementById('contador').textContent = `${sorted.length} assinante${sorted.length !== 1 ? 's' : ''}`;
+
+    if (!sorted.length) {
+      document.getElementById('tabela').innerHTML = '<div class="empty">Nenhum assinante encontrado.</div>';
+      return;
+    }
+
+    const cols = [
+      { key: 'nome',           label: 'Nome' },
+      { key: 'telefone',       label: 'Telefone' },
+      { key: 'email',          label: 'E-mail' },
+      { key: 'instagram',      label: 'Instagram' },
+      { key: 'assinante_desde',label: 'Assinante desde' },
+      { key: 'wpp_adicionado', label: 'Adicionado no WhatsApp' },
+    ];
+
+    const thead = `<thead><tr>${cols.map(c =>
+      `<th class="${sortIcon(c.key)}" onclick="ordenar('${c.key}')">
+        ${c.label}<span class="sort-icon"></span>
+      </th>`
+    ).join('')}</tr></thead>`;
+
+    const tbody = `<tbody>${sorted.map(c => {
+      const tel = (c.telefone || '').replace(/\D/g, '');
+      const telLink = tel
+        ? `<a href="https://wa.me/55${tel}" target="_blank" style="color:#25D366; font-weight:700; text-decoration:none;">💬 ${c.telefone}</a>`
+        : '<span style="color:#ccc;">—</span>';
+      const ig = c.instagram
+        ? `<a href="https://instagram.com/${c.instagram}" target="_blank" style="color:#1F4E79; text-decoration:none;">@${c.instagram}</a>`
+        : '<span style="color:#ccc;">—</span>';
+      const desde = c.assinante_desde
+        ? new Date(c.assinante_desde + 'T12:00:00').toLocaleDateString('pt-BR')
+        : '—';
+      const wpp = c.wpp_adicionado;
+
+      return `<tr>
+        <td><strong style="color:#1F4E79;">${c.nome}</strong></td>
+        <td>${telLink}</td>
+        <td style="font-size:12px;">${c.email || '<span style="color:#ccc;">—</span>'}</td>
+        <td>${ig}</td>
+        <td style="font-size:13px; color:#888;">${desde}</td>
+        <td>
+          <div class="wpp-toggle">
+            <input type="checkbox" class="toggle-input" id="wpp-${c.id}" ${wpp ? 'checked' : ''}
+              onchange="salvarWpp('${c.id}', this.checked)">
+            <label class="toggle-label" for="wpp-${c.id}">
+              <span class="track"></span>
+              <span class="thumb"></span>
+            </label>
+            <span class="wpp-label ${wpp ? 'sim' : ''}" id="wpp-label-${c.id}">${wpp ? 'Sim' : 'Não'}</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>`;
+
+    document.getElementById('tabela').innerHTML = `<table>${thead}${tbody}</table>`;
+  }
+
+  // ── Salvar WhatsApp ───────────────────────────────────────────
+  async function salvarWpp(id, valor) {
+    const label = document.getElementById('wpp-label-' + id);
+    label.textContent = valor ? 'Sim' : 'Não';
+    label.className = 'wpp-label' + (valor ? ' sim' : '');
+    await sb.from('corredores').update({ wpp_adicionado: valor }).eq('id', id);
+    // Atualiza local
+    const c = _dados.find(x => x.id === id);
+    if (c) c.wpp_adicionado = valor;
+  }
+</script>
+
+</body>
+</html>
