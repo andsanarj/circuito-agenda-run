@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assinatura — Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; color: #222; }
+    h1, h2, h3, h4 { font-family: 'Barlow Condensed', sans-serif; }
+
+    /* ── HEADER ── */
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; }
+    header nav a:hover { color: #fff; }
+    .btn-header-assinar { background: #E8622A; color: #fff !important; font-weight: 700 !important; border-radius: 20px !important; padding: 7px 18px !important; }
+    .btn-header-assinar:hover { background: #c94f1f !important; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0F2D4A 0%, #1F4E79 60%, #0d2d4a 100%);
+      color: #fff; text-align: center; padding: 72px 24px 64px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 40%, rgba(76,191,203,0.12) 0%, transparent 60%);
+    }
+    .hero-badge {
+      display: inline-block; background: #E8622A; color: #fff;
+      font-size: 12px; font-weight: 700; padding: 5px 16px; border-radius: 20px;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: clamp(36px, 6vw, 60px); font-weight: 900; line-height: 1.05; margin-bottom: 16px; }
+    .hero h1 span { color: #4CBFCB; }
+    .hero p { font-size: 17px; color: #a8c8e8; max-width: 520px; margin: 0 auto 32px; line-height: 1.6; }
+    .hero-preco {
+      display: inline-flex; align-items: baseline; gap: 4px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px; padding: 14px 28px; margin-bottom: 28px;
+    }
+    .hero-preco .cifrao { font-size: 22px; font-weight: 700; color: #4CBFCB; }
+    .hero-preco .valor { font-size: 52px; font-weight: 900; color: #fff; line-height: 1; font-family: 'Barlow Condensed', sans-serif; }
+    .hero-preco .periodo { font-size: 16px; color: #a8c8e8; }
+    .btn-hero {
+      display: inline-block; background: #E8622A; color: #fff;
+      padding: 16px 40px; border-radius: 8px; font-size: 17px; font-weight: 800;
+      text-decoration: none; font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; border: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-hero:hover { background: #c94f1f; transform: translateY(-1px); }
+    .hero-note { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 14px; }
+
+    /* ── SEÇÃO ── */
+    .section { max-width: 920px; margin: 0 auto; padding: 64px 24px; }
+    .section-label { font-size: 12px; font-weight: 700; color: #E8622A; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .section h2 { font-size: clamp(26px, 4vw, 38px); color: #1F4E79; margin-bottom: 10px; }
+    .section .sub { font-size: 15px; color: #666; max-width: 560px; line-height: 1.6; margin-bottom: 40px; }
+    .divider { border: none; border-top: 1px solid #e0e7ef; }
+
+    /* ── BENEFÍCIOS GRID ── */
+    .beneficios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .beneficio-card {
+      background: #fff; border-radius: 14px; padding: 26px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1.5px solid transparent;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .beneficio-card:hover { border-color: #4CBFCB; transform: translateY(-2px); }
+    .beneficio-icon { font-size: 32px; margin-bottom: 12px; }
+    .beneficio-card h3 { font-size: 20px; color: #1F4E79; margin-bottom: 6px; }
+    .beneficio-card p { font-size: 13px; color: #666; line-height: 1.6; }
+    .beneficio-destaque { background: linear-gradient(135deg, #EBF3FB, #dbeeff); border-color: #4CBFCB; }
+
+    /* ── COMPARATIVO ── */
+    .comparativo { background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden; }
+    .comp-header { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .comp-col { padding: 20px 16px; text-align: center; }
+    .comp-col.assinante { background: linear-gradient(135deg, #1F4E79, #163a5f); color: #fff; }
+    .comp-col h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .comp-col .sub-col { font-size: 12px; opacity: 0.7; }
+    .comp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid #f0f0f0; }
+    .comp-row:last-child { border-bottom: none; }
+    .comp-cell { padding: 14px 16px; font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .comp-cell.label { text-align: left; justify-content: flex-start; color: #444; font-weight: 600; font-size: 13px; }
+    .comp-cell.assinante { background: #f5faff; color: #1F4E79; font-weight: 700; }
+    .check { color: #1a7a4a; font-size: 15px; }
+    .cross { color: #ccc; font-size: 15px; }
+
+    /* ── NÍVEIS ── */
+    .niveis-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media(max-width:640px){ .niveis-grid { grid-template-columns: 1fr 1fr; } }
+    .nivel-card {
+      border-radius: 12px; padding: 22px 18px; text-align: center;
+      border: 2px solid transparent;
+    }
+    .nivel-bronze { background: linear-gradient(135deg, #fdf6ee, #f5deb3); border-color: #c8a87a; }
+    .nivel-prata  { background: linear-gradient(135deg, #f0f5fb, #d8e8f0); border-color: #a0c4d8; }
+    .nivel-ouro   { background: linear-gradient(135deg, #fffdf0, #fff3c0); border-color: #e8cc60; }
+    .nivel-elite  { background: linear-gradient(135deg, #e8f8ff, #b8f0ff); border-color: #4CBFCB; }
+    .nivel-card .nivel-icon { font-size: 32px; margin-bottom: 8px; }
+    .nivel-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .nivel-bronze h3 { color: #6b4c1e; }
+    .nivel-prata  h3 { color: #1F4E79; }
+    .nivel-ouro   h3 { color: #7a5800; }
+    .nivel-elite  h3 { color: #0a3d47; }
+    .nivel-periodo { font-size: 12px; color: #888; margin-bottom: 12px; }
+    .nivel-bonus { font-size: 13px; font-weight: 700; }
+    .nivel-bronze .nivel-bonus { color: #6b4c1e; }
+    .nivel-prata  .nivel-bonus { color: #1F4E79; }
+    .nivel-ouro   .nivel-bonus { color: #7a5800; }
+    .nivel-elite  .nivel-bonus { color: #0a3d47; }
+    .nivel-extras { font-size: 12px; color: #666; margin-top: 8px; line-height: 1.5; }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      background: linear-gradient(135deg, #1F4E79, #0d2d4a);
+      color: #fff; text-align: center; padding: 72px 24px;
+    }
+    .cta-section h2 { font-size: clamp(28px, 5vw, 46px); margin-bottom: 12px; }
+    .cta-section p { font-size: 16px; color: #a8c8e8; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+    .btn-cta {
+      display: inline-block; background: #E8622A; color: #fff;
+      padding: 16px 48px; border-radius: 8px; font-size: 18px; font-weight: 800;
+      text-decoration: none; font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; border: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-cta:hover { background: #c94f1f; transform: translateY(-1px); }
+    .cta-note { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 16px; }
+
+    /* ── JÁ ASSINANTE ── */
+    .ja-assinante-banner {
+      background: linear-gradient(135deg, #0a3d1f, #1a5c30);
+      color: #fff; text-align: center; padding: 28px 24px;
+    }
+    .ja-assinante-banner p { font-size: 15px; color: #a8e6c0; }
+    .ja-assinante-banner strong { color: #fff; }
+    .btn-area-exc {
+      display: inline-block; background: rgba(255,255,255,0.15); color: #fff;
+      border: 1px solid rgba(255,255,255,0.3); padding: 10px 24px; border-radius: 20px;
+      font-size: 14px; font-weight: 700; text-decoration: none; margin-top: 12px;
+    }
+    .btn-area-exc:hover { background: rgba(255,255,255,0.25); }
+
+    /* Mensagem de processamento */
+    .msg-assinar { margin-top: 14px; font-size: 13px; padding: 10px 16px; border-radius: 8px; display: none; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .msg-assinar.ok  { background: rgba(255,255,255,0.1); color: #a8e6c0; display: block; }
+    .msg-assinar.err { background: rgba(255,255,255,0.1); color: #ffaaaa; display: block; }
+
+    footer { text-align: center; padding: 32px 24px; background: #0F2D4A; color: rgba(255,255,255,0.35); font-size: 13px; }
+    footer a { color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="ranking.html">🏆 Ranking</a>
+    <a href="eventos.html">📅 Eventos</a>
+    <a href="perfil.html" id="navPerfil" style="display:none;">👤 Meu Perfil</a>
+    <a href="#assinar" class="btn-header-assinar" id="btnNavAssinar">⭐ Assinar</a>
+  </nav>
+</header>
+
+<!-- Banner para assinante ativo -->
+<div id="bannerAssinante" class="ja-assinante-banner" style="display:none;">
+  <p>✅ Você já é assinante! <strong id="bannerTierNome"></strong></p>
+  <a href="assinantes.html" class="btn-area-exc">Acessar área exclusiva →</a>
+</div>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-badge">⭐ Assinatura do Circuito</div>
+  <h1>Pontue mais.<br><span>Corra com vantagem.</span></h1>
+  <p>Assine o Circuito Agenda Run e tenha bônus de pontos em cada corrida, retirada gratuita de kit e acesso a sorteios exclusivos.</p>
+  <div>
+    <div class="hero-preco">
+      <span class="cifrao">R$</span>
+      <span class="valor">9,99</span>
+      <span class="periodo">/mês</span>
+    </div>
+  </div>
+  <div>
+    <button class="btn-hero" id="btnHeroAssinar" onclick="irParaAssinar()">⭐ Quero assinar agora</button>
+    <div class="msg-assinar" id="msgHero"></div>
+  </div>
+  <p class="hero-note">Cancele quando quiser · Sem taxa de adesão</p>
+</div>
+
+<!-- ── BENEFÍCIOS ── -->
+<div class="section">
+  <div class="section-label">O que você ganha</div>
+  <h2>Benefícios exclusivos para assinantes</h2>
+  <p class="sub">Cada mês de assinatura te deixa mais perto do nível Elite, com vantagens cada vez maiores.</p>
+
+  <div class="beneficios-grid">
+    <div class="beneficio-card beneficio-destaque">
+      <div class="beneficio-icon">🏆</div>
+      <h3>Bônus de Pontos</h3>
+      <p>Ganhe <strong>+0,5 pt</strong> por corrida nos níveis Bronze e Prata. Evolua para Ouro/Elite e suba para <strong>+1 pt</strong> por evento — sobre a pontuação base de cada corrida.</p>
+    </div>
+    <div class="beneficio-card">
+      <div class="beneficio-icon">📦</div>
+      <h3>Kit Run Express</h3>
+      <p>Retirada gratuita de kit em corridas atendidas pela Kit Run Express. <strong>1 retirada por mês</strong> nos níveis Ouro/Elite. 50% de desconto nas demais retiradas.</p>
+    </div>
+    <div class="beneficio-card">
+      <div class="beneficio-icon">🎰</div>
+      <h3>Sorteios Exclusivos</h3>
+      <p>Participe de sorteios exclusivos de cortesias para corridas parceiras e produtos Agenda Run. Nos níveis mais altos, inclui brindes especiais.</p>
+    </div>
+    <div class="beneficio-card">
+      <div class="beneficio-icon">💎</div>
+      <h3>Programa de Fidelidade</h3>
+      <p>Quanto mais tempo assinante, maior o seu nível: Bronze, Prata, Ouro e Elite. Cada nível desbloqueia benefícios extras.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── COMPARATIVO ── -->
+<div class="section">
+  <div class="section-label">Compare</div>
+  <h2>Assinante vs. não assinante</h2>
+  <p class="sub">Veja a diferença que a assinatura faz dentro do Circuito.</p>
+
+  <div class="comparativo">
+    <div class="comp-header">
+      <div class="comp-col"><h4 style="color:#444;">Benefício</h4></div>
+      <div class="comp-col"><h4>Sem assinatura</h4><div class="sub-col">Gratuito</div></div>
+      <div class="comp-col assinante"><h4>⭐ Assinante</h4><div class="sub-col">R$ 9,99/mês</div></div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Participar do ranking</div>
+      <div class="comp-cell"><span class="check">✓</span> Sim</div>
+      <div class="comp-cell assinante"><span class="check">✓</span> Sim</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Pontuação base por evento</div>
+      <div class="comp-cell">0,5 / 1 / 2 pts</div>
+      <div class="comp-cell assinante">0,5 / 1 / 2 pts</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Bônus de pontos por evento</div>
+      <div class="comp-cell"><span class="cross">—</span> Sem bônus</div>
+      <div class="comp-cell assinante">+0,5 ou +1 pt</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Bônus Kit Run Express</div>
+      <div class="comp-cell">+0,5 pt</div>
+      <div class="comp-cell assinante">+1 pt</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Retirada gratuita de kit</div>
+      <div class="comp-cell"><span class="cross">—</span> Não incluso</div>
+      <div class="comp-cell assinante">✓ Incluída</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Desconto nas demais retiradas</div>
+      <div class="comp-cell"><span class="cross">—</span> Preço cheio</div>
+      <div class="comp-cell assinante">50% off</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Sorteios de cortesias</div>
+      <div class="comp-cell"><span class="cross">—</span> Não participa</div>
+      <div class="comp-cell assinante">✓ Acesso exclusivo</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Pontuação máxima por evento</div>
+      <div class="comp-cell">2,5 pts</div>
+      <div class="comp-cell assinante">4 pts</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── NÍVEIS ── -->
+<div class="section">
+  <div class="section-label">Programa de fidelidade</div>
+  <h2>Evolua com o tempo</h2>
+  <p class="sub">Quanto mais meses de assinatura ativa, maior o seu nível e mais benefícios você acumula.</p>
+
+  <div class="niveis-grid">
+    <div class="nivel-card nivel-bronze">
+      <div class="nivel-icon">🥉</div>
+      <h3>Bronze</h3>
+      <div class="nivel-periodo">1 a 4 meses</div>
+      <div class="nivel-bonus">+0,5 pt por evento</div>
+      <div class="nivel-extras">1 retirada gratuita a cada 3 meses<br>50% off nas demais<br>🎁 Sorteios de cortesias</div>
+    </div>
+    <div class="nivel-card nivel-prata">
+      <div class="nivel-icon">🥈</div>
+      <h3>Prata</h3>
+      <div class="nivel-periodo">5 a 8 meses</div>
+      <div class="nivel-bonus">+0,5 pt por evento</div>
+      <div class="nivel-extras">1 retirada gratuita a cada 2 meses<br>50% off nas demais<br>🎁 Sorteios de cortesias</div>
+    </div>
+    <div class="nivel-card nivel-ouro">
+      <div class="nivel-icon">🥇</div>
+      <h3>Ouro</h3>
+      <div class="nivel-periodo">9 a 12 meses</div>
+      <div class="nivel-bonus">+1 pt por evento</div>
+      <div class="nivel-extras">1 retirada gratuita por mês<br>50% off nas demais<br>🎁 Sorteios de cortesias e produtos</div>
+    </div>
+    <div class="nivel-card nivel-elite">
+      <div class="nivel-icon">💎</div>
+      <h3>Elite</h3>
+      <div class="nivel-periodo">13+ meses</div>
+      <div class="nivel-bonus">+1 pt por evento</div>
+      <div class="nivel-extras">1 retirada gratuita por mês<br>50% off nas demais<br>🎁 Sorteios · Boné ou camiseta Agenda Run</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CTA FINAL ── -->
+<div class="cta-section" id="assinar">
+  <h2>Pronto para pontuar mais?</h2>
+  <p>Assine agora por R$ 9,99/mês e comece a acumular vantagens na sua próxima corrida.</p>
+  <button class="btn-cta" id="btnCtaAssinar" onclick="irParaAssinar()">⭐ Assinar agora — R$ 9,99/mês</button>
+  <div class="msg-assinar" id="msgCta"></div>
+  <p class="cta-note">Cancele quando quiser · Sem taxa de adesão · Pagamento via PIX ou cartão</p>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br">agendarun@agendarun.com.br</a> · Temporada 2026 — Grande São Paulo
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let _sessao = null;
+  let _corredorAssinante = false;
+
+  // ── Verificar sessão ──────────────────────────────────────────
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    _sessao = session;
+    if (!session) return;
+
+    document.getElementById('navPerfil').style.display = 'inline';
+
+    const { data: corredor } = await sb
+      .from('corredores')
+      .select('assinante, assinante_desde')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!corredor) return;
+
+    if (corredor.assinante) {
+      _corredorAssinante = true;
+      const nivel = corredor.assinante_desde
+        ? Math.max(1, Math.floor((new Date() - new Date(corredor.assinante_desde)) / (1000*60*60*24*30.44)) + 1)
+        : 1;
+      const tier = nivel >= 13 ? '💎 Elite' : nivel >= 9 ? '🥇 Ouro' : nivel >= 5 ? '🥈 Prata' : '🥉 Bronze';
+      document.getElementById('bannerAssinante').style.display = 'block';
+      document.getElementById('bannerTierNome').textContent = tier;
+      document.getElementById('btnNavAssinar').textContent = '⭐ Área exclusiva';
+      document.getElementById('btnNavAssinar').href = 'assinantes.html';
+      document.getElementById('btnHeroAssinar').textContent = '⭐ Acessar área exclusiva';
+      document.getElementById('btnHeroAssinar').onclick = () => window.location.href = 'assinantes.html';
+      document.getElementById('btnCtaAssinar').textContent = '⭐ Acessar área exclusiva';
+      document.getElementById('btnCtaAssinar').onclick = () => window.location.href = 'assinantes.html';
+    }
+  });
+
+  // ── Botão assinar ─────────────────────────────────────────────
+  async function irParaAssinar() {
+    // Não assinante logado: acionar Edge Function
+    if (_sessao && !_corredorAssinante) {
+      await processarAssinatura();
+      return;
+    }
+    // Não logado: ir para cadastro
+    if (!_sessao) {
+      window.location.href = 'cadastro_corredor.html?redirect=assinatura.html';
+      return;
+    }
+    // Já assinante: ir para área exclusiva
+    window.location.href = 'assinantes.html';
+  }
+
+  async function processarAssinatura() {
+    const btnHero = document.getElementById('btnHeroAssinar');
+    const btnCta  = document.getElementById('btnCtaAssinar');
+    const msgHero = document.getElementById('msgHero');
+    const msgCta  = document.getElementById('msgCta');
+
+    [btnHero, btnCta].forEach(b => { b.disabled = true; b.textContent = 'Aguarde...'; });
+
+    try {
+      const res = await fetch(
+        'https://tbveeaupcmpltncjwfgt.supabase.co/functions/v1/criar-assinatura',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${_sessao.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      const data = await res.json();
+
+      if (data.paymentUrl) {
+        msgHero.textContent = '✅ Redirecionando para o pagamento...';
+        msgHero.className = 'msg-assinar ok';
+        msgCta.textContent = '✅ Redirecionando para o pagamento...';
+        msgCta.className = 'msg-assinar ok';
+        setTimeout(() => window.open(data.paymentUrl, '_blank'), 800);
+        [btnHero, btnCta].forEach(b => { b.disabled = false; b.textContent = '⭐ Assinar agora'; });
+      } else {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
+    } catch (err) {
+      msgHero.textContent = '❌ ' + err.message; msgHero.className = 'msg-assinar err';
+      msgCta.textContent  = '❌ ' + err.message; msgCta.className  = 'msg-assinar err';
+      [btnHero, btnCta].forEach(b => { b.disabled = false; b.textContent = '⭐ Assinar agora'; });
+    }
+  }
+</script>
+</body>
+</html>
