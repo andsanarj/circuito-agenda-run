@@ -69,6 +69,36 @@
     .edit-panel.aberto { display:block; }
     .edit-panel h4 { font-family:'Barlow Condensed',sans-serif; font-size:16px; color:#1F4E79; margin-bottom:14px; }
 
+    /* Modal de sorteio */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.aberto { display:flex; }
+    .modal-box { background:#fff; border-radius:14px; width:100%; max-width:520px; box-shadow:0 12px 48px rgba(0,0,0,0.25); overflow:hidden; max-height:90vh; display:flex; flex-direction:column; }
+    .modal-header { background:#1F4E79; color:#fff; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .modal-header h3 { font-size:20px; font-family:'Barlow Condensed',sans-serif; }
+    .modal-fechar { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; line-height:1; padding:0 2px; }
+    .modal-body { padding:22px; overflow-y:auto; flex:1; }
+    .modal-footer { padding:16px 22px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; flex-shrink:0; }
+    .sorteio-config { display:flex; align-items:flex-end; gap:12px; padding:16px; background:#f0f4f8; border-radius:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .sorteio-config > div { flex:1; min-width:120px; }
+    .sorteio-config label { display:block; font-size:11px; font-weight:700; color:#666; text-transform:uppercase; margin-bottom:5px; }
+    .sorteio-config input[type=number] { padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; width:100%; font-family:inherit; }
+    .info-inscritos { font-size:13px; color:#888; padding-top:2px; }
+    .info-inscritos strong { color:#1F4E79; }
+    .btn-sortear { background:#E8622A; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+    .btn-sortear:hover { background:#c94f1f; }
+    .resultado-lista { }
+    .resultado-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #f0f0f0; }
+    .resultado-item:last-child { border-bottom:none; }
+    .resultado-pos { width:32px; height:32px; background:linear-gradient(135deg,#fff3c0,#ffe066); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#7a5800; flex-shrink:0; }
+    .resultado-info { flex:1; }
+    .resultado-nome { font-size:14px; font-weight:700; color:#1F4E79; }
+    .resultado-email { font-size:12px; color:#aaa; }
+    .btn-desconsiderar { background:#fdecea; color:#b00020; border:1px solid #f5c6c6; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit; }
+    .btn-desconsiderar:hover { background:#fbd5d2; }
+    .aviso-pool { font-size:12px; color:#888; text-align:center; padding:10px; background:#fff8e1; border-radius:8px; margin-top:12px; }
+    .desconsiderados-lista { margin-top:14px; padding:12px 16px; background:#fafbfc; border:1px solid #eee; border-radius:8px; font-size:12px; color:#aaa; }
+    .desconsiderados-lista strong { color:#888; display:block; margin-bottom:6px; font-size:11px; text-transform:uppercase; }
+
     footer { text-align:center; padding:24px; color:#999; font-size:13px; }
   </style>
 </head>
@@ -147,6 +177,38 @@
   </div>
 
 </div>
+</div>
+
+<!-- Modal de Sorteio -->
+<div class="modal-overlay" id="modalSorteio" onclick="fecharModalFora(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalSorteioTitulo">🎰 Realizar Sorteio</h3>
+      <button class="modal-fechar" onclick="fecharModalSorteio()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="sorteio-config">
+        <div>
+          <label>Nº de ganhadores</label>
+          <input type="number" id="sorteioQtd" value="1" min="1" max="999">
+        </div>
+        <div>
+          <div class="info-inscritos">
+            <strong id="sorteioTotalInscritos">0</strong> inscritos disponíveis
+          </div>
+        </div>
+        <button class="btn-sortear" onclick="executarSorteio()">🎲 Sortear</button>
+      </div>
+
+      <div id="sorteioResultado"></div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="fecharModalSorteio()">Cancelar</button>
+      <button class="btn btn-orange" id="btnConfirmarSorteio" style="display:none;" onclick="confirmarSorteio()">🏆 Confirmar Ganhadores</button>
+    </div>
+  </div>
 </div>
 
 <footer>Circuito Agenda Run · Painel Administrativo</footer>
@@ -241,16 +303,19 @@
       ? '<span class="status-aberto">🟢 Aberto</span>'
       : '<span class="status-encerrado">⚫ Encerrado</span>';
 
-    const ganhadorBox = s.ganhador
-      ? `<div class="ganhador-box">🏆 Ganhador: <strong>${s.ganhador.nome}</strong></div>`
-      : '';
+    let ganhadorBox = '';
+    if (s.ganhadores && s.ganhadores.length > 0) {
+      ganhadorBox = `<div class="ganhador-box">🏆 Ganhador${s.ganhadores.length > 1 ? 'es' : ''}: <strong>${s.ganhadores.map(g => g.nome).join(', ')}</strong></div>`;
+    } else if (s.ganhador) {
+      ganhadorBox = `<div class="ganhador-box">🏆 Ganhador: <strong>${s.ganhador.nome}</strong></div>`;
+    }
 
     const inscritosHtml = inscs.length
       ? `<div class="inscritos-lista">${inscs.map((i,n) => `${n+1}. ${i.corredores?.nome || '?'} <span style="color:#aaa;font-size:11px;">${i.corredores?.email || ''}</span>`).join('<br>')}</div>`
       : '<div style="font-size:12px;color:#bbb;">Nenhum inscrito ainda.</div>';
 
     const btnSortear = s.status === 'aberto' && inscs.length > 0
-      ? `<button class="btn btn-orange btn-sm" onclick="realizarSorteio('${s.id}')">🎰 Realizar Sorteio</button>`
+      ? `<button class="btn btn-orange btn-sm" onclick="abrirModalSorteio('${s.id}', '${esc(s.titulo)}', ${inscs.length})">🎰 Realizar Sorteio</button>`
       : '';
     const btnEncerrar = s.status === 'aberto'
       ? `<button class="btn btn-gray btn-sm" onclick="encerrarSorteio('${s.id}')">Encerrar</button>`
@@ -366,18 +431,135 @@
     setTimeout(() => carregarSorteios(), 1000);
   }
 
-  // ── Sortear / Encerrar ─────────────────────────────────────────
-  async function realizarSorteio(id) {
-    const { data: inscricoes } = await sb.from('sorteio_inscricoes')
-      .select('corredor_id, corredores(nome)').eq('sorteio_id', id);
-    if (!inscricoes?.length) return;
-    const sorteado = inscricoes[Math.floor(Math.random() * inscricoes.length)];
-    if (!confirm(`Sortear agora entre ${inscricoes.length} inscrito${inscricoes.length!==1?'s':''}?\nO resultado não pode ser desfeito.`)) return;
-    await sb.from('sorteios').update({ ganhador_id: sorteado.corredor_id, status: 'encerrado' }).eq('id', id);
-    alert(`🏆 Ganhador: ${sorteado.corredores?.nome}`);
+  // ── Modal de Sorteio ───────────────────────────────────────────
+  let sorteioModalId = null;
+  let sorteioPool = [];          // [{id, nome, email}] todos os inscritos
+  let sorteioGanhadores = [];    // [{id, nome, email}] sorteados atualmente
+  let sorteioDesconsiderados = new Set(); // IDs desconsiderados
+
+  async function abrirModalSorteio(id, titulo, numInscs) {
+    sorteioModalId = id;
+    sorteioGanhadores = [];
+    sorteioDesconsiderados = new Set();
+
+    document.getElementById('modalSorteioTitulo').textContent = '🎰 ' + titulo;
+    document.getElementById('sorteioTotalInscritos').textContent = numInscs;
+    document.getElementById('sorteioQtd').value = 1;
+    document.getElementById('sorteioQtd').max = numInscs;
+    document.getElementById('sorteioResultado').innerHTML = '';
+    document.getElementById('btnConfirmarSorteio').style.display = 'none';
+    document.getElementById('modalSorteio').classList.add('aberto');
+
+    const { data } = await sb.from('sorteio_inscricoes')
+      .select('corredor_id, corredores(nome, email)').eq('sorteio_id', id);
+    sorteioPool = (data || []).map(i => ({
+      id: i.corredor_id,
+      nome: i.corredores?.nome || '?',
+      email: i.corredores?.email || ''
+    }));
+    document.getElementById('sorteioTotalInscritos').textContent = sorteioPool.length;
+    document.getElementById('sorteioQtd').max = sorteioPool.length;
+  }
+
+  function fecharModalSorteio() {
+    document.getElementById('modalSorteio').classList.remove('aberto');
+  }
+  function fecharModalFora(e) {
+    if (e.target === document.getElementById('modalSorteio')) fecharModalSorteio();
+  }
+
+  function executarSorteio() {
+    const qtd = Math.max(1, parseInt(document.getElementById('sorteioQtd').value) || 1);
+    const disponiveis = sorteioPool.filter(p => !sorteioDesconsiderados.has(p.id));
+
+    if (qtd > disponiveis.length) {
+      alert(`Só há ${disponiveis.length} participante(s) disponível(is) para sortear.`);
+      return;
+    }
+
+    // Embaralha e pega os primeiros qtd
+    const embaralhados = [...disponiveis].sort(() => Math.random() - 0.5);
+    sorteioGanhadores = embaralhados.slice(0, qtd);
+    renderResultado();
+    document.getElementById('btnConfirmarSorteio').style.display = 'inline-block';
+  }
+
+  function desconsiderar(idx) {
+    const descartado = sorteioGanhadores[idx];
+    sorteioDesconsiderados.add(descartado.id);
+
+    // Pool disponível: exclui ganhadores atuais + desconsiderados
+    const usados = new Set([
+      ...sorteioGanhadores.map(g => g.id),
+      ...sorteioDesconsiderados
+    ]);
+    const disponiveis = sorteioPool.filter(p => !usados.has(p.id));
+
+    if (disponiveis.length === 0) {
+      sorteioGanhadores.splice(idx, 1);
+      renderResultado();
+      if (sorteioGanhadores.length === 0) {
+        document.getElementById('btnConfirmarSorteio').style.display = 'none';
+      }
+      alert('Não há mais participantes disponíveis para preencher este slot.');
+    } else {
+      const novo = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+      sorteioGanhadores[idx] = novo;
+      renderResultado();
+    }
+  }
+
+  function renderResultado() {
+    const descList = [...sorteioDesconsiderados].map(id => {
+      const p = sorteioPool.find(x => x.id === id);
+      return p ? p.nome : id;
+    });
+
+    document.getElementById('sorteioResultado').innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:12px;">
+        Resultado — ${sorteioGanhadores.length} ganhador${sorteioGanhadores.length !== 1 ? 'es' : ''}
+      </div>
+      <div class="resultado-lista">
+        ${sorteioGanhadores.map((g, i) => `
+          <div class="resultado-item">
+            <div class="resultado-pos">${i + 1}º</div>
+            <div class="resultado-info">
+              <div class="resultado-nome">${g.nome}</div>
+              <div class="resultado-email">${g.email}</div>
+            </div>
+            <button class="btn-desconsiderar" onclick="desconsiderar(${i})">✕ Desconsiderar</button>
+          </div>
+        `).join('')}
+      </div>
+      ${descList.length > 0 ? `
+        <div class="desconsiderados-lista">
+          <strong>Desconsiderados (${descList.length})</strong>
+          ${descList.join(' · ')}
+        </div>
+      ` : ''}
+      ${sorteioPool.filter(p => !sorteioDesconsiderados.has(p.id) && !sorteioGanhadores.find(g => g.id === p.id)).length === 0 && sorteioGanhadores.length > 0 ? `
+        <div class="aviso-pool">⚠️ Pool esgotado — não há mais participantes para substituição.</div>
+      ` : ''}
+    `;
+  }
+
+  async function confirmarSorteio() {
+    if (!sorteioGanhadores.length) return;
+    const nomes = sorteioGanhadores.map(g => g.nome).join(', ');
+    if (!confirm(`Confirmar ${sorteioGanhadores.length > 1 ? 'ganhadores' : 'ganhador'}: ${nomes}?\n\nEsta ação encerrará o sorteio e não poderá ser desfeita.`)) return;
+
+    const { error } = await sb.from('sorteios').update({
+      ganhador_id: sorteioGanhadores[0].id,
+      ganhadores: sorteioGanhadores.map(g => ({ id: g.id, nome: g.nome })),
+      status: 'encerrado'
+    }).eq('id', sorteioModalId);
+
+    if (error) { alert('Erro: ' + error.message); return; }
+    fecharModalSorteio();
     carregarSorteios();
   }
 
+  // ── Encerrar ───────────────────────────────────────────────────
   async function encerrarSorteio(id) {
     if (!confirm('Encerrar este sorteio sem realizar o sorteio?')) return;
     await sb.from('sorteios').update({ status: 'encerrado' }).eq('id', id);
