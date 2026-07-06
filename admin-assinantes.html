@@ -56,6 +56,10 @@
     .empty { text-align: center; color: #bbb; padding: 28px; font-size: 14px; }
     .status-ativo { background: #e6f9f0; color: #1a7a4a; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
     .status-inativo { background: #f0f0f0; color: #888; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+    .btn-ativar { background: #e6f9f0; color: #1a7a4a; border: 1px solid #a3e0c0; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; cursor: pointer; font-family: inherit; margin-left: 6px; }
+    .btn-ativar:hover { background: #c8f5e0; }
+    .btn-desativar { background: #fdecea; color: #b00020; border: 1px solid #f5c6c6; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; cursor: pointer; font-family: inherit; margin-left: 6px; }
+    .btn-desativar:hover { background: #fbd5d2; }
     /* ── SELOS ── */
     .selo { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; white-space: nowrap; }
     .selo-bronze { background: linear-gradient(135deg, #e8d5b7, #c8a87a); color: #6b4c1e; }
@@ -271,7 +275,12 @@
           <td style="font-size:13px;">${desde}</td>
           <td style="font-size:13px; ${!c.assinante ? 'color:#bbb;' : ''}">${ate}</td>
           <td>${renderSelo(nivel, c.assinante)}</td>
-          <td>${c.assinante ? '<span class="status-ativo">✅ Ativo</span>' : '<span class="status-inativo">Inativo</span>'}</td>
+          <td id="status-cell-${c.id}">
+            ${c.assinante
+              ? `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${c.id}')">Desativar</button>`
+              : `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${c.id}')">✓ Ativar</button>`
+            }
+          </td>
           <td>${c.asaas_subscription_id ? `<a href="https://www.asaas.com/subscriptions/${c.asaas_subscription_id}" target="_blank" style="font-size:12px;color:#1F4E79;font-weight:600;text-decoration:none;">🔗 Ver no Asaas</a>` : '<span style="color:#ccc;font-size:12px;">—</span>'}</td>
           <td>
             <div style="display:flex;align-items:center;">
@@ -287,6 +296,53 @@
     });
     html += '</tbody></table>';
     document.getElementById('tabela').innerHTML = html;
+  }
+
+  async function ativarAssinante(id) {
+    const ate = new Date();
+    ate.setDate(ate.getDate() + 32);
+    const ateStr = ate.toISOString().split('T')[0];
+    const hoje = new Date().toISOString().split('T')[0];
+
+    const { error } = await sb.from('corredores').update({
+      assinante: true,
+      assinante_ate: ateStr,
+      assinante_desde: _todos.find(c => c.id === id)?.assinante_desde || hoje
+    }).eq('id', id);
+
+    if (error) { alert('Erro: ' + error.message); return; }
+
+    const c = _todos.find(x => x.id === id);
+    if (c) { c.assinante = true; c.assinante_ate = ateStr; }
+
+    const cell = document.getElementById('status-cell-' + id);
+    if (cell) cell.innerHTML = `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${id}')">Desativar</button>`;
+
+    // Atualiza stats
+    const ativos = _todos.filter(c => c.assinante).length;
+    const inativos = _todos.filter(c => !c.assinante).length;
+    document.getElementById('statAtivos').textContent = ativos;
+    document.getElementById('statInativos').textContent = inativos;
+    document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
+  }
+
+  async function desativarAssinante(id) {
+    if (!confirm('Desativar esta assinatura manualmente?')) return;
+
+    const { error } = await sb.from('corredores').update({ assinante: false }).eq('id', id);
+    if (error) { alert('Erro: ' + error.message); return; }
+
+    const c = _todos.find(x => x.id === id);
+    if (c) c.assinante = false;
+
+    const cell = document.getElementById('status-cell-' + id);
+    if (cell) cell.innerHTML = `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${id}')">✓ Ativar</button>`;
+
+    const ativos = _todos.filter(c => c.assinante).length;
+    const inativos = _todos.filter(c => !c.assinante).length;
+    document.getElementById('statAtivos').textContent = ativos;
+    document.getElementById('statInativos').textContent = inativos;
+    document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
   }
 
   async function salvarControle(id, valor) {
