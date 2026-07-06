@@ -603,7 +603,8 @@
     const { error } = await sb.from('sorteios').update({
       ganhador_id: sorteioGanhadores[0].id,
       ganhadores: sorteioGanhadores.map(g => ({ id: g.id, nome: g.nome })),
-      status: 'encerrado'
+      status: 'encerrado',
+      encerrado_em: new Date().toISOString()
     }).eq('id', sorteioModalId);
 
     if (error) { alert('Erro: ' + error.message); return; }

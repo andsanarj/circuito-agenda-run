@@ -131,6 +131,15 @@
     .dist-sug-btn:hover { background: #EBF3FB; border-color: #1F4E79; color: #1F4E79; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     .loading { text-align: center; padding: 60px; color: #888; }
+    /* Banner ganhador */
+    .banner-ganhador { background: linear-gradient(135deg, #fff8dc, #ffe066, #fff8dc); border: 2px solid #f0c800; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 20px rgba(220,180,0,0.2); }
+    .banner-ganhador-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
+    .banner-ganhador-info { flex: 1; }
+    .banner-ganhador-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #7a5800; margin-bottom: 2px; }
+    .banner-ganhador-sub { font-size: 13px; color: #9a7010; line-height: 1.5; }
+    .banner-ganhador-premio { font-size: 14px; font-weight: 700; color: #7a5800; margin-top: 4px; }
+    .banner-ganhador-exp { font-size: 11px; color: #b09030; margin-top: 6px; }
+
     /* Bloco Sorteios */
     .sorteios-bloco { background: #fff; border-radius: 12px; padding: 22px 28px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
     .sorteios-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 800; color: #1F4E79; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee; flex-wrap: wrap; }
@@ -165,6 +174,9 @@
 </header>
 
 <div class="container" id="conteudo" style="display:none;">
+
+  <!-- Banner ganhador de sorteio -->
+  <div id="bannerGanhador" style="display:none;"></div>
 
   <!-- Card de pontos -->
   <div class="pontos-card">
@@ -451,6 +463,7 @@
       carregarEventos(corredor.id),
       carregarHistorico(corredor.id),
       carregarSorteiosPerfil(corredor.id, !!corredor.assinante),
+      carregarBannerGanhador(corredor.id),
     ]);
 
     document.getElementById('loading').style.display = 'none';
@@ -1052,6 +1065,48 @@
     }).catch(() => {
       prompt('Copie o link do seu perfil:', url);
     });
+  }
+
+  // ── BANNER GANHADOR ─────────────────────────────────────────
+  async function carregarBannerGanhador(corredorId) {
+    const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Busca sorteios encerrados nos últimos 7 dias onde este corredor é ganhador
+    const { data: sorteios } = await client
+      .from('sorteios')
+      .select('id, titulo, premio, encerrado_em, ganhador_id, ganhadores')
+      .eq('status', 'encerrado')
+      .gte('encerrado_em', seteDiasAtras)
+      .order('encerrado_em', { ascending: false });
+
+    if (!sorteios?.length) return;
+
+    // Filtra os que este corredor ganhou (por ganhador_id ou no array ganhadores)
+    const ganhos = sorteios.filter(s =>
+      s.ganhador_id === corredorId ||
+      (s.ganhadores && s.ganhadores.some(g => g.id === corredorId))
+    );
+
+    if (!ganhos.length) return;
+
+    const fmt = d => new Date(d).toLocaleDateString('pt-BR');
+    const div = document.getElementById('bannerGanhador');
+
+    div.innerHTML = ganhos.map(s => {
+      const diasRestantes = Math.ceil((new Date(s.encerrado_em).getTime() + 7 * 86400000 - Date.now()) / 86400000);
+      return `
+        <div class="banner-ganhador">
+          <div class="banner-ganhador-icon">🏆</div>
+          <div class="banner-ganhador-info">
+            <div class="banner-ganhador-titulo">Parabéns! Você ganhou!</div>
+            <div class="banner-ganhador-sub">Você foi sorteado em <strong>${s.titulo}</strong></div>
+            <div class="banner-ganhador-premio">🎁 Prêmio: ${s.premio}</div>
+            <div class="banner-ganhador-exp">Sorteio realizado em ${fmt(s.encerrado_em)} · Esta mensagem desaparece em ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    div.style.display = 'block';
   }
 
   // ── SORTEIOS ────────────────────────────────────────────────

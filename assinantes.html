@@ -103,6 +103,14 @@
     .badge-ouro    { background: #fff3c0; color: #7a5800; }
     .badge-elite   { background: #b8f0ff; color: #0a3d47; }
     .sorteio-encerrado { opacity: 0.6; }
+    /* Meus Prêmios */
+    .premio-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid #f0f0f0; }
+    .premio-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .premio-trofeu { font-size: 28px; flex-shrink: 0; }
+    .premio-info { flex: 1; }
+    .premio-nome { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 800; color: #1F4E79; }
+    .premio-item-desc { font-size: 13px; color: #E8622A; font-weight: 700; margin-top: 2px; }
+    .premio-data { font-size: 11px; color: #aaa; margin-top: 4px; }
     .ganhador-chip { display: inline-block; background: linear-gradient(135deg,#fff3c0,#ffe066); color: #7a5800; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-top: 8px; }
     .btn-ver-participantes { background: none; border: none; color: #1F4E79; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit; }
     .btn-ver-participantes:hover { color: #E8622A; }
@@ -186,6 +194,17 @@
       </div>
     </div>
 
+    <!-- Meus Prêmios -->
+    <div class="card" id="cardMeusPremios" style="display:none;">
+      <div class="card-header">
+        <h2>🏆 Meus Prêmios</h2>
+        <span>Sorteios ganhos</span>
+      </div>
+      <div class="card-body">
+        <div id="listaPremios"></div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -235,6 +254,7 @@
       document.getElementById('conteudo').style.display = 'block';
       carregarKitRun(corredor.id);
       carregarSorteios(corredor.id);
+      carregarMeusPremios(corredor.id);
     }
   }
 
@@ -444,6 +464,40 @@
       btn.disabled = false;
       btn.onclick = () => participarSorteio(sorteioId, btn);
     }
+  }
+
+  async function carregarMeusPremios(corredorId) {
+    const { data: sorteios } = await sb
+      .from('sorteios')
+      .select('id, titulo, premio, encerrado_em, ganhador_id, ganhadores')
+      .eq('status', 'encerrado')
+      .order('encerrado_em', { ascending: false });
+
+    if (!sorteios?.length) return;
+
+    const ganhos = sorteios.filter(s =>
+      s.ganhador_id === corredorId ||
+      (s.ganhadores && s.ganhadores.some(g => g.id === corredorId))
+    );
+
+    if (!ganhos.length) return;
+
+    const fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+    const card = document.getElementById('cardMeusPremios');
+    const div  = document.getElementById('listaPremios');
+
+    div.innerHTML = ganhos.map(s => `
+      <div class="premio-item">
+        <div class="premio-trofeu">🏆</div>
+        <div class="premio-info">
+          <div class="premio-nome">${s.titulo}</div>
+          <div class="premio-item-desc">🎁 ${s.premio}</div>
+          <div class="premio-data">Sorteio realizado em ${fmt(s.encerrado_em)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    card.style.display = 'block';
   }
 
   async function verParticipantes(sorteioId, titulo) {
