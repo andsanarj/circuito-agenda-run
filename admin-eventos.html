@@ -445,7 +445,7 @@
 
     const { data, error } = await sb
       .from('resultados')
-      .select('validado, created_at, corredores(id, nome, email, instagram)')
+      .select('status, created_at, corredores(id, nome, email, instagram)')
       .eq('evento_id', eventoId)
       .order('created_at', { ascending: true });
 
@@ -455,15 +455,26 @@
       return;
     }
 
-    const validados = data.filter(r => r.validado).length;
+    const validados = data.filter(r => r.status === 'aprovado').length;
+    const pendentes = data.filter(r => r.status === 'pendente' || !r.status).length;
+    const rejeitados = data.filter(r => r.status === 'rejeitado').length;
+
+    const statusLabel = s => {
+      if (s === 'aprovado')  return ['validado', '✅ Aprovado'];
+      if (s === 'rejeitado') return ['pendente', '❌ Rejeitado'];
+      return ['pendente', '⏳ Pendente'];
+    };
+
     document.getElementById('modalPartBody').innerHTML = `
-      <div style="font-size:12px;color:#888;margin-bottom:16px;">
-        <strong style="color:#1F4E79;">${data.length}</strong> participante${data.length !== 1 ? 's' : ''}
-        · <span style="color:#1a7a4a;font-weight:700;">${validados} validado${validados !== 1 ? 's' : ''}</span>
-        · <span style="color:#b07800;">${data.length - validados} pendente${(data.length - validados) !== 1 ? 's' : ''}</span>
+      <div style="font-size:12px;color:#888;margin-bottom:16px;display:flex;gap:14px;flex-wrap:wrap;">
+        <span><strong style="color:#1F4E79;">${data.length}</strong> participante${data.length !== 1 ? 's' : ''}</span>
+        <span style="color:#1a7a4a;font-weight:700;">✅ ${validados} aprovado${validados !== 1 ? 's' : ''}</span>
+        ${pendentes  ? `<span style="color:#b07800;font-weight:700;">⏳ ${pendentes} pendente${pendentes !== 1 ? 's' : ''}</span>` : ''}
+        ${rejeitados ? `<span style="color:#b00020;font-weight:700;">❌ ${rejeitados} rejeitado${rejeitados !== 1 ? 's' : ''}</span>` : ''}
       </div>
       ${data.map((r, i) => {
         const c = r.corredores;
+        const [cls, label] = statusLabel(r.status);
         return `
         <div class="part-row">
           <div class="part-num">${i + 1}</div>
@@ -474,9 +485,7 @@
               ${c?.instagram ? `<span class="part-insta"> · @${c.instagram}</span>` : ''}
             </div>
           </div>
-          <span class="part-status ${r.validado ? 'validado' : 'pendente'}">
-            ${r.validado ? '✅ Validado' : '⏳ Pendente'}
-          </span>
+          <span class="part-status ${cls}">${label}</span>
         </div>`;
       }).join('')}
     `;
