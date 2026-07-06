@@ -94,13 +94,12 @@
     .resultado-nome { font-size:14px; font-weight:700; color:#1F4E79; }
     .resultado-email { font-size:12px; color:#aaa; }
     .resultado-insta { font-size:12px; color:#E8622A; font-weight:600; }
-    .resultado-item.marcado { background:#fff5f5; border-radius:8px; border:1px solid #f5c6c6; padding:8px; margin:-4px 0; }
-    .btn-toggle-desc { border:1px solid #ddd; background:#f7f9fb; color:#666; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all 0.15s; }
-    .btn-toggle-desc:hover { background:#fdecea; color:#b00020; border-color:#f5c6c6; }
-    .btn-toggle-desc.marcado { background:#fdecea; color:#b00020; border-color:#f5c6c6; }
-    .btn-toggle-desc.marcado:hover { background:#e6f9f0; color:#1a7a4a; border-color:#a3e0c0; }
-    .btn-ressortear { background:#1F4E79; color:#fff; border:none; padding:9px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:14px; width:100%; }
-    .btn-ressortear:hover { background:#163a5f; }
+    .resultado-item.valido { background:#f0fdf4; border-radius:8px; border:1px solid #a3e0c0; padding:8px; margin:-4px 0 4px; }
+    .btn-valido { border:1px solid #ddd; background:#f7f9fb; color:#888; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all 0.15s; }
+    .btn-valido:hover { background:#e6f9f0; color:#1a7a4a; border-color:#a3e0c0; }
+    .btn-valido.ativo { background:#e6f9f0; color:#1a7a4a; border-color:#1a7a4a; }
+    .btn-valido.ativo:hover { background:#fdecea; color:#b00020; border-color:#f5c6c6; }
+    .hint-ressortear { font-size:12px; color:#888; background:#f7f9fb; border-radius:8px; padding:10px 14px; margin-top:12px; text-align:center; }
     .aviso-pool { font-size:12px; color:#888; text-align:center; padding:10px; background:#fff8e1; border-radius:8px; margin-top:12px; }
     .desconsiderados-lista { margin-top:14px; padding:12px 16px; background:#fafbfc; border:1px solid #eee; border-radius:8px; font-size:12px; color:#aaa; }
     .desconsiderados-lista strong { color:#888; display:block; margin-bottom:6px; font-size:11px; text-transform:uppercase; }
@@ -441,18 +440,20 @@
   let sorteioModalId = null;
   let sorteioPool = [];          // [{id, nome, email, instagram}] todos os inscritos
   let sorteioGanhadores = [];    // [{id, nome, email, instagram}] sorteados atualmente
-  let sorteioDesconsiderados = new Set(); // IDs permanentemente excluídos (já substituídos)
-  let sorteioMarcados = new Set();        // índices marcados para ressortear
+  let sorteioDesconsiderados = new Set(); // IDs já descartados em rodadas anteriores
+  let sorteioValidos = new Set();         // IDs marcados como válidos (não re-sorteados)
 
   async function abrirModalSorteio(id, titulo, numInscs) {
     sorteioModalId = id;
     sorteioGanhadores = [];
     sorteioDesconsiderados = new Set();
+    sorteioValidos = new Set();
 
     document.getElementById('modalSorteioTitulo').textContent = '🎰 ' + titulo;
     document.getElementById('sorteioTotalInscritos').textContent = numInscs;
     document.getElementById('sorteioQtd').value = 1;
     document.getElementById('sorteioQtd').max = numInscs;
+    sorteioValidos = new Set();
     document.getElementById('sorteioResultado').innerHTML = '';
     document.getElementById('btnConfirmarSorteio').style.display = 'none';
     document.getElementById('modalSorteio').classList.add('aberto');
@@ -478,80 +479,51 @@
 
   function executarSorteio() {
     const qtd = Math.max(1, parseInt(document.getElementById('sorteioQtd').value) || 1);
-    const disponiveis = sorteioPool.filter(p => !sorteioDesconsiderados.has(p.id));
 
-    if (qtd > disponiveis.length) {
-      alert(`Só há ${disponiveis.length} participante(s) disponível(is) para sortear.`);
+    // Mantém ganhadores já validados
+    const validosAtuais = sorteioGanhadores.filter(g => sorteioValidos.has(g.id));
+
+    // Descarta permanentemente os não-validados da rodada anterior
+    sorteioGanhadores.filter(g => !sorteioValidos.has(g.id)).forEach(g => {
+      sorteioDesconsiderados.add(g.id);
+    });
+
+    const slotsParaSortear = qtd - validosAtuais.length;
+
+    if (slotsParaSortear <= 0) {
+      sorteioGanhadores = validosAtuais.slice(0, qtd);
+      renderResultado();
+      document.getElementById('btnConfirmarSorteio').style.display = 'inline-block';
       return;
     }
 
-    sorteioMarcados = new Set();
+    // Pool disponível: exclui válidos atuais + desconsiderados
+    const usados = new Set([...validosAtuais.map(g => g.id), ...sorteioDesconsiderados]);
+    const disponiveis = sorteioPool.filter(p => !usados.has(p.id));
+
+    if (slotsParaSortear > disponiveis.length) {
+      alert(`Só há ${disponiveis.length} participante(s) disponível(is) para preencher os ${slotsParaSortear} slot(s) restante(s).`);
+      return;
+    }
+
     const embaralhados = [...disponiveis].sort(() => Math.random() - 0.5);
-    sorteioGanhadores = embaralhados.slice(0, qtd);
+    sorteioGanhadores = [...validosAtuais, ...embaralhados.slice(0, slotsParaSortear)];
+
     renderResultado();
     document.getElementById('btnConfirmarSorteio').style.display = 'inline-block';
   }
 
-  function toggleMarcado(idx) {
-    if (sorteioMarcados.has(idx)) {
-      sorteioMarcados.delete(idx);
+  function toggleValido(id) {
+    if (sorteioValidos.has(id)) {
+      sorteioValidos.delete(id);
     } else {
-      sorteioMarcados.add(idx);
+      sorteioValidos.add(id);
     }
     renderResultado();
-  }
-
-  function sortearNovamenteMarcados() {
-    if (sorteioMarcados.size === 0) return;
-
-    // Desconsiderar permanentemente os marcados
-    sorteioMarcados.forEach(idx => {
-      sorteioDesconsiderados.add(sorteioGanhadores[idx].id);
-    });
-
-    // Substituir cada marcado por um novo sorteado
-    const semSubstituto = [];
-    const indicesMarcados = [...sorteioMarcados].sort((a, b) => a - b);
-
-    indicesMarcados.forEach(idx => {
-      // Pool: exclui todos os ganhadores atuais (exceto o slot sendo substituído) + desconsiderados
-      const usados = new Set([
-        ...sorteioGanhadores.filter((_, i) => i !== idx).map(g => g.id),
-        ...sorteioDesconsiderados
-      ]);
-      const disponiveis = sorteioPool.filter(p => !usados.has(p.id));
-
-      if (disponiveis.length === 0) {
-        semSubstituto.push(idx);
-      } else {
-        const novo = disponiveis[Math.floor(Math.random() * disponiveis.length)];
-        sorteioGanhadores[idx] = novo;
-      }
-    });
-
-    // Remove slots sem substituto (do fim para o início para não deslocar índices)
-    semSubstituto.sort((a, b) => b - a).forEach(idx => sorteioGanhadores.splice(idx, 1));
-
-    sorteioMarcados = new Set();
-
-    if (sorteioGanhadores.length === 0) {
-      document.getElementById('btnConfirmarSorteio').style.display = 'none';
-    }
-
-    renderResultado();
-
-    if (semSubstituto.length > 0) {
-      alert(`⚠️ ${semSubstituto.length} slot(s) não puderam ser preenchidos — pool esgotado.`);
-    }
   }
 
   function renderResultado() {
-    const descList = [...sorteioDesconsiderados].map(id => {
-      const p = sorteioPool.find(x => x.id === id);
-      return p ? p.nome : id;
-    });
-
-    const temMarcados = sorteioMarcados.size > 0;
+    const naoValidados = sorteioGanhadores.filter(g => !sorteioValidos.has(g.id)).length;
     const poolLivre = sorteioPool.filter(p =>
       !sorteioDesconsiderados.has(p.id) && !sorteioGanhadores.find(g => g.id === p.id)
     ).length;
@@ -559,38 +531,35 @@
     document.getElementById('sorteioResultado').innerHTML = `
       <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:12px;">
         Resultado — ${sorteioGanhadores.length} ganhador${sorteioGanhadores.length !== 1 ? 'es' : ''}
-        ${temMarcados ? `<span style="color:#b00020;margin-left:8px;">(${sorteioMarcados.size} marcado${sorteioMarcados.size > 1 ? 's' : ''} para ressortear)</span>` : ''}
+        ${sorteioValidos.size > 0 ? `<span style="color:#1a7a4a;margin-left:8px;">(${sorteioValidos.size} validado${sorteioValidos.size > 1 ? 's' : ''})</span>` : ''}
       </div>
       <div class="resultado-lista">
-        ${sorteioGanhadores.map((g, i) => {
-          const marcado = sorteioMarcados.has(i);
+        ${sorteioGanhadores.map((g) => {
+          const valido = sorteioValidos.has(g.id);
           return `
-          <div class="resultado-item${marcado ? ' marcado' : ''}">
-            <div class="resultado-pos" style="${marcado ? 'opacity:0.4;' : ''}">${i + 1}º</div>
-            <div class="resultado-info" style="${marcado ? 'opacity:0.5;' : ''}">
+          <div class="resultado-item${valido ? ' valido' : ''}">
+            <div class="resultado-pos">${sorteioGanhadores.indexOf(g) + 1}º</div>
+            <div class="resultado-info">
               <div class="resultado-nome">${g.nome}</div>
               ${g.instagram ? `<div class="resultado-insta">@${g.instagram}</div>` : ''}
               <div class="resultado-email">${g.email}</div>
             </div>
-            <button class="btn-toggle-desc${marcado ? ' marcado' : ''}" onclick="toggleMarcado(${i})">
-              ${marcado ? '↩ Manter' : '✕ Desconsiderar'}
+            <button class="btn-valido${valido ? ' ativo' : ''}" onclick="toggleValido('${g.id}')">
+              ${valido ? '✓ Válido' : 'Marcar válido'}
             </button>
           </div>`;
         }).join('')}
       </div>
-      ${temMarcados && poolLivre > 0 ? `
-        <button class="btn-ressortear" onclick="sortearNovamenteMarcados()">
-          🔄 Sortear novamente para os marcados (${sorteioMarcados.size})
-        </button>
-      ` : ''}
-      ${temMarcados && poolLivre === 0 ? `
-        <div class="aviso-pool">⚠️ Pool esgotado — não há mais participantes disponíveis para substituição.</div>
-      ` : ''}
-      ${descList.length > 0 ? `
-        <div class="desconsiderados-lista">
-          <strong>Desconsiderados nesta rodada (${descList.length})</strong>
-          ${descList.join(' · ')}
+      ${naoValidados > 0 && sorteioGanhadores.length > 0 ? `
+        <div class="hint-ressortear">
+          ${sorteioValidos.size > 0
+            ? `${sorteioValidos.size} confirmado${sorteioValidos.size > 1 ? 's' : ''} · Clique em <strong>🎲 Sortear</strong> para substituir os ${naoValidados} restante${naoValidados > 1 ? 's' : ''}`
+            : `Marque como <strong>Válido</strong> quem ficar. Clique em <strong>🎲 Sortear</strong> para re-sortear os demais.`
+          }
         </div>
+      ` : ''}
+      ${poolLivre === 0 && naoValidados > 0 ? `
+        <div class="aviso-pool">⚠️ Pool esgotado — não há mais participantes disponíveis.</div>
       ` : ''}
     `;
   }
