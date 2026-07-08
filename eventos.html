@@ -74,6 +74,18 @@
     .empty { text-align: center; padding: 48px; color: #aaa; font-size: 15px; }
     .loading { text-align: center; padding: 48px; color: #888; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; margin-top: auto; }
+
+    /* Premiação */
+    .premiacao-section { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 24px 28px; margin-bottom: 28px; }
+    .premiacao-title { font-size: 20px; font-weight: 800; color: #0F2D4A; margin-bottom: 16px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; }
+    .premiacao-items { display: flex; flex-direction: column; gap: 10px; }
+    .premiacao-item { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 10px; }
+    .premiacao-item.ouro   { background: #fffbea; border-left: 4px solid #f5c000; }
+    .premiacao-item.prata  { background: #f5f5f5; border-left: 4px solid #aaa; }
+    .premiacao-item.brinde { background: #fff3ee; border-left: 4px solid #E8622A; }
+    .premiacao-pos { font-size: 26px; line-height: 1; min-width: 34px; text-align: center; }
+    .premiacao-desc { font-size: 15px; font-weight: 700; color: #1F4E79; }
+    .premiacao-sub { font-size: 13px; color: #666; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -97,6 +109,33 @@
 </div>
 
 <div class="container">
+  <div class="premiacao-section">
+    <div class="premiacao-title">🏆 Premiação da Temporada 2026</div>
+    <div class="premiacao-items">
+      <div class="premiacao-item ouro">
+        <div class="premiacao-pos">🥇</div>
+        <div>
+          <div class="premiacao-desc">1º lugar</div>
+          <div class="premiacao-sub">1 tênis de corrida</div>
+        </div>
+      </div>
+      <div class="premiacao-item prata">
+        <div class="premiacao-pos">🥈</div>
+        <div>
+          <div class="premiacao-desc">2º lugar</div>
+          <div class="premiacao-sub">1 tênis de corrida</div>
+        </div>
+      </div>
+      <div class="premiacao-item brinde">
+        <div class="premiacao-pos">🎁</div>
+        <div>
+          <div class="premiacao-desc">3º ao 10º lugar</div>
+          <div class="premiacao-sub">Brindes surpresa + cortesias para eventos de corrida</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="avisoLogin" class="aviso-login" style="display:none;">
     <a href="login.html">Faça login</a> ou <a href="cadastro_corredor.html">cadastre-se grátis</a> para adicionar eventos à sua lista e registrar seus resultados.
   </div>
