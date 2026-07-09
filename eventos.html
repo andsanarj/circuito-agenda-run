@@ -110,7 +110,10 @@
 
 <div class="container">
   <div class="premiacao-section">
-    <div class="premiacao-title">🏆 Premiação da Temporada 2026</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+      <div class="premiacao-title" style="margin-bottom:0;">🏆 Premiação da Temporada 2026</div>
+      <span style="background:#EBF3FB; color:#1F4E79; font-size:13px; font-weight:600; padding:5px 14px; border-radius:20px; border:1px solid #c8dff0;">📅 Temporada teste: Julho — Setembro 2026</span>
+    </div>
     <div class="premiacao-items">
       <div class="premiacao-item ouro">
         <div class="premiacao-pos">🥇</div>
@@ -182,10 +185,16 @@
 
   async function carregarEventos() {
     // Buscar todos os eventos
-    const { data: eventos } = await sb
-      .from('eventos')
-      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, site, url_runking, cupom_desconto, pontuacao')
+    // Buscar temporada atual da config
+    const { data: cfg } = await sb.from('config').select('value').eq('key', 'temporada_atual').single();
+    const temporadaAtual = cfg?.value || null;
+
+    // Buscar eventos da temporada atual (ou todos se não houver config)
+    let query = sb.from('eventos')
+      .select('id, nome, data, horario_largada, distancia, cidade, numero_permit, link_inscricao, site, url_runking, cupom_desconto, pontuacao, temporada')
       .order('data', { ascending: true });
+    if (temporadaAtual) query = query.eq('temporada', temporadaAtual);
+    const { data: eventos } = await query;
 
     // Buscar eventos com serviço Kit Run Express
     const { data: kitRunEventos } = await sb
