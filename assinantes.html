@@ -367,6 +367,7 @@
     const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
       sb.from('sorteios')
         .select('*, ganhador:ganhador_id(nome)')
+        .eq('status', 'aberto')
         .order('created_at', { ascending: false }),
       sb.from('sorteio_inscricoes')
         .select('sorteio_id')
