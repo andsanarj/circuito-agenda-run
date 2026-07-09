@@ -616,6 +616,10 @@
           <input type="text" id="categoria-${eventoId}" placeholder="Ex: M4044, F3539" value="${r.categoria || ''}">
         </div>
       </div>
+      <label class="checkbox-row" style="margin-top:12px; background:#f0f7ff; border-radius:8px; padding:10px 12px; border:1px solid #c8dff0;">
+        <input type="checkbox" id="kitrun-${eventoId}" ${r.usou_kit_run ? 'checked' : ''}>
+        <span>🎒 Utilizei o serviço de retirada de kit da <strong>Kit Run Express</strong> neste evento</span>
+      </label>
       ${distHtml}
       <div class="form-group" style="margin-top:14px;">
         <label>Link do resultado oficial * <span style="color:#888; font-weight:400;">(RunKing ou site da corrida)</span></label>
@@ -718,25 +722,9 @@
     const ev = _eventosCache[eventoId];
     const basePts = parseFloat(ev?.pontuacao ?? 1);
     const bonusAssinante = getBonusAssinante();
-    // Verificar se corredor usou Kit Run Express para este evento
-    let bonusKitRun = 0;
-    {
-      // Busca pelo evento_id (FK direta) ou por data como fallback
-      const { data: kitEventos } = await client
-        .from('kit_run_eventos')
-        .select('id')
-        .or(`evento_id.eq.${eventoId}${ev?.data ? `,data.eq.${ev.data}` : ''}`);
-      if (kitEventos && kitEventos.length > 0) {
-        const kitIds = kitEventos.map(k => k.id);
-        const { data: kitInteresse } = await client
-          .from('kit_run_interesses')
-          .select('id')
-          .eq('corredor_id', corredorIdGlobal)
-          .in('kit_run_evento_id', kitIds)
-          .maybeSingle();
-        if (kitInteresse) bonusKitRun = corredorAssinanteGlobal ? 1 : 0.5;
-      }
-    }
+    // Verificar se corredor usou Kit Run Express (flag marcada pelo próprio atleta)
+    const usouKitRun = document.getElementById(`kitrun-${eventoId}`)?.checked || false;
+    const bonusKitRun = usouKitRun ? (corredorAssinanteGlobal ? 1 : 0.5) : 0;
     const pontosCalculados = basePts + bonusAssinante + bonusKitRun;
 
     const dados = {
@@ -751,6 +739,7 @@
       status: 'pendente',
       motivo_rejeicao: null,
       pontos: pontosCalculados,
+      usou_kit_run: usouKitRun,
     };
 
     let erro = null;
