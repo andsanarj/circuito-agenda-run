@@ -97,7 +97,22 @@
     .msg-form { margin-top: 10px; padding: 10px 14px; border-radius: 7px; font-size: 13px; display: none; }
     .msg-form.success { background: #e6f9f0; color: #1a7a4a; display: block; }
     .msg-form.error { background: #fdecea; color: #b00020; display: block; }
-    .info-pontos-form { background: #EBF3FB; border-radius: 7px; padding: 10px 14px; font-size: 12px; color: #1F4E79; margin-bottom: 14px; }
+    .info-pontos-form { margin-bottom: 14px; }
+    .pts-bloco { border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; }
+    .pts-bloco.assinante { background: #e6f9f0; border: 1.5px solid #1a7a4a; }
+    .pts-bloco.nao-assinante { background: #EBF3FB; border: 1.5px solid #a8c8e8; }
+    .pts-bloco-icon { font-size: 24px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+    .pts-bloco-info { flex: 1; }
+    .pts-bloco-titulo { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .pts-bloco.assinante .pts-bloco-titulo { color: #1a7a4a; }
+    .pts-bloco.nao-assinante .pts-bloco-titulo { color: #1F4E79; }
+    .pts-bloco-detalhe { font-size: 12px; line-height: 1.6; color: #555; }
+    .pts-bloco-total { font-size: 15px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; margin-top: 6px; }
+    .pts-bloco.assinante .pts-bloco-total { color: #1a7a4a; }
+    .pts-bloco.nao-assinante .pts-bloco-total { color: #1F4E79; }
+    .pts-bloco-cta { margin-top: 10px; }
+    .btn-assinar-form { background: #E8622A; color: #fff; border: none; padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-assinar-form:hover { background: #c94f1f; }
 
     /* Selo de assinante */
   .selo-assinante { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; }
@@ -657,18 +672,47 @@
   function gerarInfoPontos(eventoId) {
     const ev = _eventosCache[eventoId];
     const base = ev?.pontuacao ?? 1;
-    const labelBase = base === 0.5 ? '⭐ Comum — 0,5 pt' : base === 2 ? '⭐⭐⭐ Premium — 2 pts' : '⭐⭐ Destaque — 1 pt';
-    let bonusAssinanteHtml;
+    const labelBase = base === 0.5 ? 'Comum (0,5 pt)' : base === 2 ? 'Premium (2 pts)' : 'Destaque (1 pt)';
+    const labelKit = corredorAssinanteGlobal ? '+1 pt' : '+0,5 pt';
+
     if (corredorAssinanteGlobal) {
       const bonus = getBonusAssinante();
       const nivel = calcularNivelAssinante(corredorAssinanteDesdeGlobal);
-      const tierLabel = nivel >= 9 ? 'Ouro/Elite' : 'Bronze/Prata';
-      bonusAssinanteHtml = `<span style="color:#1a7a4a;">✅ +${bonus} pt bônus assinante (${tierLabel})</span>`;
+      const tierLabel = nivel >= 9 ? 'Ouro / Elite' : 'Bronze / Prata';
+      const total = base + bonus;
+      const totalFmt = Number.isInteger(total) ? total : total.toFixed(1);
+      return `
+        <div class="pts-bloco assinante">
+          <div class="pts-bloco-icon">⭐</div>
+          <div class="pts-bloco-info">
+            <div class="pts-bloco-titulo">Você é assinante — ${tierLabel}</div>
+            <div class="pts-bloco-detalhe">
+              🏆 Pontuação base: <strong>${labelBase}</strong><br>
+              ✅ Bônus assinante: <strong>+${bonus} pt</strong> já sendo computado!<br>
+              🎒 Kit Run Express: ${labelKit} (se utilizado)
+            </div>
+            <div class="pts-bloco-total">Total: ${totalFmt} pt${total !== 1 ? 's' : ''} neste evento</div>
+          </div>
+        </div>`;
     } else {
-      bonusAssinanteHtml = `<span style="color:#999;">+0,5 ou +1 pt bônus assinante (você não é assinante)</span>`;
+      return `
+        <div class="pts-bloco nao-assinante">
+          <div class="pts-bloco-icon">🏆</div>
+          <div class="pts-bloco-info">
+            <div class="pts-bloco-titulo">Pontuação deste evento: ${labelBase}</div>
+            <div class="pts-bloco-detalhe">
+              🎒 Kit Run Express: ${labelKit} (se utilizado)<br>
+              <em style="color:#777;">Pontos salvos agora, contam no ranking após aprovação.</em>
+            </div>
+            <div class="pts-bloco-cta">
+              <div style="font-size:13px; font-weight:600; color:#E8622A; margin-bottom:8px;">
+                💡 Seja assinante e ganhe +0,5 pt extra neste evento e em todos os outros!
+              </div>
+              <button class="btn-assinar-form" onclick="assinar()">⭐ Assinar — R$ 9,99/mês</button>
+            </div>
+          </div>
+        </div>`;
     }
-    const labelKit = corredorAssinanteGlobal ? '+1 pt Kit Run Express' : '+0,5 pt Kit Run Express';
-    return `🏆 Pontuação deste evento: <strong>${labelBase}</strong> &nbsp;·&nbsp; ${bonusAssinanteHtml} &nbsp;·&nbsp; ${labelKit} &nbsp;·&nbsp; <em>(pontos salvos agora, contam no ranking após aprovação)</em>`;
   }
 
   async function removerDaLista(resultadoId) {
