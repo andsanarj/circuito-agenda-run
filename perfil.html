@@ -131,6 +131,18 @@
     .dist-sug-btn:hover { background: #EBF3FB; border-color: #1F4E79; color: #1F4E79; }
     footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
     .loading { text-align: center; padding: 60px; color: #888; }
+    /* Banner assinatura vencida */
+    .banner-assinatura-vencida { display: flex; align-items: flex-start; gap: 14px; background: #fff8e1; border: 2px solid #f0a000; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
+    .banner-assinatura-vencida.critico { background: #fdecea; border-color: #b00020; }
+    .bav-icon { font-size: 32px; flex-shrink: 0; line-height: 1; }
+    .bav-info { flex: 1; }
+    .bav-titulo { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; color: #b07800; margin-bottom: 4px; }
+    .bav-titulo.critico { color: #b00020; }
+    .bav-sub { font-size: 13px; color: #7a5800; line-height: 1.5; margin-bottom: 10px; }
+    .bav-sub.critico { color: #8a0018; }
+    .bav-dias { font-size: 22px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; color: #E8622A; margin-bottom: 4px; }
+    .bav-btn { background: #E8622A; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+    .bav-btn:hover { background: #c94f1f; }
     /* Banner ganhador */
     .banner-ganhador { background: linear-gradient(135deg, #fff8dc, #ffe066, #fff8dc); border: 2px solid #f0c800; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 20px rgba(220,180,0,0.2); }
     .banner-ganhador-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
@@ -175,6 +187,8 @@
 
 <div class="container" id="conteudo" style="display:none;">
 
+  <!-- Banner assinatura vencida -->
+  <div id="bannerAssinaturaVencida" style="display:none;"></div>
   <!-- Banner ganhador de sorteio -->
   <div id="bannerGanhador" style="display:none;"></div>
 
@@ -407,6 +421,7 @@
     corredorAssinanteGlobal = !!corredor.assinante;
     corredorAssinanteDesdeGlobal = corredor.assinante_desde || null;
     exibirStatusAssinatura(corredor);
+    verificarAssinaturaVencida(corredor);
 
     // Exibir botão compartilhar com URL correta
     const shareUrl = corredor.instagram
@@ -658,9 +673,9 @@
 
   async function removerDaLista(resultadoId) {
     if (!confirm('Remover este evento da sua lista?')) return;
-    const { error } = await sb.from('resultados').delete().eq('id', resultadoId);
+    const { error } = await client.from('resultados').delete().eq('id', resultadoId);
     if (error) { alert('Erro: ' + error.message); return; }
-    await carregarMinhasCorridas();
+    await carregarEventos(corredorIdGlobal);
   }
 
   function confirmarEdicaoAprovado(eventoId, resultadoId) {
@@ -740,6 +755,7 @@
       motivo_rejeicao: null,
       pontos: pontosCalculados,
       usou_kit_run: usouKitRun,
+      bonus_assinante: bonusAssinante,
     };
 
     let erro = null;
@@ -771,6 +787,59 @@
       msg.className = 'msg-form success';
       btn.textContent = 'Enviado ✓';
       setTimeout(() => carregarEventos(corredorIdGlobal), 2000);
+    }
+  }
+
+  // ── ASSINATURA VENCIDA ─────────────────────────────────────
+  function verificarAssinaturaVencida(corredor) {
+    if (!corredor.assinante_ate) return;
+    const vencimento = new Date(corredor.assinante_ate + 'T23:59:59');
+    const agora = new Date();
+    if (vencimento >= agora) return; // ainda ativo
+
+    const diasVencido = Math.floor((agora - vencimento) / (1000 * 60 * 60 * 24));
+    const diasRestantes = 7 - diasVencido;
+    const banner = document.getElementById('bannerAssinaturaVencida');
+
+    if (diasVencido <= 7) {
+      banner.innerHTML = `
+        <div class="banner-assinatura-vencida">
+          <div class="bav-icon">⚠️</div>
+          <div class="bav-info">
+            <div class="bav-titulo">Sua assinatura venceu há ${diasVencido} dia${diasVencido !== 1 ? 's' : ''}</div>
+            <div class="bav-dias">${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} para renovar</div>
+            <div class="bav-sub">Após esse prazo, os pontos bônus de assinante serão removidos de todas as suas corridas cadastradas.</div>
+            <button class="bav-btn" onclick="assinar()">🔄 Renovar assinatura</button>
+          </div>
+        </div>`;
+    } else {
+      banner.innerHTML = `
+        <div class="banner-assinatura-vencida critico">
+          <div class="bav-icon">❌</div>
+          <div class="bav-info">
+            <div class="bav-titulo critico">Pontos bônus removidos</div>
+            <div class="bav-sub critico">Sua assinatura venceu há ${diasVencido} dias e o prazo de renovação expirou. Os pontos bônus de assinante foram removidos das suas corridas.</div>
+            <button class="bav-btn" onclick="assinar()">⭐ Renovar assinatura</button>
+          </div>
+        </div>`;
+      removerBonusAssinante(corredor.id);
+    }
+    banner.style.display = 'block';
+  }
+
+  async function removerBonusAssinante(corredorId) {
+    const { data: resultados } = await client
+      .from('resultados')
+      .select('id, pontos, bonus_assinante')
+      .eq('corredor_id', corredorId)
+      .gt('bonus_assinante', 0)
+      .in('status', ['pendente', 'aprovado']);
+
+    if (!resultados || resultados.length === 0) return;
+
+    for (const r of resultados) {
+      const novosPontos = Math.max(0, (r.pontos || 0) - (r.bonus_assinante || 0));
+      await client.from('resultados').update({ pontos: novosPontos, bonus_assinante: 0 }).eq('id', r.id);
     }
   }
 
