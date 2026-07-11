@@ -98,7 +98,6 @@
     <div class="stats" id="statsRow">
       <div class="stat-box"><div class="num" id="statAtivos">—</div><div class="lbl">⭐ Ativos</div></div>
       <div class="stat-box"><div class="num" id="statInativos">—</div><div class="lbl">Inativos</div></div>
-      <div class="stat-box"><div class="num" id="statMRR">—</div><div class="lbl">MRR estimado</div></div>
       <div class="stat-box"><div class="num" id="statMedia">—</div><div class="lbl">Meses médio</div></div>
     </div>
 
@@ -216,7 +215,6 @@
 
     document.getElementById('statAtivos').textContent = ativos.length;
     document.getElementById('statInativos').textContent = inativos.length;
-    document.getElementById('statMRR').textContent = 'R$ ' + mrr.toFixed(2).replace('.', ',');
     document.getElementById('statMedia').textContent = media + (media !== '—' ? ' meses' : '');
 
     filtrar();
