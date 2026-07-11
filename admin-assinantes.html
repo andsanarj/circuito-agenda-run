@@ -162,6 +162,13 @@
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
 
+  const _hoje = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+  // Considera ativo se assinante=true OU se assinante_ate ainda não venceu
+  function isAtivo(c) {
+    return c.assinante || (c.assinante_ate && c.assinante_ate >= _hoje);
+  }
+
   function calcularNivel(assinante_desde) {
     if (!assinante_desde) return 0;
     const inicio = new Date(assinante_desde + 'T12:00:00');
@@ -194,8 +201,15 @@
     _todos = (data || []).filter(c => c.assinante || c.assinante_desde)
       .sort((a, b) => (a.assinante_desde || '').localeCompare(b.assinante_desde || ''));
 
-    const ativos = _todos.filter(c => c.assinante);
-    const inativos = _todos.filter(c => !c.assinante);
+    // Auto-corrigir: assinante_ate ainda válido mas assinante=false → sincronizar DB
+    const desincronizados = _todos.filter(c => !c.assinante && c.assinante_ate && c.assinante_ate >= _hoje);
+    for (const c of desincronizados) {
+      await sb.from('corredores').update({ assinante: true }).eq('id', c.id);
+      c.assinante = true;
+    }
+
+    const ativos = _todos.filter(c => isAtivo(c));
+    const inativos = _todos.filter(c => !isAtivo(c));
     const mrr = ativos.length * 9.99;
     const niveis = _todos.filter(c => c.assinante_desde).map(c => calcularNivel(c.assinante_desde));
     const media = niveis.length ? (niveis.reduce((s, n) => s + n, 0) / niveis.length).toFixed(1) : '—';
@@ -213,7 +227,7 @@
     const status = document.getElementById('filtroStatus').value;
     let lista = _todos.filter(c =>
       (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca)) &&
-      (!status || (status === 'ativo' ? c.assinante : !c.assinante))
+      (!status || (status === 'ativo' ? isAtivo(c) : !isAtivo(c)))
     );
     renderTabela(lista);
   }
@@ -250,7 +264,6 @@
       { key: 'assinante_ate',   label: 'Válido até' },
       { key: null,              label: 'Nível / Selo' },
       { key: 'assinante',       label: 'Status' },
-      { key: null,              label: 'Assinatura' },
       { key: 'admin_controle',  label: '✅ Meu controle' },
     ];
     const thead = cols.map(c => c.key
@@ -269,19 +282,18 @@
         <tr>
           <td class="corredor-info">
             <strong>${c.nome}</strong>
-            <span>${c.email || ''}</span>
+            <span>${c.telefone || ''}</span>
             ${insta ? `<span>${insta}</span>` : ''}
           </td>
           <td style="font-size:13px;">${desde}</td>
-          <td style="font-size:13px; ${!c.assinante ? 'color:#bbb;' : ''}">${ate}</td>
-          <td>${renderSelo(nivel, c.assinante)}</td>
+          <td style="font-size:13px; ${!isAtivo(c) ? 'color:#bbb;' : ''}">${ate}</td>
+          <td>${renderSelo(nivel, isAtivo(c))}</td>
           <td id="status-cell-${c.id}">
-            ${c.assinante
+            ${isAtivo(c)
               ? `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${c.id}')">Desativar</button>`
               : `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${c.id}')">✓ Ativar</button>`
             }
           </td>
-          <td>${c.asaas_subscription_id ? `<a href="https://www.asaas.com/subscriptions/${c.asaas_subscription_id}" target="_blank" style="font-size:12px;color:#1F4E79;font-weight:600;text-decoration:none;">🔗 Ver no Asaas</a>` : '<span style="color:#ccc;font-size:12px;">—</span>'}</td>
           <td>
             <div style="display:flex;align-items:center;">
               <input type="checkbox" class="toggle-input" id="ctrl-${c.id}" ${ctrl ? 'checked' : ''}
@@ -319,8 +331,8 @@
     if (cell) cell.innerHTML = `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${id}')">Desativar</button>`;
 
     // Atualiza stats
-    const ativos = _todos.filter(c => c.assinante).length;
-    const inativos = _todos.filter(c => !c.assinante).length;
+    const ativos = _todos.filter(c => isAtivo(c)).length;
+    const inativos = _todos.filter(c => !isAtivo(c)).length;
     document.getElementById('statAtivos').textContent = ativos;
     document.getElementById('statInativos').textContent = inativos;
     document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
@@ -329,17 +341,17 @@
   async function desativarAssinante(id) {
     if (!confirm('Desativar esta assinatura manualmente?')) return;
 
-    const { error } = await sb.from('corredores').update({ assinante: false }).eq('id', id);
+    const { error } = await sb.from('corredores').update({ assinante: false, assinante_ate: null }).eq('id', id);
     if (error) { alert('Erro: ' + error.message); return; }
 
     const c = _todos.find(x => x.id === id);
-    if (c) c.assinante = false;
+    if (c) { c.assinante = false; c.assinante_ate = null; }
 
     const cell = document.getElementById('status-cell-' + id);
     if (cell) cell.innerHTML = `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${id}')">✓ Ativar</button>`;
 
-    const ativos = _todos.filter(c => c.assinante).length;
-    const inativos = _todos.filter(c => !c.assinante).length;
+    const ativos = _todos.filter(c => isAtivo(c)).length;
+    const inativos = _todos.filter(c => !isAtivo(c)).length;
     document.getElementById('statAtivos').textContent = ativos;
     document.getElementById('statInativos').textContent = inativos;
     document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
