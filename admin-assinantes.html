@@ -77,7 +77,8 @@
   </a>
   <div style="display:flex; align-items:center; gap:12px;">
     <span class="badge-admin">⚙️ Admin</span>
-    <a href="admin.html" class="btn-voltar">← Painel</a>
+    <a href="admin-assistente.html" style="color:#fff; font-size:13px; font-weight:600; text-decoration:none; background:rgba(255,255,255,0.1); padding:7px 14px; border-radius:20px;">👤 Assistente</a>
+    <a href="admin-validacao.html" style="color:#fff; font-size:13px; font-weight:600; text-decoration:none; background:rgba(255,255,255,0.1); padding:7px 14px; border-radius:20px;">✅ Validar Resultados</a>
     <button class="btn-sair" onclick="sair()">Sair</button>
   </div>
 </header>
@@ -143,14 +144,14 @@
 <script>
   const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
-  const ADMIN_EMAIL  = 'agendarun1@gmail.com';
+  const EMAILS_PERMITIDOS = ['agendarun1@gmail.com', 'amandafrancoroberti@yahoo.com'];
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let _todos = [];
   let _sortCol = 'assinante_desde';
   let _sortDir = 'asc';
 
   sb.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session || session.user.email !== ADMIN_EMAIL) {
+    if (!session || !EMAILS_PERMITIDOS.includes(session.user.email)) {
       document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
       return;
     }
