@@ -673,8 +673,6 @@
     const ev = _eventosCache[eventoId];
     const base = ev?.pontuacao ?? 1;
     const labelBase = base === 0.5 ? 'Comum (0,5 pt)' : base === 2 ? 'Premium (2 pts)' : 'Destaque (1 pt)';
-    const labelKit = corredorAssinanteGlobal ? '+1 pt' : '+0,5 pt';
-
     if (corredorAssinanteGlobal) {
       const bonus = getBonusAssinante();
       const nivel = calcularNivelAssinante(corredorAssinanteDesdeGlobal);
@@ -689,7 +687,7 @@
             <div class="pts-bloco-detalhe">
               🏆 Pontuação base: <strong>${labelBase}</strong><br>
               ✅ Bônus assinante: <strong>+${bonus} pt</strong> já sendo computado!<br>
-              🎒 Kit Run Express: ${labelKit} (se utilizado)
+              🎒 Kit Run Express: +1 pt se assinante (confirmado na validação)
             </div>
             <div class="pts-bloco-total">Total: ${totalFmt} pt${total !== 1 ? 's' : ''} neste evento</div>
           </div>
@@ -701,7 +699,7 @@
           <div class="pts-bloco-info">
             <div class="pts-bloco-titulo">Pontuação deste evento: ${labelBase}</div>
             <div class="pts-bloco-detalhe">
-              🎒 Kit Run Express: ${labelKit} (se utilizado)<br>
+              🎒 Kit Run Express: +0,5 pt (confirmado na validação)<br>
               <em style="color:#777;">Pontos salvos agora, contam no ranking após aprovação.</em>
             </div>
             <div class="pts-bloco-cta">
@@ -783,8 +781,8 @@
     const bonusAssinante = getBonusAssinante();
     // Verificar se corredor usou Kit Run Express (flag marcada pelo próprio atleta)
     const usouKitRun = document.getElementById(`kitrun-${eventoId}`)?.checked || false;
-    const bonusKitRun = usouKitRun ? (corredorAssinanteGlobal ? 1 : 0.5) : 0;
-    const pontosCalculados = basePts + bonusAssinante + bonusKitRun;
+    // Bônus Kit Run NÃO é somado aqui — será confirmado pelo admin na validação
+    const pontosCalculados = basePts + bonusAssinante;
 
     const dados = {
       corredor_id: corredorIdGlobal,

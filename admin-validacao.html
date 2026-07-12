@@ -121,7 +121,7 @@
     const resumo = Object.entries(porStatus).map(([s, n]) => `${s}: ${n}`).join(' | ');
 
     const { data, error } = await sb.from('resultados')
-      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, corredores(nome, email, instagram, assinante), eventos(nome, data, distancia)')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, usou_kit_run, corredores(nome, email, instagram, assinante, assinante_desde), eventos(nome, data, distancia)')
       .eq('status', 'pendente')
       .order('created_at', { ascending: true });
 
@@ -165,15 +165,15 @@
           </td>
           <td style="min-width:180px;">
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0})">
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
                 ✅ Aprovar (${r.pontos || 0} pts)
               </button>
               <div style="font-size:11px; padding:5px 8px; border-radius:5px; ${r.corredores?.assinante ? 'background:#e6f9f0; color:#1a7a4a;' : 'background:#f5f5f5; color:#aaa;'}; white-space:nowrap;">
-                ${r.corredores?.assinante ? '✅ Assinante (+1 pt já incluído)' : '⬜ Não é assinante'}
+                ${r.corredores?.assinante ? `✅ Assinante (+${calcularBonusAssinante(r.corredores).toString().replace('.', ',')} pt já incluído)` : '⬜ Não é assinante'}
               </div>
               <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
-                <input type="checkbox" id="kitrun-${r.id}" style="width:auto; cursor:pointer;">
-                +1 pt Kit Run Express
+                <input type="checkbox" id="kitrun-${r.id}" ${r.usou_kit_run ? 'checked' : ''} style="width:auto; cursor:pointer;">
+                +${calcularBonusKitRun(r.corredores).toString().replace('.', ',')} pt Kit Run Express${r.usou_kit_run ? ' <span style="color:#E8622A;">(atleta declarou uso)</span>' : ''}
               </label>
               <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">❌ Rejeitar</button>
             </div>
@@ -191,13 +191,25 @@
     document.getElementById('tabelaPendentes').innerHTML = html;
   }
 
+  function calcularBonusAssinante(corredor) {
+    if (!corredor?.assinante || !corredor.assinante_desde) return 0;
+    const meses = Math.floor((new Date() - new Date(corredor.assinante_desde + 'T12:00:00')) / (1000 * 60 * 60 * 24 * 30.44)) + 1;
+    return meses >= 9 ? 1 : 0.5; // ouro/elite ≥ 9 meses = 1 pt, bronze/prata = 0,5 pt
+  }
+
+  function calcularBonusKitRun(corredor) {
+    // Assinante (qualquer tier) = 1 pt; não-assinante = 0,5 pt
+    return corredor?.assinante ? 1 : 0.5;
+  }
+
   function toggleRejeicao(id) { document.getElementById(`rejeicao-${id}`).classList.toggle('aberta'); }
 
-  async function aprovar(resultadoId, pontosBase) {
+  async function aprovar(resultadoId, pontosBase, bonusKitRunValor) {
     const msg = document.getElementById('msgValidacao');
     const isKitRun = document.getElementById(`kitrun-${resultadoId}`)?.checked;
-    const pontos = (pontosBase || 0) + (isKitRun ? 1 : 0);
-    const { error } = await sb.from('resultados').update({ status: 'aprovado', pontos, validado_em: new Date().toISOString(), motivo_rejeicao: null }).eq('id', resultadoId);
+    const bonusKitRun = isKitRun ? (bonusKitRunValor || 0.5) : 0;
+    const pontos = (pontosBase || 0) + bonusKitRun;
+    const { error } = await sb.from('resultados').update({ status: 'aprovado', pontos, usou_kit_run: isKitRun, validado_em: new Date().toISOString(), motivo_rejeicao: null }).eq('id', resultadoId);
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
     else {
       msg.textContent = `✅ Resultado aprovado com ${pontos} pts!`;
