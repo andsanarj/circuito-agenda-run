@@ -58,6 +58,8 @@
     .btn-participar:hover { background: #c94f1f; }
     .btn-na-lista { background: #e6f9f0; color: #1a7a4a; border: 2px solid #1a7a4a; padding: 9px 20px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: default; white-space: nowrap; }
     .btn-passado { background: #f0f4f8; color: #aaa; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: default; white-space: nowrap; }
+    .btn-participei { background: #1F4E79; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-participei:hover { background: #163d62; }
     .btn-remover { background: none; border: none; color: #b00020; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
     .btn-remover:hover { color: #8a0018; }
     .btn-login-evt { background: #1F4E79; color: #fff; border: none; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
@@ -224,7 +226,7 @@
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    div.innerHTML = eventos.map(ev => {
+    const itens = eventos.map(ev => {
       const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
       const passado = dataEv && dataEv < hoje;
       const resultado = mapaResultados[ev.id] || null;
@@ -285,7 +287,7 @@
                    <a href="perfil.html" class="link-perfil">Ver no meu perfil →</a>`;
         }
       } else if (passado) {
-        botao = `<button class="btn-passado" disabled>Evento encerrado</button>`;
+        botao = `<button class="btn-participei" onclick="entrarNaLista('${ev.id}', this)">✓ Participei</button>`;
       } else {
         botao = `<button class="btn-participar" onclick="entrarNaLista('${ev.id}', this)">+ Quero participar</button>`;
       }
@@ -295,8 +297,8 @@
         ? `<a href="${urlInscricao}" target="_blank" class="link-perfil" style="margin-top:4px;">🔗 Inscrições abertas →</a>`
         : '';
 
-      return `
-        <div class="evento-card ${passado && !resultado ? 'passado' : ''}">
+      return { passado, html: `
+        <div class="evento-card">
           <div class="barra"></div>
           <div class="corpo">
             <div class="ev-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div><div style="font-size:10px; color:#a8c8e8;">${ano}</div></div>
@@ -313,8 +315,23 @@
             </div>
           </div>
         </div>
+      `};
+    });
+
+    const proximos = itens.filter(i => !i.passado).map(i => i.html);
+    const finalizados = itens.filter(i => i.passado).map(i => i.html);
+
+    let html = proximos.join('');
+    if (finalizados.length) {
+      html += `
+        <div style="margin-top:36px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #e8edf2;">
+          <h2 style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; color:#0F2D4A; margin:0;">🏁 Eventos Finalizados</h2>
+          <p style="font-size:13px; color:#888; margin:4px 0 0;">Você ainda pode adicionar esses eventos ao seu perfil.</p>
+        </div>
+        ${finalizados.join('')}
       `;
-    }).join('');
+    }
+    div.innerHTML = html || '<div class="empty">Nenhum evento cadastrado ainda. Volte em breve! 🏃</div>';
   }
 
   async function removerDaLista(resultadoId, btn) {
