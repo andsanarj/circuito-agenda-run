@@ -293,7 +293,7 @@
       }
 
       const urlInscricao = ev.site || ev.link_inscricao || '';
-      const linkInscricao = urlInscricao
+      const linkInscricao = urlInscricao && !passado
         ? `<a href="${urlInscricao}" target="_blank" class="link-perfil" style="margin-top:4px;">🔗 Inscrições abertas →</a>`
         : '';
 
