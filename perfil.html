@@ -306,6 +306,7 @@
         <div class="form-group">
           <label>E-mail</label>
           <input type="email" id="email" disabled>
+          <div id="emailAviso" style="display:none; font-size:11px; color:#E8622A; margin-top:4px;">⚠️ Você receberá um e-mail de confirmação no novo endereço. A alteração só vale após confirmar.</div>
         </div>
         <div class="form-group">
           <label>Telefone / WhatsApp</label>
@@ -449,6 +450,12 @@
     document.getElementById('nomeCorreder').textContent = corredor.nome.split(' ')[0];
     document.getElementById('headerNome').textContent = corredor.nome.split(' ')[0];
     document.getElementById('nome').value = corredor.nome || '';
+    // Sincronizar email caso tenha sido confirmado via link do Supabase
+    const emailAuth = session.user.email || '';
+    if (emailAuth && emailAuth !== corredor.email) {
+      await client.from('corredores').update({ email: emailAuth }).eq('user_id', session.user.id);
+      corredor.email = emailAuth;
+    }
     document.getElementById('email').value = corredor.email || '';
     document.getElementById('telefone').value = corredor.telefone || '';
     const cpfFmt = corredor.cpf ? corredor.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '';
@@ -789,6 +796,7 @@
       evento_id: eventoId,
       numero_peito: peito,
       distancia,
+      finalizou,
       tempo: finalizou ? tempo : null,
       posicao_geral: finalizou ? posicao : null,
       categoria,
@@ -1009,13 +1017,23 @@
 
   function toggleEdicao() {
     modoEdicao = !modoEdicao;
-    const campos = ['nome', 'telefone', 'cpf', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
+    const campos = ['nome', 'email', 'telefone', 'cpf', 'cidade', 'instagram', 'sexo', 'data_nascimento'];
     campos.forEach(id => { document.getElementById(id).disabled = !modoEdicao; });
     document.getElementById('distPrefView').style.display = modoEdicao ? 'none' : 'flex';
     document.getElementById('distPrefEdit').style.display = modoEdicao ? 'block' : 'none';
     document.getElementById('btnSalvar').style.display = modoEdicao ? 'block' : 'none';
     document.querySelector('.btn-edit').textContent = modoEdicao ? '✕ Cancelar' : '✏️ Editar';
-    if (!modoEdicao) document.getElementById('msgPerfil').className = 'msg';
+    if (!modoEdicao) {
+      document.getElementById('msgPerfil').className = 'msg';
+      document.getElementById('emailAviso').style.display = 'none';
+    }
+    if (modoEdicao) {
+      document.getElementById('email').addEventListener('input', function() {
+        const original = this.dataset.original || '';
+        document.getElementById('emailAviso').style.display = this.value !== original ? 'block' : 'none';
+      }, { once: false });
+      document.getElementById('email').dataset.original = document.getElementById('email').value;
+    }
   }
 
   document.getElementById('formPerfil').addEventListener('submit', async (e) => {
@@ -1027,6 +1045,11 @@
 
     const { data: { session } } = await client.auth.getSession();
     const distSelecionadas = getDistPrefSelecionadas();
+    const novoEmail = document.getElementById('email').value.trim();
+    const emailOriginal = document.getElementById('email').dataset.original || '';
+    const emailMudou = novoEmail && novoEmail !== emailOriginal;
+
+    // 1. Salvar outros campos em corredores
     const { error } = await client.from('corredores').update({
       nome: document.getElementById('nome').value.trim(),
       telefone: document.getElementById('telefone').value.trim() || null,
@@ -1041,14 +1064,32 @@
     if (error) {
       msg.textContent = 'Erro ao salvar: ' + error.message;
       msg.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = 'Salvar alterações';
+      return;
+    }
+
+    // 2. Se email mudou, solicitar troca via Supabase Auth
+    if (emailMudou) {
+      const { error: errEmail } = await client.auth.updateUser({ email: novoEmail });
+      if (errEmail) {
+        msg.textContent = '✅ Perfil salvo, mas erro ao alterar e-mail: ' + errEmail.message;
+        msg.className = 'msg error';
+      } else {
+        msg.textContent = `✅ Perfil salvo! Um e-mail de confirmação foi enviado para ${novoEmail}. Confirme para concluir a alteração do e-mail.`;
+        msg.className = 'msg success';
+        document.getElementById('email').value = emailOriginal; // restaura o atual até confirmar
+        document.getElementById('emailAviso').style.display = 'none';
+      }
     } else {
       msg.textContent = '✅ Perfil atualizado com sucesso!';
       msg.className = 'msg success';
-      document.getElementById('nomeCorreder').textContent = document.getElementById('nome').value.split(' ')[0];
-      document.getElementById('headerNome').textContent = document.getElementById('nome').value.split(' ')[0];
-      renderDistPref(distSelecionadas);
-      toggleEdicao();
     }
+
+    document.getElementById('nomeCorreder').textContent = document.getElementById('nome').value.split(' ')[0];
+    document.getElementById('headerNome').textContent = document.getElementById('nome').value.split(' ')[0];
+    renderDistPref(distSelecionadas);
+    toggleEdicao();
     btn.disabled = false;
     btn.textContent = 'Salvar alterações';
   });
