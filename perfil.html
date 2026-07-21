@@ -2,6 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F2D4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Circuito AR">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meu Perfil — Circuito Agenda Run</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1071,7 +1078,10 @@
 
     // 2. Se email mudou, solicitar troca via Supabase Auth
     if (emailMudou) {
-      const { error: errEmail } = await client.auth.updateUser({ email: novoEmail });
+      const { error: errEmail } = await client.auth.updateUser(
+        { email: novoEmail },
+        { emailRedirectTo: 'https://circuito.agendarun.com.br/perfil.html' }
+      );
       if (errEmail) {
         msg.textContent = '✅ Perfil salvo, mas erro ao alterar e-mail: ' + errEmail.message;
         msg.className = 'msg error';
@@ -1338,7 +1348,31 @@
     window.location.href = 'login.html';
   }
 
+  // Listener para capturar confirmação de e-mail (TOKEN_REFRESHED / USER_UPDATED)
+  client.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') && session?.user?.email) {
+      const emailAuth = session.user.email;
+      // Sincroniza e-mail confirmado na tabela corredores
+      const { data: corredor } = await client.from('corredores')
+        .select('id, email')
+        .eq('user_id', session.user.id)
+        .single();
+      if (corredor && corredor.email !== emailAuth) {
+        await client.from('corredores').update({ email: emailAuth }).eq('user_id', session.user.id);
+        // Atualiza campo visível se estiver na página
+        const campo = document.getElementById('email');
+        if (campo) campo.value = emailAuth;
+        const msgEl = document.getElementById('msgPerfil');
+        if (msgEl) {
+          msgEl.textContent = `✅ E-mail atualizado para ${emailAuth} com sucesso!`;
+          msgEl.className = 'msg success';
+        }
+      }
+    }
+  });
+
   init();
 </script>
+  <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}</script>
 </body>
 </html>

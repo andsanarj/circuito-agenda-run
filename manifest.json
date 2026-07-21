@@ -1,0 +1,20 @@
+{
+  "name": "Circuito Agenda Run",
+  "short_name": "Circuito AR",
+  "description": "Ranking, eventos e área de assinantes do Circuito Agenda Run",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0F2D4A",
+  "theme_color": "#0F2D4A",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ranking", "url": "/ranking.html", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Meu Perfil", "url": "/perfil.html", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Eventos", "url": "/eventos.html", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

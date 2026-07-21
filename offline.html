@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F2D4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Circuito AR">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sem conexão — Circuito Agenda Run</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0F2D4A; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #fff; }
+    img { height: 56px; margin-bottom: 24px; }
+    h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; margin-bottom: 10px; }
+    p { color: #a8c8e8; font-size: 15px; line-height: 1.6; max-width: 320px; margin-bottom: 28px; }
+    button { background: #E8622A; color: #fff; border: none; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    button:hover { background: #c94f1f; }
+  </style>
+</head>
+<body>
+  <img src="/logo.png" alt="Circuito Agenda Run">
+  <h1>Sem conexão</h1>
+  <p>Você está offline. Verifique sua internet e tente novamente.</p>
+  <button onclick="window.location.reload()">Tentar novamente</button>
+  <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}</script>
+</body>
+</html>
