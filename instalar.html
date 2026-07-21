@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F2D4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Circuito AR">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instale o App — Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a1a1a; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header a.btn-back { color: #a8c8e8; font-size: 14px; text-decoration: none; }
+    header a.btn-back:hover { color: #fff; }
+
+    .hero { background: linear-gradient(135deg, #1F4E79, #0d2d4a); color: #fff; padding: 52px 24px 44px; text-align: center; }
+    .hero img.app-icon { width: 88px; height: 88px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .hero h1 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+    .hero p { color: #a8c8e8; font-size: 15px; max-width: 400px; margin: 0 auto; line-height: 1.6; }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 20px 60px; }
+
+    .os-tabs { display: flex; gap: 12px; margin-bottom: 32px; }
+    .os-tab { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid #dde3ea; background: #fff; cursor: pointer; text-align: center; font-weight: 700; font-size: 15px; color: #888; transition: all 0.15s; font-family: inherit; }
+    .os-tab.ativo { border-color: #1F4E79; color: #1F4E79; background: #EBF3FB; }
+
+    .passo-lista { display: none; }
+    .passo-lista.ativo { display: block; }
+
+    .passo { display: flex; gap: 18px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .passo-num { background: #0F2D4A; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; min-width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .passo-ios .passo-num { background: #555; }
+    .passo-conteudo h3 { font-size: 17px; color: #0F2D4A; margin-bottom: 4px; }
+    .passo-conteudo p { font-size: 14px; color: #666; line-height: 1.6; }
+    .passo-icon { font-size: 28px; flex-shrink: 0; align-self: center; }
+
+    .destaque { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 10px; padding: 14px 18px; margin-top: 10px; font-size: 13px; color: #7a5800; line-height: 1.6; }
+    .destaque strong { color: #b07800; }
+
+    .resultado { background: linear-gradient(135deg, #e6f9f0, #d0f5e8); border: 1.5px solid #a3e6c8; border-radius: 12px; padding: 20px 24px; text-align: center; margin-top: 28px; }
+    .resultado h3 { font-size: 22px; color: #1a7a4a; margin-bottom: 6px; }
+    .resultado p { font-size: 14px; color: #2d6a4f; }
+
+    .compartilhar { background: #fff; border-radius: 14px; padding: 28px 24px; margin-top: 28px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .compartilhar h2 { font-size: 22px; color: #0F2D4A; margin-bottom: 8px; }
+    .compartilhar p { font-size: 14px; color: #666; margin-bottom: 18px; }
+    .link-box { background: #f0f4f8; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .link-box span { font-size: 14px; font-weight: 600; color: #1F4E79; word-break: break-all; }
+    .btn-copiar { background: #1F4E79; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; }
+    .btn-copiar:hover { background: #163d62; }
+    .btn-copiar.copiado { background: #1a7a4a; }
+
+    footer { background: #0F2D4A; color: #a8c8e8; text-align: center; padding: 20px; font-size: 13px; }
+    footer a { color: #4CBFCB; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Circuito Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <a href="index.html" class="btn-back">← Voltar</a>
+</header>
+
+<div class="hero">
+  <img src="icon-192.png" alt="App Circuito AR" class="app-icon">
+  <h1>Instale o App</h1>
+  <p>Adicione o Circuito Agenda Run à tela inicial do seu celular — rápido e sem precisar de loja.</p>
+</div>
+
+<div class="container">
+
+  <div class="os-tabs">
+    <button class="os-tab ativo" onclick="trocarAba('android')">🤖 Android</button>
+    <button class="os-tab" onclick="trocarAba('ios')">🍎 iPhone</button>
+  </div>
+
+  <!-- Android -->
+  <div class="passo-lista ativo" id="tab-android">
+    <div class="passo">
+      <div class="passo-num">1</div>
+      <div class="passo-conteudo">
+        <h3>Abra o Chrome</h3>
+        <p>Acesse <strong>circuito.agendarun.com.br</strong> pelo navegador Chrome no seu Android.</p>
+        <div class="destaque">⚠️ Deve ser o <strong>Chrome</strong> — outros navegadores podem não funcionar.</div>
+      </div>
+    </div>
+    <div class="passo">
+      <div class="passo-num">2</div>
+      <div class="passo-conteudo">
+        <h3>Toque no banner de instalação</h3>
+        <p>O Chrome exibe automaticamente um banner na parte inferior da tela com a mensagem <strong>"Adicionar Circuito AR à tela inicial"</strong>. Toque nele.</p>
+      </div>
+      <div class="passo-icon">📲</div>
+    </div>
+    <div class="passo">
+      <div class="passo-num">3</div>
+      <div class="passo-conteudo">
+        <h3>Ou use o menu do Chrome</h3>
+        <p>Se o banner não aparecer, toque nos <strong>3 pontinhos ⋮</strong> no canto superior direito e escolha <strong>"Adicionar à tela inicial"</strong>.</p>
+      </div>
+      <div class="passo-icon">⋮</div>
+    </div>
+    <div class="passo">
+      <div class="passo-num">4</div>
+      <div class="passo-conteudo">
+        <h3>Confirme a instalação</h3>
+        <p>Uma janela vai aparecer perguntando se quer adicionar. Toque em <strong>"Adicionar"</strong> e pronto!</p>
+      </div>
+      <div class="passo-icon">✅</div>
+    </div>
+    <div class="resultado">
+      <h3>🎉 Pronto!</h3>
+      <p>O ícone do Circuito Agenda Run aparece na sua tela inicial, igual a um app normal.</p>
+    </div>
+  </div>
+
+  <!-- iPhone -->
+  <div class="passo-lista passo-ios" id="tab-ios">
+    <div class="passo">
+      <div class="passo-num" style="background:#555;">1</div>
+      <div class="passo-conteudo">
+        <h3>Abra o Safari</h3>
+        <p>Acesse <strong>circuito.agendarun.com.br</strong> pelo <strong>Safari</strong> — o navegador padrão do iPhone. Não funciona pelo Chrome no iOS.</p>
+        <div class="destaque">⚠️ No iPhone, apenas o <strong>Safari</strong> permite instalar na tela inicial.</div>
+      </div>
+    </div>
+    <div class="passo">
+      <div class="passo-num" style="background:#555;">2</div>
+      <div class="passo-conteudo">
+        <h3>Toque no botão Compartilhar</h3>
+        <p>Na barra inferior do Safari, toque no ícone de <strong>compartilhar</strong> — um quadrado com uma seta apontando para cima <strong>⬆️</strong>.</p>
+      </div>
+      <div class="passo-icon">⬆️</div>
+    </div>
+    <div class="passo">
+      <div class="passo-num" style="background:#555;">3</div>
+      <div class="passo-conteudo">
+        <h3>Escolha "Adicionar à Tela de Início"</h3>
+        <p>Role o menu para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> (ícone de um quadrado com um +).</p>
+      </div>
+      <div class="passo-icon">➕</div>
+    </div>
+    <div class="passo">
+      <div class="passo-num" style="background:#555;">4</div>
+      <div class="passo-conteudo">
+        <h3>Confirme o nome e adicione</h3>
+        <p>O nome <strong>"Circuito AR"</strong> já vem preenchido. Toque em <strong>"Adicionar"</strong> no canto superior direito.</p>
+      </div>
+      <div class="passo-icon">✅</div>
+    </div>
+    <div class="resultado">
+      <h3>🎉 Pronto!</h3>
+      <p>O ícone do Circuito Agenda Run aparece na sua tela inicial como um app nativo.</p>
+    </div>
+  </div>
+
+  <!-- Compartilhar -->
+  <div class="compartilhar">
+    <h2>📤 Compartilhe com seus amigos</h2>
+    <p>Mande o link abaixo para quem você quer ver no ranking!</p>
+    <div class="link-box">
+      <span>circuito.agendarun.com.br</span>
+      <button class="btn-copiar" onclick="copiarLink(this)">Copiar</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  function trocarAba(os) {
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('ativo'));
+    document.querySelectorAll('.passo-lista').forEach(l => l.classList.remove('ativo'));
+    document.getElementById('tab-' + os).classList.add('ativo');
+    event.target.classList.add('ativo');
+  }
+
+  function copiarLink(btn) {
+    navigator.clipboard.writeText('https://circuito.agendarun.com.br').then(() => {
+      btn.textContent = '✓ Copiado!';
+      btn.classList.add('copiado');
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copiado'); }, 2500);
+    });
+  }
+
+  // Detecta sistema e seleciona aba automaticamente
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    trocarAba('ios');
+    document.querySelectorAll('.os-tab')[1].classList.add('ativo');
+    document.querySelectorAll('.os-tab')[0].classList.remove('ativo');
+  }
+
+  if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}
+</script>
+</body>
+</html>
