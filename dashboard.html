@@ -513,14 +513,7 @@
       const chipDist   = ev.distancias     ? `<span class="ag-chip dist">🏃 ${ev.distancias}</span>` : '';
       const chipCirc   = ev.circuito_agenda_run ? `<span class="ag-chip circ">🏅 Circuito</span>` : '';
 
-      let chipCupom = '';
-      if (ev.cupom_desconto) {
-        if (isAssinante) {
-          chipCupom = `<span class="ag-chip cupom">🏷️ ${ev.cupom_desconto}</span>`;
-        } else {
-          chipCupom = `<span class="ag-chip cupom cupom-blur">🏷️ CUPOM</span>`;
-        }
-      }
+      const chipCupom = ev.cupom_desconto ? `<span class="ag-chip cupom">🏷️ ${ev.cupom_desconto}</span>` : '';
 
       return `
         <div class="agenda-item">
