@@ -17,7 +17,7 @@
     header .logo img { height: 36px; }
     header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
     header nav { display: flex; align-items: center; gap: 8px; }
-    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
     header nav a:hover { color: #fff; }
 
     .page-hero {
@@ -59,29 +59,26 @@
     .card-header span { font-size: 13px; color: #a8c8e8; margin-left: auto; }
     .card-body { padding: 24px; overflow-x: auto; }
 
-    /* Tabela Kit Run */
-    .kit-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
-    .kit-table thead th { background: #f0f4f8; padding: 10px 14px; text-align: center; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kit-table thead th:first-child { text-align: left; }
-    .kit-table tbody tr { border-bottom: 1px solid #f0f0f0; }
-    .kit-table tbody tr:last-child { border-bottom: none; }
-    .kit-table tbody td { padding: 12px 14px; color: #333; vertical-align: middle; text-align: center; }
-    .kit-table tbody td:first-child { text-align: left; }
-    .prazo-chip { display: inline-block; background: #fff8e1; color: #b07800; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
-    .prazo-chip.vencido { background: #fdecea; color: #b00020; }
-    .obs-text { color: #666; font-size: 13px; }
-
-    .btn-interesse {
-      background: #EBF3FB; color: #1F4E79; border: none; padding: 6px 14px;
-      border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;
-      white-space: nowrap; transition: background 0.2s;
-    }
-    .btn-interesse:hover { background: #d0e8f8; }
-    .btn-interesse.ativo { background: #e6f9f0; color: #1a7a4a; }
-    .btn-interesse.ativo:hover { background: #fdecea; color: #b00020; }
-    .btn-interesse.ativo:hover::after { content: ' (cancelar)'; }
-
     .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+    /* Preview próximas corridas */
+    .corrida-mini { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .corrida-mini:last-child { border-bottom: none; }
+    .corrida-data-box { background: #0F2D4A; color: #fff; border-radius: 8px; min-width: 48px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
+    .corrida-data-box .dia { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; line-height: 1; }
+    .corrida-data-box .mes { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; }
+    .corrida-mini.circuito .corrida-data-box { background: #E8622A; }
+    .corrida-info { flex: 1; min-width: 0; }
+    .corrida-nome { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; color: #0F2D4A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .corrida-sub { font-size: 12px; color: #888; margin-top: 2px; }
+    .corrida-cupom { font-size: 11px; font-weight: 700; color: #b07800; background: #fff8e1; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
+    .badge-circuito-mini { font-size: 10px; font-weight: 700; color: #b04010; background: #fff0ea; padding: 1px 7px; border-radius: 10px; }
+    .btn-ver-todos { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+    .btn-agenda { display: inline-block; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .btn-agenda.circuito { background: #E8622A; color: #fff; }
+    .btn-agenda.circuito:hover { background: #c94f1f; }
+    .btn-agenda.completa { background: #1F4E79; color: #fff; }
+    .btn-agenda.completa:hover { background: #163d62; }
     .loading { text-align: center; padding: 80px; color: #888; font-size: 15px; }
 
     /* Sorteios */
@@ -140,7 +137,8 @@
   </a>
   <nav>
     <a href="ranking.html">🏆 Ranking</a>
-    <a href="eventos.html">📅 Eventos</a>
+    <a href="circuito-assinantes.html">🏅 Circuito</a>
+    <a href="agenda-assinantes.html">🗓️ Agenda</a>
     <a href="perfil.html">👤 Perfil</a>
   </nav>
 </header>
@@ -180,17 +178,18 @@
       </div>
     </div>
 
-    <!-- Kit Run Express -->
+    <!-- Próximas Corridas -->
     <div class="card">
       <div class="card-header">
-        <h2>🏃 Kit Run Express</h2>
-        <span>Serviço de retirada de kit</span>
+        <h2>🗓️ Próximas Corridas</h2>
+        <span>Agenda exclusiva</span>
       </div>
       <div class="card-body">
-        <p style="font-size:14px; color:#555; margin-bottom:18px;">
-          Confira os eventos em que a <strong>Kit Run Express</strong> irá prestar o serviço de retirada de kit. Faça seu pedido antes do prazo!
-        </p>
-        <div id="listaKitRun" class="loading">Carregando eventos...</div>
+        <div id="listaProximas" class="loading">Carregando...</div>
+        <div class="btn-ver-todos">
+          <a href="circuito-assinantes.html" class="btn-agenda circuito">🏅 Eventos do Circuito</a>
+          <a href="agenda-assinantes.html" class="btn-agenda completa">🗓️ Agenda Completa</a>
+        </div>
       </div>
     </div>
 
@@ -252,7 +251,7 @@
     } else {
       corredorIdGlobal = corredor.id;
       document.getElementById('conteudo').style.display = 'block';
-      carregarKitRun(corredor.id);
+      carregarProximasCorridas();
       carregarSorteios(corredor.id);
       carregarMeusPremios(corredor.id);
     }
@@ -260,96 +259,46 @@
 
   let corredorIdGlobal = null;
 
-  async function carregarKitRun(corredorId) {
-    const div = document.getElementById('listaKitRun');
+  async function carregarProximasCorridas() {
+    const div = document.getElementById('listaProximas');
+    const hoje = new Date().toISOString().split('T')[0];
 
-    const [{ data: eventos }, { data: interesses }] = await Promise.all([
-      sb.from('kit_run_eventos').select('*').order('data', { ascending: true }),
-      sb.from('kit_run_interesses').select('kit_run_evento_id').eq('corredor_id', corredorId)
-    ]);
+    const { data: eventos, error } = await sb
+      .from('agenda_eventos')
+      .select('nome, data, cidade, cupom_desconto, circuito_agenda_run')
+      .gte('data', hoje)
+      .order('data', { ascending: true })
+      .limit(10);
 
-    if (!eventos || eventos.length === 0) {
-      div.innerHTML = '<div class="empty">Nenhum evento cadastrado pela Kit Run Express ainda.</div>';
+    if (error || !eventos?.length) {
+      div.innerHTML = '<div class="empty">Nenhum evento próximo encontrado.</div>';
       return;
     }
 
-    const comInteresse = new Set((interesses || []).map(i => i.kit_run_evento_id));
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    div.innerHTML = eventos.map(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const dia  = dataEv ? dataEv.getDate().toString().padStart(2,'0') : '—';
+      const mes  = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.','') : '';
+      const isCircuito = !!ev.circuito_agenda_run;
+      const cupomHtml = ev.cupom_desconto ? `<span class="corrida-cupom">🏷️ ${ev.cupom_desconto}</span>` : '';
+      const circuitoHtml = isCircuito ? `<span class="badge-circuito-mini">🏅 Circuito</span>` : '';
 
-    div.innerHTML = `
-      <table class="kit-table">
-        <thead>
-          <tr>
-            <th>Corrida</th>
-            <th>Data</th>
-            <th>Local</th>
-            <th>Valor</th>
-            <th>Pedidos até</th>
-            <th>Observação</th>
-            <th>Interesse</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${eventos.map(ev => {
-            const prazoDate = ev.pedidos_ate ? new Date(ev.pedidos_ate + 'T12:00:00') : null;
-            const vencido = prazoDate && prazoDate < hoje;
-            const temInteresse = comInteresse.has(ev.id);
-            const btnInteresse = vencido
-              ? `<span style="color:#ccc; font-size:12px;">Encerrado</span>`
-              : temInteresse
-                ? `<button class="btn-interesse ativo" onclick="cancelarInteresse('${ev.id}', this)">✓ Tenho interesse</button>`
-                : `<button class="btn-interesse" onclick="registrarInteresse('${ev.id}', this)">+ Tenho interesse</button>`;
-            return `<tr id="kit-row-${ev.id}">
-              <td><strong>${ev.corrida}</strong></td>
-              <td>${fmt(ev.data)}</td>
-              <td>${ev.local || '—'}</td>
-              <td>${ev.valor != null ? '<strong>R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') + '</strong>' : '—'}</td>
-              <td><span class="prazo-chip ${vencido ? 'vencido' : ''}">${fmt(ev.pedidos_ate)}${vencido ? ' · Encerrado' : ''}</span></td>
-              <td class="obs-text">${ev.observacao || '—'}</td>
-              <td>${btnInteresse}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    `;
-  }
-
-  async function registrarInteresse(eventoId, btn) {
-    btn.disabled = true;
-    btn.textContent = 'Registrando...';
-    const { error } = await sb.from('kit_run_interesses').insert([{
-      corredor_id: corredorIdGlobal,
-      kit_run_evento_id: eventoId
-    }]);
-    if (error) {
-      btn.disabled = false;
-      btn.textContent = '+ Tenho interesse';
-      alert('Erro: ' + error.message);
-    } else {
-      btn.className = 'btn-interesse ativo';
-      btn.textContent = '✓ Tenho interesse';
-      btn.disabled = false;
-      btn.onclick = () => cancelarInteresse(eventoId, btn);
-    }
-  }
-
-  async function cancelarInteresse(eventoId, btn) {
-    if (!confirm('Cancelar seu interesse neste evento?')) return;
-    btn.disabled = true;
-    const { error } = await sb.from('kit_run_interesses')
-      .delete()
-      .eq('corredor_id', corredorIdGlobal)
-      .eq('kit_run_evento_id', eventoId);
-    if (error) {
-      btn.disabled = false;
-      alert('Erro: ' + error.message);
-    } else {
-      btn.className = 'btn-interesse';
-      btn.textContent = '+ Tenho interesse';
-      btn.disabled = false;
-      btn.onclick = () => registrarInteresse(eventoId, btn);
-    }
+      return `
+        <div class="corrida-mini${isCircuito ? ' circuito' : ''}">
+          <div class="corrida-data-box">
+            <div class="dia">${dia}</div>
+            <div class="mes">${mes}</div>
+          </div>
+          <div class="corrida-info">
+            <div class="corrida-nome">${ev.nome}</div>
+            <div class="corrida-sub" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:3px;">
+              ${ev.cidade ? `<span>📍 ${ev.cidade}</span>` : ''}
+              ${cupomHtml}
+              ${circuitoHtml}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   const nivelLabel = {

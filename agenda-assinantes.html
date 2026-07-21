@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda de Eventos — Área de Assinantes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; }
+    header nav a { color: #a8c8e8; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; }
+    header nav a:hover { color: #fff; }
+    header nav a.ativo { color: #fff; font-weight: 600; background: rgba(255,255,255,0.1); }
+
+    .tab-bar { background: #fff; border-bottom: 2px solid #f0f0f0; }
+    .tab-bar-inner { max-width: 860px; margin: 0 auto; padding: 0 16px; display: flex; }
+    .tab-link { padding: 14px 20px; font-size: 14px; font-weight: 600; color: #888; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color 0.15s; white-space: nowrap; }
+    .tab-link:hover { color: #1F4E79; }
+    .tab-link.ativo { color: #1F4E79; border-bottom-color: #1F4E79; }
+
+    .page-hero { background: linear-gradient(135deg, #1F4E79, #0d2d4a); color: #fff; padding: 40px 24px 32px; text-align: center; }
+    .page-hero .badge { display: inline-block; background: #E8622A; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .page-hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+    .page-hero p { font-size: 15px; color: #a8c8e8; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 28px 16px; flex: 1; }
+
+    /* Acesso negado */
+    .acesso-negado { background: #fff; border-radius: 12px; padding: 40px 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .acesso-negado h2 { font-size: 26px; color: #0F2D4A; margin-bottom: 10px; }
+    .acesso-negado p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .btn-assinar { display: inline-block; background: #E8622A; color: #fff; font-weight: 700; padding: 12px 28px; border-radius: 24px; text-decoration: none; font-size: 15px; }
+    .btn-assinar:hover { background: #c94f1f; }
+
+    /* Separador de mês */
+    .mes-header { display: flex; align-items: center; gap: 12px; margin: 28px 0 14px; }
+    .mes-header h2 { font-size: 22px; color: #0F2D4A; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+    .mes-header .linha { flex: 1; height: 2px; background: #dde3ea; border-radius: 2px; }
+
+    /* Cards de evento */
+    .evento-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 12px; overflow: hidden; display: flex; border-left: 4px solid #E8622A; transition: box-shadow 0.15s; }
+    .evento-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.10); }
+    .evento-card.circuito { border-left-color: #4CBFCB; }
+
+    .ev-date-box { background: #0F2D4A; color: #fff; min-width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 10px; text-align: center; flex-shrink: 0; }
+    .evento-card.circuito .ev-date-box { background: #1a6370; }
+    .ev-date-box .dia { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+    .ev-date-box .mes { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; margin-top: 2px; }
+    .ev-date-box .ano { font-size: 10px; color: #7aaccc; margin-top: 1px; }
+
+    .ev-body { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }
+    .ev-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .ev-nome-wrap { flex: 1; min-width: 0; }
+    .ev-nome { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #0F2D4A; line-height: 1.1; }
+    .badge-circuito { display: inline-flex; align-items: center; gap: 4px; background: #e0f7f8; color: #1a6370; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 3px; border: 1px solid #b2e8ec; white-space: nowrap; }
+
+    .ev-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip { display: inline-block; background: #EBF3FB; color: #1F4E79; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .chip.cupom { background: #fff8e1; color: #b07800; }
+    .chip.cidade { background: #f0f4f8; color: #555; }
+    .chip.kit { background: #edf7ed; color: #1a6b2a; border: 1px solid #b6dfb6; }
+
+    .ev-link { flex-shrink: 0; align-self: center; }
+    .btn-site { display: inline-block; background: #1F4E79; color: #fff; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 20px; text-decoration: none; white-space: nowrap; }
+    .btn-site:hover { background: #163d62; }
+
+    .empty { text-align: center; padding: 48px 20px; color: #aaa; font-size: 15px; }
+    .loading { text-align: center; padding: 48px 20px; color: #888; }
+
+    footer { background: #0F2D4A; color: #a8c8e8; text-align: center; padding: 18px; font-size: 13px; margin-top: auto; }
+    footer a { color: #4CBFCB; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Circuito Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="assinantes.html">⭐ Área do Assinante</a>
+    <a href="circuito-assinantes.html">🏅 Circuito</a>
+    <a href="agenda-assinantes.html" class="ativo">🗓️ Agenda Completa</a>
+    <a href="perfil.html">👤 Meu Perfil</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="badge">⭐ Exclusivo para assinantes</div>
+  <h1>🗓️ Agenda Completa</h1>
+  <p>Todos os eventos de corrida da região, com cupons exclusivos para assinantes.</p>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <a href="circuito-assinantes.html" class="tab-link">🏅 Eventos do Circuito</a>
+    <a href="agenda-assinantes.html" class="tab-link ativo">🗓️ Agenda Completa</a>
+  </div>
+</div>
+
+<div class="container">
+  <div id="conteudo" style="display:none;">
+    <div id="listaAgenda" class="loading">Carregando eventos...</div>
+  </div>
+  <div id="telaAcesso" style="display:none;">
+    <div class="acesso-negado">
+      <h2>🔒 Conteúdo exclusivo</h2>
+      <p>Esta agenda é exclusiva para assinantes do Circuito Agenda Run.<br>Assine e tenha acesso a todos os eventos com cupons de desconto!</p>
+      <a href="assinatura.html" class="btn-assinar">⭐ Assinar agora — R$ 9,99/mês</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Circuito Agenda Run · <a href="mailto:agendarun@agendarun.com.br">agendarun@agendarun.com.br</a>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const hoje = new Date().toISOString().split('T')[0];
+    const { data: corredor } = await sb.from('corredores')
+      .select('assinante, assinante_ate')
+      .eq('user_id', session.user.id)
+      .single();
+
+    const ativo = corredor?.assinante && corredor?.assinante_ate >= hoje;
+    if (!ativo) { document.getElementById('telaAcesso').style.display = 'block'; return; }
+
+    document.getElementById('conteudo').style.display = 'block';
+    await carregar();
+  }
+
+  async function carregar() {
+    const div = document.getElementById('listaAgenda');
+    const { data: eventos, error } = await sb
+      .from('agenda_eventos')
+      .select('*')
+      .order('data', { ascending: true });
+
+    if (error || !eventos?.length) {
+      div.innerHTML = '<div class="empty">🏃 Nenhum evento cadastrado ainda. Volte em breve!</div>';
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // Agrupar por mês/ano
+    const grupos = {};
+    eventos.forEach(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const chave = dataEv ? `${dataEv.getFullYear()}-${dataEv.getMonth()}` : 'sem-data';
+      if (!grupos[chave]) grupos[chave] = { label: dataEv ? `${MESES[dataEv.getMonth()]} ${dataEv.getFullYear()}` : 'Sem data', eventos: [] };
+      grupos[chave].eventos.push(ev);
+    });
+
+    let html = '';
+    Object.values(grupos).forEach(grupo => {
+      html += `<div class="mes-header"><div class="linha"></div><h2>${grupo.label}</h2><div class="linha"></div></div>`;
+
+      grupo.eventos.forEach(ev => {
+        const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+        const passado = dataEv && dataEv < hoje;
+        const dia = dataEv ? dataEv.getDate().toString().padStart(2, '0') : '—';
+        const mesAbrev = dataEv ? dataEv.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : '';
+        const isCircuito = !!ev.circuito_agenda_run;
+
+        const chipDist = ev.distancias ? `<span class="chip">🏃 ${ev.distancias}</span>` : '';
+        const chipCidade = ev.cidade ? `<span class="chip cidade">📍 ${ev.cidade}</span>` : '';
+        const chipCupom = ev.cupom_desconto ? `<span class="chip cupom">🏷️ Cupom: <strong>${ev.cupom_desconto}</strong></span>` : '';
+        const chipKit = ev.kit_run ? `<span class="chip kit">📦 Kit Run: ${ev.kit_run}</span>` : '';
+        const badgeCircuito = isCircuito ? `<div class="badge-circuito">🏅 Circuito Agenda Run</div>` : '';
+        const btnLink = ev.link ? `<div class="ev-link"><a href="${ev.link}" target="_blank" class="btn-site">🔗 Ver evento</a></div>` : '';
+
+        html += `
+          <div class="evento-card${isCircuito ? ' circuito' : ''}" style="${passado ? 'opacity:0.5;' : ''}">
+            <div class="ev-date-box">
+              <div class="dia">${dia}</div>
+              <div class="mes">${mesAbrev}</div>
+            </div>
+            <div class="ev-body">
+              <div class="ev-top">
+                <div class="ev-nome-wrap">
+                  <div class="ev-nome">${ev.nome}</div>
+                  ${badgeCircuito}
+                </div>
+                ${btnLink}
+              </div>
+              <div class="ev-chips">${chipDist}${chipCidade}${chipCupom}${chipKit}</div>
+            </div>
+          </div>`;
+      });
+    });
+
+    div.innerHTML = html;
+  }
+
+  init();
+</script>
+</body>
+</html>

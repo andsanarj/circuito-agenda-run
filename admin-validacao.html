@@ -61,6 +61,7 @@
   </a>
   <div style="display:flex; align-items:center; gap:12px;">
     <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin-agenda.html" style="color:#fff; font-size:13px; font-weight:600; text-decoration:none; background:rgba(255,255,255,0.1); padding:7px 14px; border-radius:20px;">📅 Agenda</a>
     <a href="admin-assistente.html" class="btn-voltar">💬 WhatsApp</a>
     <a href="admin-assinantes.html" style="color:#fff; font-size:13px; font-weight:600; text-decoration:none; background:rgba(255,255,255,0.1); padding:7px 14px; border-radius:20px;">⭐ Assinantes</a>
     <button class="btn-sair" onclick="sair()">Sair</button>
@@ -165,14 +166,15 @@
           </td>
           <td style="min-width:180px;">
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
-                ✅ Aprovar (${r.pontos || 0} pts)
+              <button class="btn btn-green btn-sm" id="btn-aprovar-${r.id}" onclick="aprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
+                ✅ Aprovar (<span id="pts-label-${r.id}">${((r.pontos || 0) + (r.usou_kit_run ? calcularBonusKitRun(r.corredores) : 0)).toFixed(1).replace(/\.0$/, '')} pts</span>)
               </button>
               <div style="font-size:11px; padding:5px 8px; border-radius:5px; ${r.corredores?.assinante ? 'background:#e6f9f0; color:#1a7a4a;' : 'background:#f5f5f5; color:#aaa;'}; white-space:nowrap;">
                 ${r.corredores?.assinante ? `✅ Assinante (+${calcularBonusAssinante(r.corredores).toString().replace('.', ',')} pt já incluído)` : '⬜ Não é assinante'}
               </div>
               <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
-                <input type="checkbox" id="kitrun-${r.id}" ${r.usou_kit_run ? 'checked' : ''} style="width:auto; cursor:pointer;">
+                <input type="checkbox" id="kitrun-${r.id}" ${r.usou_kit_run ? 'checked' : ''} style="width:auto; cursor:pointer;"
+                  onchange="atualizarBtnAprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
                 +${calcularBonusKitRun(r.corredores).toString().replace('.', ',')} pt Kit Run Express${r.usou_kit_run ? ' <span style="color:#E8622A;">(atleta declarou uso)</span>' : ''}
               </label>
               <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">❌ Rejeitar</button>
@@ -200,6 +202,13 @@
   function calcularBonusKitRun(corredor) {
     // Assinante (qualquer tier) = 1 pt; não-assinante = 0,5 pt
     return corredor?.assinante ? 1 : 0.5;
+  }
+
+  function atualizarBtnAprovar(id, pontosBase, bonusKit) {
+    const checked = document.getElementById(`kitrun-${id}`)?.checked;
+    const total = (pontosBase || 0) + (checked ? bonusKit : 0);
+    const label = document.getElementById(`pts-label-${id}`);
+    if (label) label.textContent = parseFloat(total.toFixed(1)).toString().replace('.', ',') + ' pts';
   }
 
   function toggleRejeicao(id) { document.getElementById(`rejeicao-${id}`).classList.toggle('aberta'); }
