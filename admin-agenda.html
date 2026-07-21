@@ -229,31 +229,59 @@
     return new Date(dataStr + 'T12:00:00').toLocaleDateString('pt-BR');
   }
 
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
   async function carregar() {
     const div = document.getElementById('tabela');
     const { data, error } = await sb.from('agenda_eventos').select('*').order('data', { ascending: true });
     if (error) { div.innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
     if (!data?.length) { div.innerHTML = '<div class="empty">Nenhum evento cadastrado ainda.</div>'; return; }
 
-    let html = `<table><thead><tr>
-      <th>Nome</th><th>Data</th><th>Distâncias</th><th>Cidade</th><th>Cupom</th><th>Kit Run</th><th>Ações</th>
-    </tr></thead><tbody>`;
+    // Agrupar por mês
+    const grupos = {};
     data.forEach(ev => {
-      const badgeCircuito = ev.circuito_agenda_run ? `<span style="font-size:10px;background:#e0f7f8;color:#1a6370;border:1px solid #b2e8ec;padding:1px 7px;border-radius:10px;font-weight:700;">🏅 Circuito</span> ` : '';
-      html += `<tr>
-        <td>${badgeCircuito}<strong>${ev.nome}</strong>${ev.link ? `<br><a href="${ev.link}" target="_blank" style="font-size:11px;color:#1F4E79;">🔗 Ver evento</a>` : ''}</td>
-        <td style="white-space:nowrap;">${fmt(ev.data)}</td>
-        <td>${ev.distancias || '—'}</td>
-        <td>${ev.cidade || '—'}</td>
-        <td>${ev.cupom_desconto ? `<strong style="color:#b07800;">${ev.cupom_desconto}</strong>` : '—'}</td>
-        <td style="font-size:12px;color:#1a6b2a;">${ev.kit_run ? `📦 ${ev.kit_run}` : '—'}</td>
-        <td><div class="td-acoes">
-          <button class="btn btn-gray btn-sm" onclick="abrirEdicao('${ev.id}')">✏️ Editar</button>
-          <button class="btn btn-red btn-sm" onclick="excluir('${ev.id}', '${ev.nome.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
-        </div></td>
-      </tr>`;
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const chave = dataEv ? `${dataEv.getFullYear()}-${String(dataEv.getMonth()).padStart(2,'0')}` : 'z-sem-data';
+      const label = dataEv ? `${MESES[dataEv.getMonth()]} ${dataEv.getFullYear()}` : 'Sem data';
+      if (!grupos[chave]) grupos[chave] = { label, eventos: [] };
+      grupos[chave].eventos.push(ev);
     });
-    html += '</tbody></table>';
+
+    let html = '';
+    Object.values(grupos).forEach(grupo => {
+      html += `
+        <div style="display:flex;align-items:center;gap:12px;margin:28px 0 10px;">
+          <div style="flex:1;height:2px;background:#e5e9ef;border-radius:2px;"></div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#1F4E79;white-space:nowrap;text-transform:uppercase;letter-spacing:1px;">📅 ${grupo.label} <span style="font-weight:400;font-size:13px;color:#aaa;">(${grupo.eventos.length})</span></span>
+          <div style="flex:1;height:2px;background:#e5e9ef;border-radius:2px;"></div>
+        </div>
+        <table style="margin-bottom:8px;"><thead><tr>
+          <th>Nome</th><th>Data</th><th>Distâncias</th><th>Cidade</th><th>Cupom</th><th>Retirada de Kit</th><th>Ações</th>
+        </tr></thead><tbody>`;
+
+      grupo.eventos.forEach(ev => {
+        const badgeCircuito = ev.circuito_agenda_run ? `<span style="font-size:10px;background:#e0f7f8;color:#1a6370;border:1px solid #b2e8ec;padding:1px 7px;border-radius:10px;font-weight:700;">🏅 Circuito</span> ` : '';
+        const kitCell = ev.kit_run
+          ? ev.kit_run_link
+            ? `<a href="${ev.kit_run_link}" target="_blank" style="font-size:12px;color:#1a6b2a;text-decoration:none;">📦 ${ev.kit_run} →</a>`
+            : `<span style="font-size:12px;color:#1a6b2a;">📦 ${ev.kit_run}</span>`
+          : '—';
+        html += `<tr>
+          <td>${badgeCircuito}<strong>${ev.nome}</strong>${ev.link ? `<br><a href="${ev.link}" target="_blank" style="font-size:11px;color:#1F4E79;">🔗 Ver evento</a>` : ''}</td>
+          <td style="white-space:nowrap;">${fmt(ev.data)}</td>
+          <td>${ev.distancias || '—'}</td>
+          <td>${ev.cidade || '—'}</td>
+          <td>${ev.cupom_desconto ? `<strong style="color:#b07800;">${ev.cupom_desconto}</strong>` : '—'}</td>
+          <td>${kitCell}</td>
+          <td><div class="td-acoes">
+            <button class="btn btn-gray btn-sm" onclick="abrirEdicao('${ev.id}')">✏️ Editar</button>
+            <button class="btn btn-red btn-sm" onclick="excluir('${ev.id}', '${ev.nome.replace(/'/g,"\\'")}')">🗑️ Excluir</button>
+          </div></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    });
+
     div.innerHTML = html;
   }
 
