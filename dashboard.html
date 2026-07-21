@@ -515,13 +515,16 @@
 
       const chipCupom = ev.cupom_desconto ? `<span class="ag-chip cupom">🏷️ ${ev.cupom_desconto}</span>` : '';
 
+      const btnLink = ev.link ? `<a href="${ev.link}" target="_blank" style="flex-shrink:0;display:inline-block;background:#E8622A;color:#fff;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;text-decoration:none;white-space:nowrap;">🔗 Inscreva-se</a>` : '';
+
       return `
-        <div class="agenda-item">
+        <div class="agenda-item" style="align-items:center;">
           <div class="ag-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div></div>
           <div class="ag-info">
             <div class="ag-nome">${ev.nome}</div>
             <div class="ag-chips">${chipDist}${chipCidade}${chipCirc}${chipCupom}</div>
           </div>
+          ${btnLink}
         </div>`;
     }).join('');
 
