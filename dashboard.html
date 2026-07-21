@@ -121,41 +121,37 @@
     .btn-area-exc { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
     .btn-area-exc:hover { background: rgba(255,255,255,0.25); }
 
-    /* Kit Run Express no dashboard */
-    .kitrun-lock {
-      padding: 22px; background: linear-gradient(135deg, #fff8f6, #fff3ef);
-      border: 1.5px dashed #f0b89a; border-radius: 10px; text-align: center;
-    }
-    .kitrun-lock .lock-icon { font-size: 28px; margin-bottom: 10px; }
-    .kitrun-lock h4 { font-size: 17px; color: #1F4E79; margin-bottom: 6px; }
-    .kitrun-lock p { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 6px; }
-    .kitrun-beneficios {
-      background: #fff; border-radius: 8px; padding: 12px 16px;
-      margin: 12px 0; text-align: left; border: 1px solid #f0e0d8;
-    }
-    .kitrun-beneficios .b-title { font-size: 11px; font-weight: 700; color: #E8622A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .kitrun-beneficios ul { padding-left: 18px; }
-    .kitrun-beneficios li { font-size: 13px; color: #444; margin-bottom: 5px; line-height: 1.4; }
-    .kitrun-aviso { font-size: 11px; color: #999; font-style: italic; margin-top: 8px; }
-    .btn-assinar-kit {
-      display: inline-block; background: #E8622A; color: #fff;
-      padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 700;
-      text-decoration: none; font-family: 'Barlow Condensed', sans-serif;
-      text-transform: uppercase; letter-spacing: 1px; margin-top: 12px;
-    }
-    .btn-assinar-kit:hover { background: #c94f1f; }
+    /* Calendário de corridas */
+    .agenda-item { padding: 13px 0; border-bottom: 1px solid #f5f5f5; display: flex; gap: 14px; align-items: flex-start; }
+    .agenda-item:last-child { border-bottom: none; }
+    .ag-date-box { background: #1F4E79; color: #fff; border-radius: 8px; padding: 8px 10px; text-align: center; min-width: 48px; flex-shrink: 0; }
+    .ag-date-box .dia { font-size: 20px; font-weight: 800; line-height: 1; }
+    .ag-date-box .mes { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #a8c8e8; }
+    .ag-info { flex: 1; min-width: 0; }
+    .ag-nome { font-weight: 700; color: #222; font-size: 14px; margin-bottom: 4px; }
+    .ag-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ag-chip { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+    .ag-chip.cidade { background: #f0f4f8; color: #555; }
+    .ag-chip.dist   { background: #fff0ea; color: #b04010; font-weight: 700; }
+    .ag-chip.cupom  { background: #fff8e1; color: #b07800; font-weight: 700; }
+    .ag-chip.kit    { background: #edf7ed; color: #1a6b2a; border: 1px solid #b6dfb6; font-weight: 700; }
+    .ag-chip.circ   { background: #eaf6fb; color: #1a6370; border: 1px solid #a3dce8; font-weight: 700; }
+    .cupom-blur { filter: blur(4px); user-select: none; pointer-events: none; }
 
-    /* Tabela Kit Run no dashboard */
-    .kit-dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .kit-dash-table thead th { background: #f0f4f8; padding: 8px 12px; text-align: center; font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kit-dash-table thead th:first-child { text-align: left; }
-    .kit-dash-table tbody tr { border-bottom: 1px solid #f0f0f0; }
-    .kit-dash-table tbody tr:last-child { border-bottom: none; }
-    .kit-dash-table tbody td { padding: 10px 12px; color: #333; vertical-align: middle; text-align: center; }
-    .kit-dash-table tbody td:first-child { text-align: left; font-weight: 700; }
-    .prazo-chip-sm { display: inline-block; background: #fff8e1; color: #b07800; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-    .prazo-chip-sm.vencido { background: #fdecea; color: #b00020; }
-    .kitrun-footer-note { font-size: 11px; color: #888; padding: 10px 0 0; border-top: 1px solid #f0f0f0; margin-top: 6px; font-style: italic; }
+    /* Upsell assinatura no calendário */
+    .agenda-upsell { background: linear-gradient(135deg, #0F2D4A, #1F4E79); border-radius: 12px; padding: 22px 24px; margin-top: 6px; }
+    .agenda-upsell .au-tag { display: inline-block; background: rgba(232,98,42,0.2); color: #ffb38a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(232,98,42,0.35); }
+    .agenda-upsell h4 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.2; }
+    .agenda-upsell p { font-size: 13px; color: #a8c8e8; line-height: 1.7; margin-bottom: 14px; }
+    .beneficios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    @media (max-width: 480px) { .beneficios-grid { grid-template-columns: 1fr; } }
+    .ben-item { background: rgba(255,255,255,0.07); border-radius: 8px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 8px; }
+    .ben-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .ben-txt { font-size: 12px; color: #c8d8e8; line-height: 1.5; }
+    .ben-txt strong { color: #fff; display: block; font-size: 13px; margin-bottom: 1px; }
+    .btn-assinar-agenda { display: inline-block; background: #E8622A; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 12px 28px; border-radius: 8px; text-decoration: none; }
+    .btn-assinar-agenda:hover { background: #c94f1f; }
+    .au-preco { font-size: 12px; color: #7fa8c8; margin-top: 8px; }
 
     /* Sorteios no dashboard */
     .sorteio-dash-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; flex-wrap: wrap; }
@@ -185,7 +181,6 @@
   <nav>
     <a href="dashboard.html" class="ativo">🏠 Painel</a>
     <a href="eventos.html">📅 Eventos</a>
-    <a href="kitrun-eventos.html">📦 Kit Run</a>
     <a href="ranking.html">🏆 Ranking</a>
     <a href="perfil.html">👤 Perfil</a>
     <button class="btn-sair" onclick="sair()">Sair</button>
@@ -243,14 +238,14 @@
       </div>
     </div>
 
-    <!-- Kit Run Express -->
+    <!-- Calendário de Corridas -->
     <div class="card" style="margin-bottom:24px;">
       <div class="card-head">
-        <h3>🏃 Kit Run Express</h3>
-        <a href="assinantes.html" id="linkKitRunCompleto" style="display:none;">Ver detalhes →</a>
+        <h3>🗓️ Calendário de Corridas</h3>
+        <a href="agenda-assinantes.html" id="linkAgendaCompleta" style="display:none;">Agenda completa →</a>
       </div>
       <div class="card-body">
-        <div id="kitRunDashboard" class="loading">Carregando...</div>
+        <div id="agendaDashboard" class="loading">Carregando...</div>
       </div>
     </div>
 
@@ -332,7 +327,7 @@
       carregarRanking(corredor.id),
       carregarProximasEventos(corredor.id),
       carregarMinhasCorridas(corredor.id),
-      carregarKitRunDashboard(corredor.id, corredor.assinante, corredor.assinante_desde),
+      carregarAgendaDashboard(corredor.assinante),
       carregarSorteiosDashboard(corredor.id, corredor.assinante),
     ]);
   }
@@ -487,81 +482,92 @@
     }).join('');
   }
 
-  async function carregarKitRunDashboard(corredorIdParam, isAssinante, assinante_desde) {
-    function calcularNivelKit(desde) {
-      if (!desde) return 1;
-      const meses = (new Date() - new Date(desde)) / (1000 * 60 * 60 * 24 * 30.44);
-      return Math.max(1, Math.floor(meses) + 1);
-    }
-    const nivelKit = isAssinante ? calcularNivelKit(assinante_desde) : 0;
-    const retiradaTexto = nivelKit >= 9 ? '1 retirada gratuita por mês' : nivelKit >= 5 ? '1 retirada gratuita a cada 2 meses' : '1 retirada gratuita a cada 3 meses';
-    const div = document.getElementById('kitRunDashboard');
-
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const fmt = (d) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+  async function carregarAgendaDashboard(isAssinante) {
+    const div = document.getElementById('agendaDashboard');
+    const hoje = new Date().toISOString().split('T')[0];
 
     const { data: eventos } = await sb
-      .from('kit_run_eventos')
-      .select('id, corrida, data, local, valor')
+      .from('agenda_eventos')
+      .select('id, nome, data, distancias, cidade, cupom_desconto, circuito_agenda_run, kit_run')
+      .gte('data', hoje)
       .order('data', { ascending: true })
-      .limit(4);
+      .limit(15);
 
-    const tabelaHtml = eventos && eventos.length > 0 ? `
-      <table class="kit-dash-table" style="margin-top:14px;">
-        <thead>
-          <tr>
-            <th>Corrida</th>
-            <th>Data</th>
-            <th>Local</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${eventos.map(ev => `<tr>
-            <td>${ev.corrida}</td>
-            <td>${fmt(ev.data)}</td>
-            <td>${ev.local || '—'}</td>
-            <td>${ev.valor != null ? 'R$ ' + parseFloat(ev.valor).toFixed(2).replace('.', ',') : '—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    ` : `<div class="empty" style="padding:16px 0 6px;">Nenhum evento cadastrado no momento.</div>`;
-
-    if (!isAssinante) {
-      div.innerHTML = `
-        <div class="kitrun-lock">
-          <div class="lock-icon">⭐</div>
-          <h4>Serviço exclusivo para assinantes</h4>
-          <p>Assinantes têm condições especiais no serviço de retirada de kit da <strong>Kit Run Express</strong>.</p>
-          <div class="kitrun-beneficios">
-            <div class="b-title">🎁 Benefícios incluídos na assinatura</div>
-            <ul>
-              <li><strong>1 retirada gratuita</strong> a cada 2 meses</li>
-              <li><strong>50% de desconto</strong> nas demais retiradas</li>
-            </ul>
-          </div>
-          <p class="kitrun-aviso">⚠️ Benefício exclusivo e intransferível — não se aplica a terceiros.</p>
-          <a href="perfil.html" class="btn-assinar-kit">⭐ Assinar por R$ 9,99/mês</a>
-        </div>
-        ${tabelaHtml}
-      `;
+    if (!eventos || eventos.length === 0) {
+      div.innerHTML = '<div class="empty">Nenhuma corrida cadastrada ainda.</div>';
       return;
     }
 
-    // É assinante
-    document.getElementById('linkKitRunCompleto').style.display = 'inline';
+    if (isAssinante) {
+      document.getElementById('linkAgendaCompleta').style.display = 'inline';
+    }
 
-    div.innerHTML = `
-      <div class="kitrun-beneficios" style="margin:0 0 4px;">
-        <div class="b-title">🎁 Seus benefícios ativos</div>
-        <ul>
-          <li><strong>${retiradaTexto}</strong></li>
-          <li><strong>50% de desconto</strong> nas demais retiradas</li>
-        </ul>
-      </div>
-      ${tabelaHtml}
-      <div class="kitrun-footer-note">⚠️ Benefício exclusivo e intransferível — não se aplica a terceiros. <a href="assinantes.html" style="color:#1F4E79; font-weight:700; text-decoration:none;">Registrar interesse →</a></div>
-    `;
+    const MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+    const eventosHtml = eventos.map(ev => {
+      const dataEv = ev.data ? new Date(ev.data + 'T12:00:00') : null;
+      const dia = dataEv ? dataEv.getDate().toString().padStart(2,'0') : '—';
+      const mes = dataEv ? MESES_ABREV[dataEv.getMonth()] : '';
+
+      const chipCidade = ev.cidade         ? `<span class="ag-chip cidade">📍 ${ev.cidade}</span>` : '';
+      const chipDist   = ev.distancias     ? `<span class="ag-chip dist">🏃 ${ev.distancias}</span>` : '';
+      const chipCirc   = ev.circuito_agenda_run ? `<span class="ag-chip circ">🏅 Circuito</span>` : '';
+
+      let chipCupom = '';
+      if (ev.cupom_desconto) {
+        if (isAssinante) {
+          chipCupom = `<span class="ag-chip cupom">🏷️ ${ev.cupom_desconto}</span>`;
+        } else {
+          chipCupom = `<span class="ag-chip cupom cupom-blur">🏷️ CUPOM</span>`;
+        }
+      }
+
+      return `
+        <div class="agenda-item">
+          <div class="ag-date-box"><div class="dia">${dia}</div><div class="mes">${mes}</div></div>
+          <div class="ag-info">
+            <div class="ag-nome">${ev.nome}</div>
+            <div class="ag-chips">${chipDist}${chipCidade}${chipCirc}${chipCupom}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const upsellHtml = !isAssinante ? `
+      <div class="agenda-upsell">
+        <div class="au-tag">⭐ Exclusivo para assinantes</div>
+        <h4>Quer ver o calendário completo com todos os cupons de desconto?</h4>
+        <p>Assinantes têm acesso à agenda completa com todos os cupons exclusivos, destaque nos eventos do Circuito e muito mais. Por menos de R$ 10/mês você aproveita tudo:</p>
+        <div class="beneficios-grid">
+          <div class="ben-item">
+            <div class="ben-icon">🏷️</div>
+            <div class="ben-txt"><strong>Cupons de desconto</strong>Códigos exclusivos em todas as corridas parceiras</div>
+          </div>
+          <div class="ben-item">
+            <div class="ben-icon">🗓️</div>
+            <div class="ben-txt"><strong>Agenda completa</strong>Acesso a todos os eventos com filtros e datas atualizadas</div>
+          </div>
+          <div class="ben-item">
+            <div class="ben-icon">🏅</div>
+            <div class="ben-txt"><strong>Bônus de pontos</strong>+0,5 a +1 pt por evento — suba mais rápido no ranking</div>
+          </div>
+          <div class="ben-item">
+            <div class="ben-icon">🎰</div>
+            <div class="ben-txt"><strong>Sorteios exclusivos</strong>Cortesias, produtos Agenda Run e muito mais</div>
+          </div>
+          <div class="ben-item">
+            <div class="ben-icon">🥉</div>
+            <div class="ben-txt"><strong>Níveis de fidelidade</strong>Bronze → Prata → Ouro → Elite com benefícios crescentes</div>
+          </div>
+          <div class="ben-item">
+            <div class="ben-icon">🎁</div>
+            <div class="ben-txt"><strong>Brinde anual</strong>Nível Elite: boné ou camiseta Agenda Run por temporada</div>
+          </div>
+        </div>
+        <a href="assinatura.html" class="btn-assinar-agenda">⭐ Assinar agora — R$ 9,99/mês</a>
+        <div class="au-preco">Cancele quando quiser. Sem fidelidade.</div>
+      </div>` : '';
+
+    div.innerHTML = eventosHtml + upsellHtml;
   }
 
   let _sorteiosDashInscrito = new Set();
