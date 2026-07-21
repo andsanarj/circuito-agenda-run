@@ -194,7 +194,11 @@
         const chipDist = ev.distancias ? `<span class="chip">🏃 ${ev.distancias}</span>` : '';
         const chipCidade = ev.cidade ? `<span class="chip cidade">📍 ${ev.cidade}</span>` : '';
         const chipCupom = ev.cupom_desconto ? `<span class="chip cupom">🏷️ Cupom: <strong>${ev.cupom_desconto}</strong></span>` : '';
-        const chipKit = ev.kit_run ? `<span class="chip kit">📦 Kit Run: ${ev.kit_run}</span>` : '';
+        const chipKit = ev.kit_run
+          ? ev.kit_run_link
+            ? `<a href="${ev.kit_run_link}" target="_blank" class="chip kit" style="text-decoration:none;">📦 Retirada de Kit: ${ev.kit_run} →</a>`
+            : `<span class="chip kit">📦 Retirada de Kit: ${ev.kit_run}</span>`
+          : '';
         const badgeCircuito = isCircuito ? `<div class="badge-circuito">🏅 Circuito Agenda Run</div>` : '';
         const btnLink = ev.link ? `<div class="ev-link"><a href="${ev.link}" target="_blank" class="btn-site">🔗 Ver evento</a></div>` : '';
 

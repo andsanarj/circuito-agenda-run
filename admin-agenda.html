@@ -124,8 +124,12 @@
         <input type="url" id="fLink" placeholder="https://...">
       </div>
       <div class="form-group full">
-        <label>Serviço de retirada de Kit Run</label>
-        <input type="text" id="fKitRun" placeholder="Ex: Retirada disponível — entre em contato">
+        <label>Serviço de retirada de Kit</label>
+        <input type="text" id="fKitRun" placeholder="Ex: Kit Run Express, Corre Fácil…">
+      </div>
+      <div class="form-group full">
+        <label>Link do serviço de retirada de Kit</label>
+        <input type="url" id="fKitRunLink" placeholder="https://...">
       </div>
       <div class="form-group full" style="flex-direction:row; align-items:center; gap:10px; padding:10px 12px; background:#e0f7f8; border-radius:8px;">
         <input type="checkbox" id="fCircuito" style="width:18px;height:18px;cursor:pointer;accent-color:#1a6370;">
@@ -182,8 +186,12 @@
         <input type="url" id="editLink">
       </div>
       <div class="form-group full">
-        <label>Serviço de retirada de Kit Run</label>
-        <input type="text" id="editKitRun" placeholder="Ex: Retirada disponível — entre em contato">
+        <label>Serviço de retirada de Kit</label>
+        <input type="text" id="editKitRun" placeholder="Ex: Kit Run Express, Corre Fácil…">
+      </div>
+      <div class="form-group full">
+        <label>Link do serviço de retirada de Kit</label>
+        <input type="url" id="editKitRunLink" placeholder="https://...">
       </div>
       <div class="form-group full" style="flex-direction:row; align-items:center; gap:10px; padding:10px 12px; background:#e0f7f8; border-radius:8px;">
         <input type="checkbox" id="editCircuito" style="width:18px;height:18px;cursor:pointer;accent-color:#1a6370;">
@@ -262,6 +270,7 @@
       cupom_desconto: document.getElementById('fCupom').value.trim() || null,
       link: document.getElementById('fLink').value.trim() || null,
       kit_run: document.getElementById('fKitRun').value.trim() || null,
+      kit_run_link: document.getElementById('fKitRunLink').value.trim() || null,
       circuito_agenda_run: document.getElementById('fCircuito').checked,
     }]);
 
@@ -293,6 +302,7 @@
     document.getElementById('editCupom').value = ev.cupom_desconto || '';
     document.getElementById('editLink').value = ev.link || '';
     document.getElementById('editKitRun').value = ev.kit_run || '';
+    document.getElementById('editKitRunLink').value = ev.kit_run_link || '';
     document.getElementById('editCircuito').checked = !!ev.circuito_agenda_run;
     document.getElementById('msgEdicao').className = 'msg';
     document.getElementById('modalOverlay').classList.add('aberto');
@@ -316,6 +326,7 @@
       cupom_desconto: document.getElementById('editCupom').value.trim() || null,
       link: document.getElementById('editLink').value.trim() || null,
       kit_run: document.getElementById('editKitRun').value.trim() || null,
+      kit_run_link: document.getElementById('editKitRunLink').value.trim() || null,
       circuito_agenda_run: document.getElementById('editCircuito').checked,
     }).eq('id', id);
 
