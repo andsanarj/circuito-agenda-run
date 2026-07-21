@@ -362,7 +362,7 @@
     renderizar(dadosCompletos);
 
     // Stats
-    const { count: totalCorredores } = await client.from('corredores').select('*', { count: 'exact', head: true });
+    const { count: totalCorredores } = await client.from('corredores_publico').select('*', { count: 'exact', head: true });
     const { count: totalEventos } = await client.from('eventos').select('*', { count: 'exact', head: true }).eq('ativo', true);
     const totalPts = dadosCompletos.reduce((s, r) => s + (r.total_pontos || 0), 0);
 

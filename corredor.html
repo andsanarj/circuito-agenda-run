@@ -169,7 +169,7 @@
     }
 
     // Buscar corredor
-    let query = sb.from('corredores').select('id, nome, cidade, sexo, instagram, assinante, assinante_desde');
+    let query = sb.from('corredores_publico').select('id, nome, cidade, sexo, instagram, assinante, assinante_desde');
     if (handleParam) query = query.ilike('instagram', handleParam);
     else              query = query.eq('id', idParam);
 
