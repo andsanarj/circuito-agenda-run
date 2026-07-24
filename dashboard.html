@@ -571,29 +571,23 @@
   async function carregarSorteiosDashboard(corredorIdParam, isAssinante) {
     const div = document.getElementById('sorteiosDashboard');
 
-    if (!isAssinante) {
-      div.innerHTML = `
-        <div class="sorteio-lock-dash">
-          <div class="lock-icon">🔒</div>
-          <p>Sorteios de cortesias e produtos Agenda Run exclusivos para assinantes.</p>
-          <a href="perfil.html" class="btn-assinar-sorteio-dash">⭐ Assinar por R$ 9,99/mês</a>
-        </div>`;
-      return;
-    }
-
-    const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
+    const promises = [
       sb.from('sorteios')
         .select('id, titulo, premio, data_evento, local, data_sorteio, status')
         .eq('status', 'aberto')
         .order('created_at', { ascending: false })
-        .limit(3),
-      sb.from('sorteio_inscricoes')
-        .select('sorteio_id')
-        .eq('corredor_id', corredorIdParam)
-    ]);
+        .limit(3)
+    ];
+    if (isAssinante) {
+      promises.push(
+        sb.from('sorteio_inscricoes').select('sorteio_id').eq('corredor_id', corredorIdParam)
+      );
+    }
 
-    _sorteiosDashInscrito = new Set((minhasInscs || []).map(i => i.sorteio_id));
-    document.getElementById('linkSorteiosCompleto').style.display = 'inline';
+    const [{ data: sorteios }, inscsResult] = await Promise.all(promises);
+    _sorteiosDashInscrito = new Set((inscsResult?.data || []).map(i => i.sorteio_id));
+
+    if (isAssinante) document.getElementById('linkSorteiosCompleto').style.display = 'inline';
 
     if (!sorteios || sorteios.length === 0) {
       div.innerHTML = '<div class="empty">Nenhum sorteio aberto no momento.</div>';
@@ -602,16 +596,23 @@
 
     const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : null;
 
-    div.innerHTML = sorteios.map(s => {
-      const inscrito = _sorteiosDashInscrito.has(s.id);
-      const btn = inscrito
-        ? `<button class="btn-sorteio-dash inscrito" onclick="toggleSorteioDash('${s.id}', this)">✓ Inscrito</button>`
-        : `<button class="btn-sorteio-dash" onclick="toggleSorteioDash('${s.id}', this)">🎰 Participar</button>`;
+    const listHtml = sorteios.map(s => {
       const metaParts = [
         s.data_evento  ? `🏃 ${fmt(s.data_evento)}` : null,
         s.local        ? `📍 ${s.local}` : null,
-        s.data_sorteio ? `🎰 ${fmt(s.data_sorteio)}` : null,
+        s.data_sorteio ? `🎰 Sorteio: ${fmt(s.data_sorteio)}` : null,
       ].filter(Boolean).join(' · ');
+
+      let btn;
+      if (isAssinante) {
+        const inscrito = _sorteiosDashInscrito.has(s.id);
+        btn = inscrito
+          ? `<button class="btn-sorteio-dash inscrito" onclick="toggleSorteioDash('${s.id}', this)">✓ Inscrito</button>`
+          : `<button class="btn-sorteio-dash" onclick="toggleSorteioDash('${s.id}', this)">🎰 Participar</button>`;
+      } else {
+        btn = `<a href="assinatura.html" class="btn-sorteio-dash" style="text-decoration:none;background:#aaa;font-size:11px;">🔒 Só assinantes</a>`;
+      }
+
       return `
         <div class="sorteio-dash-item">
           <div class="sorteio-dash-info">
@@ -622,6 +623,17 @@
           ${btn}
         </div>`;
     }).join('');
+
+    const ctaHtml = !isAssinante ? `
+      <div style="margin-top:14px;background:linear-gradient(135deg,#1F4E79,#0d2d4a);border-radius:10px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:3px;">⭐ Quer concorrer também?</div>
+          <div style="font-size:12px;color:#a8c8e8;line-height:1.5;">Assine o Circuito por <strong style="color:#4CBFCB;">R$ 9,99/mês</strong> e participe de todos os sorteios exclusivos — cortesias, produtos Agenda Run e muito mais.</div>
+        </div>
+        <a href="assinatura.html" style="background:#E8622A;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Assinar agora</a>
+      </div>` : '';
+
+    div.innerHTML = listHtml + ctaHtml;
   }
 
   async function toggleSorteioDash(sorteioId, btn) {
