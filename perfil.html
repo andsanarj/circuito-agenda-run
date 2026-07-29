@@ -1146,14 +1146,27 @@
       const bonusPts = isOuroElite ? '+1 pt' : '+0,5 pt';
       status.innerHTML = `⭐ Você é assinante do Circuito! ${seloHtml}`;
       status.style.color = '#1a7a4a';
-      const ate = corredor.assinante_ate ? `Ativo até ${new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR')} · ` : '';
       const retirada = nivel >= 9 ? '1 retirada gratuita por mês' : nivel >= 5 ? '1 retirada gratuita a cada 2 meses' : '1 retirada gratuita a cada 3 meses';
       const extras = nivel >= 13
         ? '🎁 Sorteios de cortesias e produtos Agenda Run · 1 boné ou 1 camiseta Agenda Run'
         : isOuroElite
           ? '🎁 Sorteios de cortesias e produtos Agenda Run'
           : '🎁 Sorteios de cortesias';
-      texto.innerHTML = `${ate}${bonusPts} bônus por evento · ${retirada} · 50% desconto nas demais<br>${extras}`;
+
+      let validadeHtml = '';
+      if (corredor.assinante_ate) {
+        const venc = new Date(corredor.assinante_ate + 'T23:59:59');
+        const hoje = new Date();
+        const diasRestantes = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
+        const dataFmt = new Date(corredor.assinante_ate + 'T12:00:00').toLocaleDateString('pt-BR');
+        const cor = diasRestantes <= 7 ? '#b00020' : diasRestantes <= 15 ? '#b07800' : '#1a7a4a';
+        const alerta = diasRestantes <= 7 ? ' ⚠️ Renovar em breve!' : diasRestantes <= 15 ? ' — renovar em breve' : '';
+        validadeHtml = `<div style="display:inline-flex;align-items:center;gap:6px;background:#f0faf4;border:1px solid #a3e6c8;border-radius:8px;padding:5px 12px;margin-bottom:8px;font-size:13px;font-weight:700;color:${cor};">
+          📅 Válida até ${dataFmt}${alerta}
+        </div><br>`;
+      }
+
+      texto.innerHTML = `${validadeHtml}${bonusPts} bônus por evento · ${retirada} · 50% desconto nas demais<br>${extras}`;
       badge.style.display = 'inline-block';
       document.getElementById('btnAreaAssinantes').style.display = 'inline-block';
     } else {
