@@ -71,73 +71,68 @@
 <div id="conteudo" style="display:none;">
 <div class="container">
 
-  <!-- Status atual -->
+  <!-- Lista de temporadas -->
   <div class="card">
-    <div class="card-header"><h2>📊 Status da Temporada Atual</h2></div>
+    <div class="card-header"><h2>📋 Temporadas</h2></div>
+    <div id="listaTemporadas" style="font-size:14px;color:#888;">Carregando...</div>
+  </div>
+
+  <!-- Criar nova temporada -->
+  <div class="card">
+    <div class="card-header"><h2>➕ Criar Nova Temporada</h2></div>
+
+    <div class="aviso" style="background:#e8f4fb;border-color:#b2d8f0;">
+      <strong style="color:#1F4E79;">ℹ️ Pode criar a próxima temporada agora mesmo.</strong>
+      Ela ficará como <strong>Futura</strong> até você ativá-la. Isso permite cadastrar eventos com antecedência sem afetar a temporada atual.
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+      <div style="grid-column:1/-1;">
+        <label>Nome da temporada</label>
+        <input type="text" id="novaNome" placeholder="Ex: Temporada 2027">
+      </div>
+      <div>
+        <label>Data de início</label>
+        <input type="date" id="novaInicio" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
+      </div>
+      <div>
+        <label>Data de encerramento</label>
+        <input type="date" id="novaFim" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="criarTemporada()">➕ Criar temporada</button>
+    <div id="msgCriar" class="msg"></div>
+  </div>
+
+  <!-- Status ranking atual -->
+  <div class="card">
+    <div class="card-header"><h2>📊 Estatísticas da Temporada Ativa</h2></div>
     <div class="stats" id="statsTemporada">
       <div class="stat-box"><div class="num" id="statCorredores">—</div><div class="lbl">Corredores</div></div>
       <div class="stat-box"><div class="num" id="statResultados">—</div><div class="lbl">Resultados</div></div>
       <div class="stat-box"><div class="num" id="statAprovados">—</div><div class="lbl">Aprovados</div></div>
       <div class="stat-box"><div class="num" id="statEventos">—</div><div class="lbl">Eventos</div></div>
     </div>
-    <p style="font-size:13px; color:#888;">Estes dados serão preservados ao iniciar uma nova temporada.</p>
-  </div>
-
-  <!-- Temporada ativa -->
-  <div class="card">
-    <div class="card-header"><h2>🏁 Temporada Ativa</h2></div>
-    <div id="infoTemporadaAtiva" style="font-size:14px;color:#555;line-height:1.8;">Carregando...</div>
-  </div>
-
-  <!-- Iniciar nova temporada -->
-  <div class="card">
-    <div class="card-header"><h2>🚀 Iniciar Nova Temporada</h2></div>
-
-    <div class="aviso">
-      <strong>ℹ️ Use quando a temporada anterior já foi encerrada.</strong>
-      Preencha o nome e as datas da nova temporada. Isso atualiza as configurações do sistema sem mexer nos dados dos corredores.
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-      <div style="grid-column:1/-1;">
-        <label>Nome da temporada</label>
-        <input type="text" id="novaTemporadaNome" placeholder="Ex: Temporada 2027">
-      </div>
-      <div>
-        <label>Data de início</label>
-        <input type="date" id="novaTemporadaInicio" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
-      </div>
-      <div>
-        <label>Data de encerramento</label>
-        <input type="date" id="novaTemporadaFim" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="iniciarNovaTemporada()">🚀 Salvar e ativar temporada</button>
-    <div id="msgNovaTemporada" class="msg"></div>
+    <p style="font-size:13px; color:#888;">Estes dados serão preservados ao encerrar a temporada.</p>
   </div>
 
   <!-- Encerrar temporada -->
   <div class="card">
-    <div class="card-header"><h2>⚙️ Encerrar Temporada</h2></div>
+    <div class="card-header"><h2>⚙️ Encerrar Temporada Ativa</h2></div>
 
     <div class="aviso">
       <strong>⚠️ O que acontece ao encerrar:</strong>
-      Todos os resultados aprovados são arquivados. Os pontos dos corredores são zerados para iniciar a nova contagem.
-      Os resultados pendentes continuam em espera — revise-os antes de encerrar.
+      Todos os resultados aprovados são arquivados. Os resultados pendentes continuam em espera — revise-os antes de encerrar.
       O histórico completo é preservado e pode ser consultado em <a href="admin-historico.html" style="color:#c77700; font-weight:700;">Histórico de Validações</a>.
     </div>
 
     <div class="perigo">
       <strong>🔴 Esta ação não pode ser desfeita.</strong>
-      Certifique-se de que todos os resultados foram validados, o ranking foi conferido e os prêmios (se houver) foram definidos antes de prosseguir.
+      Certifique-se de que todos os resultados foram validados e o ranking foi conferido antes de prosseguir.
+      Você pode usar o botão <strong>"⏹ Encerrar"</strong> diretamente na lista de temporadas acima.
     </div>
 
-    <div>
-      <label>Para confirmar, digite: <strong>ENCERRAR TEMPORADA</strong></label>
-      <input type="text" id="confirmacaoTexto" placeholder="ENCERRAR TEMPORADA">
-      <button class="btn btn-danger" id="btnEncerrar" onclick="encerrarTemporada()" disabled>⚠️ Encerrar Temporada e Iniciar Nova</button>
-      <div id="msgEncerrar" class="msg"></div>
-    </div>
+    <div id="msgEncerrar" class="msg"></div>
   </div>
 
   <!-- Ações auxiliares -->
@@ -182,60 +177,78 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('conteudo').style.display = 'block';
-    await Promise.all([carregarStats(), carregarTemporadaAtiva()]);
+    await Promise.all([carregarStats(), carregarTemporadas()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
 
-  async function carregarTemporadaAtiva() {
-    const { data } = await sb.from('config').select('*').limit(1).single();
-    const div = document.getElementById('infoTemporadaAtiva');
-    if (!data) {
-      div.innerHTML = '<span style="color:#aaa;">Nenhuma temporada configurada.</span>';
+  const STATUS_LABELS = { futura: '🔵 Futura', ativa: '🟢 Ativa', encerrada: '⚫ Encerrada' };
+  const STATUS_COLORS = { futura: '#1F4E79', ativa: '#1a7a4a', encerrada: '#888' };
+
+  async function carregarTemporadas() {
+    const div = document.getElementById('listaTemporadas');
+    const { data, error } = await sb.from('temporadas').select('*').order('created_at', { ascending: false });
+    if (error || !data?.length) {
+      div.innerHTML = '<p style="color:#aaa;text-align:center;padding:16px;">Nenhuma temporada cadastrada ainda.<br>Use o formulário abaixo para criar a primeira.</p>';
       return;
     }
     const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-    div.innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;gap:20px;">
-        <div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Nome</span><br><strong style="font-size:18px;color:#1F4E79;">${data.temporada || '—'}</strong></div>
-        ${data.data_inicio ? `<div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Início</span><br><strong>${fmtDate(data.data_inicio)}</strong></div>` : ''}
-        ${data.data_fim ? `<div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Encerramento</span><br><strong>${fmtDate(data.data_fim)}</strong></div>` : ''}
-      </div>`;
-    // Preenche o form com os valores atuais
-    if (data.temporada) document.getElementById('novaTemporadaNome').value = data.temporada;
-    if (data.data_inicio) document.getElementById('novaTemporadaInicio').value = data.data_inicio;
-    if (data.data_fim) document.getElementById('novaTemporadaFim').value = data.data_fim;
+    div.innerHTML = data.map(t => `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:10px;background:#f7f9fb;margin-bottom:12px;border-left:4px solid ${STATUS_COLORS[t.status]};">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#1F4E79;font-family:'Barlow Condensed',sans-serif;">${t.nome}</div>
+          <div style="font-size:12px;color:#888;margin-top:3px;">${fmtDate(t.data_inicio)} → ${fmtDate(t.data_fim)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:700;color:${STATUS_COLORS[t.status]};background:${t.status==='ativa'?'#e6f9f0':t.status==='futura'?'#e8f4fb':'#f0f0f0'};padding:4px 10px;border-radius:20px;">${STATUS_LABELS[t.status]}</span>
+          ${t.status === 'futura' ? `<button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="ativarTemporada('${t.id}','${t.nome}')">✅ Ativar</button>` : ''}
+          ${t.status === 'ativa' ? `<button class="btn btn-danger" style="font-size:12px;padding:6px 14px;" onclick="encerrarTemporadaById('${t.id}','${t.nome}')">⏹ Encerrar</button>` : ''}
+        </div>
+      </div>`).join('');
   }
 
-  async function iniciarNovaTemporada() {
-    const nome   = document.getElementById('novaTemporadaNome').value.trim();
-    const inicio = document.getElementById('novaTemporadaInicio').value;
-    const fim    = document.getElementById('novaTemporadaFim').value;
-    const msg    = document.getElementById('msgNovaTemporada');
+  async function criarTemporada() {
+    const nome   = document.getElementById('novaNome').value.trim();
+    const inicio = document.getElementById('novaInicio').value;
+    const fim    = document.getElementById('novaFim').value;
+    const msg    = document.getElementById('msgCriar');
 
     if (!nome) { msg.textContent = 'Informe o nome da temporada.'; msg.className = 'msg error'; return; }
 
-    const { data: cfg } = await sb.from('config').select('id').limit(1).single();
-    let error;
-
-    if (cfg?.id) {
-      ({ error } = await sb.from('config').update({
-        temporada: nome,
-        data_inicio: inicio || null,
-        data_fim: fim || null,
-      }).eq('id', cfg.id));
-    } else {
-      ({ error } = await sb.from('config').insert([{
-        temporada: nome,
-        data_inicio: inicio || null,
-        data_fim: fim || null,
-      }]));
-    }
+    const { error } = await sb.from('temporadas').insert([{
+      nome, data_inicio: inicio || null, data_fim: fim || null, status: 'futura'
+    }]);
 
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; return; }
-    msg.textContent = `✅ Temporada "${nome}" ativada com sucesso!`;
+    msg.textContent = `✅ Temporada "${nome}" criada! Status: Futura. Ative-a quando quiser.`;
     msg.className = 'msg success';
-    await carregarTemporadaAtiva();
+    document.getElementById('novaNome').value = '';
+    document.getElementById('novaInicio').value = '';
+    document.getElementById('novaFim').value = '';
+    await carregarTemporadas();
+  }
+
+  async function ativarTemporada(id, nome) {
+    if (!confirm(`Ativar "${nome}"?\n\nEla ficará como Ativa. A temporada atual continuará registrada como Ativa também — você pode encerrar a anterior quando quiser.`)) return;
+    const { error } = await sb.from('temporadas').update({ status: 'ativa' }).eq('id', id);
+    if (error) { alert('Erro ao ativar: ' + error.message); return; }
+    await carregarTemporadas();
+  }
+
+  async function encerrarTemporadaById(id, nome) {
+    const confirmTxt = prompt(`Para encerrar "${nome}", digite ENCERRAR:`);
+    if (confirmTxt?.trim() !== 'ENCERRAR') { alert('Texto incorreto. Ação cancelada.'); return; }
+    if (!confirm(`ÚLTIMA CONFIRMAÇÃO:\n\nEncerrar "${nome}"?\nOs resultados aprovados serão arquivados.\n\nContinuar?`)) return;
+
+    // Arquivar resultados aprovados
+    const { error: errArq } = await sb.from('resultados').update({ status: 'arquivado' }).eq('status', 'aprovado');
+    if (errArq) { alert('Erro ao arquivar resultados: ' + errArq.message); return; }
+
+    const { error } = await sb.from('temporadas').update({ status: 'encerrada' }).eq('id', id);
+    if (error) { alert('Erro ao encerrar temporada: ' + error.message); return; }
+
+    alert(`✅ Temporada "${nome}" encerrada! Resultados arquivados.`);
+    await Promise.all([carregarStats(), carregarTemporadas()]);
   }
 
   async function carregarStats() {
@@ -251,37 +264,17 @@
     document.getElementById('statEventos').textContent = eventos ?? '—';
   }
 
-  // Habilita o botão somente quando texto correto é digitado
-  document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('confirmacaoTexto');
-    const btn = document.getElementById('btnEncerrar');
-    if (input && btn) {
-      input.addEventListener('input', () => {
-        btn.disabled = input.value.trim() !== 'ENCERRAR TEMPORADA';
-      });
-    }
-  });
 
   async function encerrarTemporada() {
-    const msg = document.getElementById('msgEncerrar');
-    if (document.getElementById('confirmacaoTexto').value.trim() !== 'ENCERRAR TEMPORADA') return;
-    if (!confirm('ÚLTIMA CONFIRMAÇÃO:\n\nIsso vai arquivar todos os resultados aprovados e zerar os pontos dos corredores.\n\nDeseja continuar?')) return;
-
-    const btn = document.getElementById('btnEncerrar');
-    btn.disabled = true; btn.textContent = 'Encerrando...';
-
-    // Arquivar: marca resultados aprovados como "arquivado"
-    const { error: errArq } = await sb.from('resultados').update({ status: 'arquivado' }).eq('status', 'aprovado');
-    if (errArq) { msg.textContent = 'Erro ao arquivar resultados: ' + errArq.message; msg.className = 'msg error'; btn.disabled = false; btn.textContent = '⚠️ Encerrar Temporada e Iniciar Nova'; return; }
-
-    // Nota: zerar pontuação dos corredores requer campo `pontos_total` na tabela corredores,
-    // ou recalculado via view. Se não houver campo direto, apenas limpa o campo.
-    // Ajuste conforme a estrutura real do seu banco.
-    msg.textContent = '✅ Temporada encerrada! Resultados arquivados. Nova temporada iniciada.';
-    msg.className = 'msg success';
-    document.getElementById('confirmacaoTexto').value = '';
-    btn.textContent = '✅ Concluído';
-    await carregarStats();
+    // Versão legada — usa a lista de temporadas ativas
+    const { data: ativas } = await sb.from('temporadas').select('id,nome').eq('status','ativa');
+    if (!ativas?.length) { alert('Nenhuma temporada ativa encontrada.'); return; }
+    if (ativas.length === 1) {
+      await encerrarTemporadaById(ativas[0].id, ativas[0].nome);
+    } else {
+      // Mais de uma ativa: encerra a mais antiga
+      await encerrarTemporadaById(ativas[ativas.length-1].id, ativas[ativas.length-1].nome);
+    }
   }
 
   async function exportarRanking() {
