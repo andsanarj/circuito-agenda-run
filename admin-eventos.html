@@ -105,7 +105,7 @@
     <div class="form-grid">
       <div>
         <label>Temporada *</label>
-        <input type="text" id="evTemporada" placeholder="Ex: Temporada 2026">
+        <select id="evTemporada"><option value="">Carregando...</option></select>
       </div>
       <div>
         <label>Nome do Evento *</label>
@@ -193,7 +193,7 @@
     <div class="form-grid">
       <div>
         <label>Temporada *</label>
-        <input type="text" id="editTemporada">
+        <select id="editTemporada"><option value="">Carregando...</option></select>
       </div>
       <div>
         <label>Nome *</label>
@@ -287,13 +287,26 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('conteudo').style.display = 'block';
-    // Pré-preencher temporada atual no form de cadastro
-    const { data: cfg } = await sb.from('config').select('value').eq('key', 'temporada_atual').single();
-    if (cfg?.value) document.getElementById('evTemporada').value = cfg.value;
-    await carregarEventos();
+    await Promise.all([carregarTemporadasSelect(), carregarEventos()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  let _temporadas = [];
+  async function carregarTemporadasSelect() {
+    const { data } = await sb.from('temporadas').select('id, nome, status').order('created_at', { ascending: false });
+    _temporadas = data || [];
+    const STATUS_ICON = { ativa: '🟢', futura: '🔵', encerrada: '⚫' };
+    const opts = _temporadas.map(t =>
+      `<option value="${t.nome}">${STATUS_ICON[t.status] || ''} ${t.nome}</option>`
+    ).join('');
+    ['evTemporada', 'editTemporada'].forEach(id => {
+      document.getElementById(id).innerHTML = `<option value="">Selecione a temporada</option>${opts}`;
+    });
+    // Seleciona a ativa por padrão no formulário de cadastro
+    const ativa = _temporadas.find(t => t.status === 'ativa');
+    if (ativa) document.getElementById('evTemporada').value = ativa.nome;
+  }
 
   async function carregarEventos() {
     const { data, error } = await sb.from('eventos').select('*').order('data', { ascending: false });
@@ -386,6 +399,10 @@
     const e = _eventos.find(ev => ev.id === id);
     if (!e) return;
     document.getElementById('editId').value = e.id;
+    // Garante que o select já tem opções antes de setar o valor
+    if (!document.getElementById('editTemporada').querySelector(`option[value="${e.temporada}"]`)) {
+      await carregarTemporadasSelect();
+    }
     document.getElementById('editTemporada').value = e.temporada || '';
     document.getElementById('editNome').value = e.nome || '';
     document.getElementById('editData').value = e.data || '';
