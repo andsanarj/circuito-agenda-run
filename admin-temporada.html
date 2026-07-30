@@ -83,6 +83,39 @@
     <p style="font-size:13px; color:#888;">Estes dados serão preservados ao iniciar uma nova temporada.</p>
   </div>
 
+  <!-- Temporada ativa -->
+  <div class="card">
+    <div class="card-header"><h2>🏁 Temporada Ativa</h2></div>
+    <div id="infoTemporadaAtiva" style="font-size:14px;color:#555;line-height:1.8;">Carregando...</div>
+  </div>
+
+  <!-- Iniciar nova temporada -->
+  <div class="card">
+    <div class="card-header"><h2>🚀 Iniciar Nova Temporada</h2></div>
+
+    <div class="aviso">
+      <strong>ℹ️ Use quando a temporada anterior já foi encerrada.</strong>
+      Preencha o nome e as datas da nova temporada. Isso atualiza as configurações do sistema sem mexer nos dados dos corredores.
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+      <div style="grid-column:1/-1;">
+        <label>Nome da temporada</label>
+        <input type="text" id="novaTemporadaNome" placeholder="Ex: Temporada 2027">
+      </div>
+      <div>
+        <label>Data de início</label>
+        <input type="date" id="novaTemporadaInicio" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
+      </div>
+      <div>
+        <label>Data de encerramento</label>
+        <input type="date" id="novaTemporadaFim" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="iniciarNovaTemporada()">🚀 Salvar e ativar temporada</button>
+    <div id="msgNovaTemporada" class="msg"></div>
+  </div>
+
   <!-- Encerrar temporada -->
   <div class="card">
     <div class="card-header"><h2>⚙️ Encerrar Temporada</h2></div>
@@ -149,10 +182,61 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('conteudo').style.display = 'block';
-    await carregarStats();
+    await Promise.all([carregarStats(), carregarTemporadaAtiva()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function carregarTemporadaAtiva() {
+    const { data } = await sb.from('config').select('*').limit(1).single();
+    const div = document.getElementById('infoTemporadaAtiva');
+    if (!data) {
+      div.innerHTML = '<span style="color:#aaa;">Nenhuma temporada configurada.</span>';
+      return;
+    }
+    const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    div.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:20px;">
+        <div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Nome</span><br><strong style="font-size:18px;color:#1F4E79;">${data.temporada || '—'}</strong></div>
+        ${data.data_inicio ? `<div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Início</span><br><strong>${fmtDate(data.data_inicio)}</strong></div>` : ''}
+        ${data.data_fim ? `<div><span style="font-size:11px;text-transform:uppercase;color:#888;font-weight:700;">Encerramento</span><br><strong>${fmtDate(data.data_fim)}</strong></div>` : ''}
+      </div>`;
+    // Preenche o form com os valores atuais
+    if (data.temporada) document.getElementById('novaTemporadaNome').value = data.temporada;
+    if (data.data_inicio) document.getElementById('novaTemporadaInicio').value = data.data_inicio;
+    if (data.data_fim) document.getElementById('novaTemporadaFim').value = data.data_fim;
+  }
+
+  async function iniciarNovaTemporada() {
+    const nome   = document.getElementById('novaTemporadaNome').value.trim();
+    const inicio = document.getElementById('novaTemporadaInicio').value;
+    const fim    = document.getElementById('novaTemporadaFim').value;
+    const msg    = document.getElementById('msgNovaTemporada');
+
+    if (!nome) { msg.textContent = 'Informe o nome da temporada.'; msg.className = 'msg error'; return; }
+
+    const { data: cfg } = await sb.from('config').select('id').limit(1).single();
+    let error;
+
+    if (cfg?.id) {
+      ({ error } = await sb.from('config').update({
+        temporada: nome,
+        data_inicio: inicio || null,
+        data_fim: fim || null,
+      }).eq('id', cfg.id));
+    } else {
+      ({ error } = await sb.from('config').insert([{
+        temporada: nome,
+        data_inicio: inicio || null,
+        data_fim: fim || null,
+      }]));
+    }
+
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; return; }
+    msg.textContent = `✅ Temporada "${nome}" ativada com sucesso!`;
+    msg.className = 'msg success';
+    await carregarTemporadaAtiva();
+  }
 
   async function carregarStats() {
     const [{ count: corredores }, { count: resultados }, { count: aprovados }, { count: eventos }] = await Promise.all([
