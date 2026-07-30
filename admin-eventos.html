@@ -399,10 +399,6 @@
     const e = _eventos.find(ev => ev.id === id);
     if (!e) return;
     document.getElementById('editId').value = e.id;
-    // Garante que o select já tem opções antes de setar o valor
-    if (!document.getElementById('editTemporada').querySelector(`option[value="${e.temporada}"]`)) {
-      await carregarTemporadasSelect();
-    }
     document.getElementById('editTemporada').value = e.temporada || '';
     document.getElementById('editNome').value = e.nome || '';
     document.getElementById('editData').value = e.data || '';
