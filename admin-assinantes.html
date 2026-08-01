@@ -147,6 +147,46 @@
 </div>
 </div>
 
+  <!-- Card de benefícios -->
+  <div class="card" style="max-width:1000px;margin:0 auto 28px;">
+    <div class="card-header">
+      <div>
+        <h2>🎁 Benefícios para Assinantes</h2>
+        <p style="font-size:13px;color:#888;margin-top:2px;">Registre cupons, descontos e vantagens que os assinantes já receberam.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregarBeneficios()">🔄 Atualizar</button>
+    </div>
+
+    <!-- Formulário novo benefício -->
+    <div style="display:grid;grid-template-columns:64px 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px;">
+      <div>
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Ícone</label>
+        <input type="text" id="bIcone" value="🎁" maxlength="4" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:20px;text-align:center;">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Título *</label>
+        <input type="text" id="bTitulo" placeholder="Ex: 20% desconto na Meia SP" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Descrição (opcional)</label>
+        <input type="text" id="bDescricao" placeholder="Detalhes do benefício..." style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:#666;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Data</label>
+        <input type="date" id="bData" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
+      <button class="btn btn-primary" onclick="salvarBeneficio()" style="background:#E8622A;">➕ Adicionar benefício</button>
+      <div id="msgBeneficio" style="font-size:13px;"></div>
+    </div>
+
+    <!-- Lista de benefícios -->
+    <div id="listaBeneficios"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+</div>
+
 <footer>Circuito Agenda Run · Painel Administrativo</footer>
 
 <script>
@@ -165,7 +205,7 @@
     }
     document.getElementById('telaAcesso').style.display = 'none';
     document.getElementById('conteudo').style.display = 'block';
-    await carregar();
+    await Promise.all([carregar(), carregarBeneficios()]);
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
@@ -362,6 +402,63 @@
     document.getElementById('statAtivos').textContent = ativos;
     document.getElementById('statInativos').textContent = inativos;
     document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
+  }
+
+  // ── Benefícios ──
+  async function carregarBeneficios() {
+    const div = document.getElementById('listaBeneficios');
+    const { data, error } = await sb.from('beneficios_assinantes').select('*').order('data', { ascending: false });
+    if (error || !data?.length) {
+      div.innerHTML = '<div class="empty">Nenhum benefício cadastrado ainda.</div>';
+      return;
+    }
+    const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    div.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr>
+        <th style="background:#f7f9fb;padding:8px 12px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;">Ícone</th>
+        <th style="background:#f7f9fb;padding:8px 12px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;">Título</th>
+        <th style="background:#f7f9fb;padding:8px 12px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;">Descrição</th>
+        <th style="background:#f7f9fb;padding:8px 12px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;">Data</th>
+        <th style="background:#f7f9fb;padding:8px 12px;"></th>
+      </tr></thead>
+      <tbody>${data.map(b => `
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0f4f8;font-size:20px;">${b.icone || '🎁'}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0f4f8;font-weight:600;color:#1F4E79;">${b.titulo}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0f4f8;color:#666;">${b.descricao || '—'}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0f4f8;white-space:nowrap;">${fmtDate(b.data)}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0f4f8;">
+            <button class="btn btn-sm" style="background:#fdecea;color:#b00020;border:1px solid #f5c6c6;" onclick="excluirBeneficio('${b.id}')">🗑️</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function salvarBeneficio() {
+    const titulo = document.getElementById('bTitulo').value.trim();
+    const msg = document.getElementById('msgBeneficio');
+    if (!titulo) { msg.textContent = '⚠️ Informe o título.'; msg.style.color = '#b00020'; return; }
+    const { error } = await sb.from('beneficios_assinantes').insert([{
+      icone:     document.getElementById('bIcone').value.trim() || '🎁',
+      titulo,
+      descricao: document.getElementById('bDescricao').value.trim() || null,
+      data:      document.getElementById('bData').value || null,
+    }]);
+    if (error) { msg.textContent = 'Erro: ' + error.message; msg.style.color = '#b00020'; return; }
+    msg.textContent = '✅ Benefício adicionado!'; msg.style.color = '#1a7a4a';
+    document.getElementById('bTitulo').value = '';
+    document.getElementById('bDescricao').value = '';
+    document.getElementById('bData').value = '';
+    document.getElementById('bIcone').value = '🎁';
+    setTimeout(() => { msg.textContent = ''; }, 3000);
+    await carregarBeneficios();
+  }
+
+  async function excluirBeneficio(id) {
+    if (!confirm('Excluir este benefício?')) return;
+    await sb.from('beneficios_assinantes').delete().eq('id', id);
+    await carregarBeneficios();
   }
 
   async function salvarControle(id, valor) {
