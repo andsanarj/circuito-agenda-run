@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F2D4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Circuito AR">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ex-Assinantes — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    .badge-admin { background: #E8622A; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+    .btn-sair { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .btn-voltar { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    h2 { font-size: 22px; color: #1F4E79; }
+    .btn { padding: 7px 14px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-gray { background: #f0f4f8; color: #444; border: 1px solid #ddd; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-ativar { background: #e6f9f0; color: #1a7a4a; border: 1px solid #a3e0c0; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .btn-ativar:hover { background: #c8f5e0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-box { background: #f7f9fb; border-radius: 10px; padding: 14px 18px; text-align: center; }
+    .stat-box .num { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: #1F4E79; }
+    .stat-box .lbl { font-size: 11px; color: #888; text-transform: uppercase; }
+    .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filtros input { padding: 7px 12px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; font-family: inherit; min-width: 220px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; white-space: nowrap; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
+    .corredor-info strong { display: block; font-size: 13px; }
+    .corredor-info span { font-size: 11px; color: #888; display: block; }
+    .empty { text-align: center; color: #bbb; padding: 40px; font-size: 14px; }
+    .tempo-chip { display: inline-block; background: #f0f4f8; color: #555; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
+    .selo { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; opacity: 0.6; }
+    .selo-bronze { background: linear-gradient(135deg, #e8d5b7, #c8a87a); color: #6b4c1e; }
+    .selo-prata  { background: linear-gradient(135deg, #d8e8f0, #a0c4d8); color: #1F4E79; }
+    .selo-ouro   { background: linear-gradient(135deg, #fff3c0, #ffe066); color: #7a5800; }
+    .selo-elite  { background: linear-gradient(135deg, #b8f0ff, #4CBFCB); color: #0a3d47; }
+    .aviso-reativar { background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #7a5800; margin-bottom: 20px; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span class="badge-admin">⚙️ Admin</span>
+    <a href="admin-assinantes.html" class="btn-voltar">← Assinantes</a>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="telaAcesso" style="text-align:center; padding:80px 20px;"><p style="color:#888;">Verificando acesso...</p></div>
+
+<div id="conteudo" style="display:none;">
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>📋 Ex-Assinantes</h2>
+        <p style="font-size:13px; color:#888; margin-top:2px;">Corredores que já foram assinantes e hoje estão inativos.</p>
+      </div>
+      <button class="btn btn-gray btn-sm" onclick="carregar()">🔄 Atualizar</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box"><div class="num" id="statTotal">—</div><div class="lbl">Ex-assinantes</div></div>
+      <div class="stat-box"><div class="num" id="statMediaMeses">—</div><div class="lbl">Meses médio de assinatura</div></div>
+      <div class="stat-box"><div class="num" id="statRecente">—</div><div class="lbl">Cancelaram nos últimos 30 dias</div></div>
+    </div>
+
+    <div class="aviso-reativar">
+      💡 <strong>Dica:</strong> Use o botão <strong>✓ Reativar</strong> para renovar a assinatura de um corredor manualmente por mais 32 dias.
+    </div>
+
+    <div class="filtros">
+      <input type="text" id="filtroBusca" placeholder="Buscar por nome ou e-mail..." oninput="filtrar()">
+    </div>
+
+    <div id="tabela"><div class="empty">Carregando...</div></div>
+  </div>
+
+</div>
+</div>
+
+<footer>Circuito Agenda Run · Painel Administrativo</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const EMAILS_PERMITIDOS = ['agendarun1@gmail.com', 'amandafrancoroberti@yahoo.com'];
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const _hoje = new Date().toISOString().split('T')[0];
+  let _todos = [];
+
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session || !EMAILS_PERMITIDOS.includes(session.user.email)) {
+      document.getElementById('telaAcesso').innerHTML = `<h2 style="color:#b00020;">🔒 Acesso Negado</h2><p style="margin:12px 0;"><a href="login.html" style="color:#1F4E79;font-weight:700;">Fazer login</a></p>`;
+      return;
+    }
+    document.getElementById('telaAcesso').style.display = 'none';
+    document.getElementById('conteudo').style.display = 'block';
+    await carregar();
+  });
+
+  async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  function calcularMeses(desde) {
+    if (!desde) return 0;
+    const inicio = new Date(desde + 'T12:00:00');
+    const agora = new Date();
+    return Math.max(Math.floor((agora - inicio) / (1000 * 60 * 60 * 24 * 30.44)) + 1, 1);
+  }
+
+  function renderSelo(meses) {
+    if (!meses) return '—';
+    if (meses >= 13) return `<span class="selo selo-elite">💎 Elite</span>`;
+    if (meses >= 9)  return `<span class="selo selo-ouro">🥇 Ouro</span>`;
+    if (meses >= 5)  return `<span class="selo selo-prata">🥈 Prata</span>`;
+    return `<span class="selo selo-bronze">🥉 Bronze</span>`;
+  }
+
+  async function carregar() {
+    document.getElementById('tabela').innerHTML = '<div class="empty">Carregando...</div>';
+
+    const { data, error } = await sb.from('corredores')
+      .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate')
+      .not('assinante_desde', 'is', null);
+
+    if (error) { document.getElementById('tabela').innerHTML = `<div class="empty" style="color:#b00020;">Erro: ${error.message}</div>`; return; }
+
+    // Filtra só os inativos (assinante=false E assinante_ate vencido ou nulo)
+    _todos = (data || []).filter(c =>
+      !c.assinante && (!c.assinante_ate || c.assinante_ate < _hoje)
+    ).sort((a, b) => (b.assinante_ate || '').localeCompare(a.assinante_ate || ''));
+
+    // Stats
+    const total = _todos.length;
+    const mesesLista = _todos.map(c => calcularMeses(c.assinante_desde));
+    const media = mesesLista.length ? (mesesLista.reduce((s, n) => s + n, 0) / mesesLista.length).toFixed(1) : '—';
+    const trintaDias = new Date(); trintaDias.setDate(trintaDias.getDate() - 30);
+    const trintaStr = trintaDias.toISOString().split('T')[0];
+    const recentes = _todos.filter(c => c.assinante_ate && c.assinante_ate >= trintaStr).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statMediaMeses').textContent = media !== '—' ? media + ' meses' : '—';
+    document.getElementById('statRecente').textContent = recentes;
+
+    filtrar();
+  }
+
+  function filtrar() {
+    const busca = document.getElementById('filtroBusca').value.toLowerCase().trim();
+    const lista = busca
+      ? _todos.filter(c => c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca))
+      : _todos;
+    renderTabela(lista);
+  }
+
+  function renderTabela(lista) {
+    if (!lista.length) {
+      document.getElementById('tabela').innerHTML = '<div class="empty">Nenhum ex-assinante encontrado.</div>';
+      return;
+    }
+    const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    let html = `<table><thead><tr>
+      <th>Corredor</th>
+      <th>Assinante desde</th>
+      <th>Cancelou em</th>
+      <th>Tempo de assinatura</th>
+      <th>Nível atingido</th>
+      <th></th>
+    </tr></thead><tbody>`;
+
+    lista.forEach(c => {
+      const meses = calcularMeses(c.assinante_desde);
+      const insta = c.instagram ? `@${c.instagram}` : '';
+      html += `
+        <tr>
+          <td class="corredor-info">
+            <strong>${c.nome}</strong>
+            <span>${c.email || ''}</span>
+            ${c.telefone ? `<span>${c.telefone}</span>` : ''}
+            ${insta ? `<span>${insta}</span>` : ''}
+          </td>
+          <td style="white-space:nowrap;">${fmtDate(c.assinante_desde)}</td>
+          <td style="white-space:nowrap; color:#b00020;">${fmtDate(c.assinante_ate)}</td>
+          <td><span class="tempo-chip">${meses} ${meses === 1 ? 'mês' : 'meses'}</span></td>
+          <td>${renderSelo(meses)}</td>
+          <td><button class="btn-ativar" onclick="reativar('${c.id}', '${(c.nome||'').replace(/'/g,"\\'")}', '${c.assinante_desde || ''}')">✓ Reativar</button></td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tabela').innerHTML = html;
+  }
+
+  async function reativar(id, nome, desde) {
+    if (!confirm(`Reativar a assinatura de ${nome} por mais 32 dias?`)) return;
+    const ate = new Date();
+    ate.setDate(ate.getDate() + 32);
+    const ateStr = ate.toISOString().split('T')[0];
+    const { error } = await sb.from('corredores').update({
+      assinante: true,
+      assinante_ate: ateStr,
+      assinante_desde: desde || new Date().toISOString().split('T')[0],
+    }).eq('id', id);
+    if (error) { alert('Erro: ' + error.message); return; }
+    alert(`✅ ${nome} reativada com sucesso!`);
+    await carregar();
+  }
+</script>
+  <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}</script>
+</body>
+</html>
