@@ -266,7 +266,7 @@
         <div id="statusAssinatura" style="font-size:13px; font-weight:700; margin-bottom:4px;">Carregando...</div>
         <div id="textoAssinatura" style="font-size:12px; color:#666;"></div>
       </div>
-      <button id="btnAssinar" onclick="assinar()"
+      <button id="btnAssinar" onclick="assinar(this)"
         style="background:#E8622A; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; display:none;">
         ⭐ Assinar — R$ 9,99/mês
       </button>
@@ -720,7 +720,7 @@
               <div style="font-size:13px; font-weight:600; color:#E8622A; margin-bottom:8px;">
                 💡 Seja assinante e ganhe +0,5 pt extra neste evento e em todos os outros!
               </div>
-              <button class="btn-assinar-form" onclick="assinar()">⭐ Assinar — R$ 9,99/mês</button>
+              <button class="btn-assinar-form" onclick="assinar(this)">⭐ Assinar — R$ 9,99/mês</button>
             </div>
           </div>
         </div>`;
@@ -866,7 +866,7 @@
             <div class="bav-titulo">Sua assinatura venceu há ${diasVencido} dia${diasVencido !== 1 ? 's' : ''}</div>
             <div class="bav-dias">${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} para renovar</div>
             <div class="bav-sub">Após esse prazo, os pontos bônus de assinante serão removidos de todas as suas corridas cadastradas.</div>
-            <button class="bav-btn" onclick="assinar()">🔄 Renovar assinatura</button>
+            <button class="bav-btn" onclick="assinar(this)">🔄 Renovar assinatura</button>
           </div>
         </div>`;
     } else {
@@ -876,7 +876,7 @@
           <div class="bav-info">
             <div class="bav-titulo critico">Pontos bônus removidos</div>
             <div class="bav-sub critico">Sua assinatura venceu há ${diasVencido} dias e o prazo de renovação expirou. Os pontos bônus de assinante foram removidos das suas corridas.</div>
-            <button class="bav-btn" onclick="assinar()">⭐ Renovar assinatura</button>
+            <button class="bav-btn" onclick="assinar(this)">⭐ Renovar assinatura</button>
           </div>
         </div>`;
       removerBonusAssinante(corredor.id);
@@ -1177,12 +1177,13 @@
     }
   }
 
-  async function assinar() {
-    const btn = document.getElementById('btnAssinar');
+  async function assinar(btnEl) {
+    // Aceita o elemento clicado ou tenta o botão principal
+    const btn = btnEl || document.getElementById('btnAssinar');
     const msg = document.getElementById('msgAssinatura');
-    btn.disabled = true;
-    btn.textContent = 'Aguarde...';
-    msg.style.display = 'none';
+    const textoOriginal = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Aguarde...'; }
+    if (msg) msg.style.display = 'none';
 
     try {
       const { data: { session } } = await client.auth.getSession();
@@ -1201,22 +1202,27 @@
       const data = await res.json();
 
       if (data.paymentUrl) {
-        msg.textContent = '✅ Assinatura criada! Abrindo página de pagamento...';
-        msg.style.background = '#e6f9f0';
-        msg.style.color = '#1a7a4a';
-        msg.style.display = 'block';
-        setTimeout(() => window.open(data.paymentUrl, '_blank'), 1200);
+        if (msg) {
+          msg.textContent = '✅ Assinatura criada! Abrindo página de pagamento...';
+          msg.style.background = '#e6f9f0';
+          msg.style.color = '#1a7a4a';
+          msg.style.display = 'block';
+        }
+        setTimeout(() => window.open(data.paymentUrl, '_blank'), 800);
       } else {
         const detalhe = data.detail ? ' — ' + JSON.stringify(data.detail) : '';
         throw new Error((data.error || 'Erro desconhecido') + detalhe);
       }
     } catch (err) {
-      msg.textContent = '❌ ' + err.message;
-      msg.style.background = '#fdecea';
-      msg.style.color = '#b00020';
-      msg.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = '⭐ Assinar — R$ 9,99/mês';
+      if (msg) {
+        msg.textContent = '❌ ' + err.message;
+        msg.style.background = '#fdecea';
+        msg.style.color = '#b00020';
+        msg.style.display = 'block';
+      } else {
+        alert('❌ ' + err.message);
+      }
+      if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
     }
   }
 
@@ -1286,7 +1292,7 @@
         <div class="sorteios-lock">
           <div class="lock-icon">🔒</div>
           <p>Os sorteios são exclusivos para assinantes do Circuito. Assine por <strong>R$ 9,99/mês</strong> e participe de sorteios de cortesias e produtos Agenda Run!</p>
-          <button class="btn-assinar-sorteio" onclick="assinar()">⭐ Quero assinar</button>
+          <button class="btn-assinar-sorteio" onclick="assinar(this)">⭐ Quero assinar</button>
         </div>`;
       return;
     }
