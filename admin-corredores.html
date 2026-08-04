@@ -249,7 +249,7 @@
     const temporada = document.getElementById('crmFiltroTemporada').value;
 
     let filtrados = crmDados.filter(c =>
-      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca) || (c.cpf || '').replace(/\D/g,'').includes(busca.replace(/\D/g,''))) &&
+      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca) || (busca.replace(/\D/g,'').length >= 3 && (c.cpf || '').replace(/\D/g,'').includes(busca.replace(/\D/g,'')))) &&
       (!cidade || c.cidade === cidade) &&
       (!dist || (c.distancias_preferidas || '').includes(dist)) &&
       (!sexo || c.sexo === sexo)
