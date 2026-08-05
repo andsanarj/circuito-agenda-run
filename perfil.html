@@ -287,6 +287,12 @@
     <div id="sorteiosConteudo"></div>
   </div>
 
+  <!-- ── MEUS PAGAMENTOS ─────────────────────────────────────── -->
+  <div class="card" id="cardPagamentos" style="display:none;">
+    <div class="card-title">💳 Meus Pagamentos</div>
+    <div id="listaPagamentos"><div class="loading" style="padding:16px;">Carregando...</div></div>
+  </div>
+
   <!-- ── MINHAS CORRIDAS ──────────────────────────────────────── -->
   <div class="card">
     <div class="card-title">
@@ -445,6 +451,7 @@
     corredorAssinanteDesdeGlobal = corredor.assinante_desde || null;
     exibirStatusAssinatura(corredor);
     verificarAssinaturaVencida(corredor);
+    if (corredor.assinante || corredor.assinante_desde) carregarPagamentos();
 
     // Exibir botão compartilhar com URL correta
     const shareUrl = corredor.instagram
@@ -1250,6 +1257,62 @@
         alert('❌ ' + err.message);
       }
       if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
+    }
+  }
+
+  async function carregarPagamentos() {
+    const card = document.getElementById('cardPagamentos');
+    const div  = document.getElementById('listaPagamentos');
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(
+        'https://tbveeaupcmpltncjwfgt.supabase.co/functions/v1/buscar-pagamentos',
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      );
+      const { payments, error } = await res.json();
+
+      if (error || !payments?.length) {
+        // Sem histórico de pagamentos, mantém card oculto
+        return;
+      }
+
+      card.style.display = 'block';
+
+      const STATUS = {
+        PENDING:          { label: 'Pendente',    cor: '#b07800', bg: '#fff8e1' },
+        RECEIVED:         { label: '✅ Pago',      cor: '#1a7a4a', bg: '#e6f9f0' },
+        CONFIRMED:        { label: '✅ Confirmado', cor: '#1a7a4a', bg: '#e6f9f0' },
+        OVERDUE:          { label: '❌ Vencido',   cor: '#b00020', bg: '#fdecea' },
+        REFUNDED:         { label: 'Estornado',   cor: '#888',    bg: '#f0f0f0' },
+        RECEIVED_IN_CASH: { label: '✅ Pago',      cor: '#1a7a4a', bg: '#e6f9f0' },
+        AWAITING_RISK_ANALYSIS: { label: 'Em análise', cor: '#1F4E79', bg: '#e8f4fb' },
+      };
+
+      const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const fmtVal  = v => v != null ? `R$ ${parseFloat(v).toFixed(2).replace('.', ',')}` : '—';
+
+      div.innerHTML = payments.map(p => {
+        const st = STATUS[p.status] || { label: p.status, cor: '#888', bg: '#f0f0f0' };
+        const linkBoleto = p.bankSlipUrl ? `<a href="${p.bankSlipUrl}" target="_blank" style="font-size:12px;font-weight:700;color:#1F4E79;text-decoration:none;background:#e8f4fb;padding:4px 10px;border-radius:6px;white-space:nowrap;">📄 Boleto</a>` : '';
+        const linkPix    = p.pixQrCodeUrl ? `<a href="${p.pixQrCodeUrl}" target="_blank" style="font-size:12px;font-weight:700;color:#1F4E79;text-decoration:none;background:#e8f4fb;padding:4px 10px;border-radius:6px;white-space:nowrap;">📱 PIX</a>` : '';
+        const linkPagar  = p.invoiceUrl ? `<a href="${p.invoiceUrl}" target="_blank" style="font-size:12px;font-weight:700;color:#fff;text-decoration:none;background:#E8622A;padding:4px 10px;border-radius:6px;white-space:nowrap;">Pagar →</a>` : '';
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#1F4E79;">Assinatura Circuito Agenda Run</div>
+              <div style="font-size:12px;color:#888;margin-top:2px;">Vencimento: ${fmtDate(p.dueDate)}${p.paymentDate ? ` · Pago em: ${fmtDate(p.paymentDate)}` : ''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-size:14px;font-weight:700;color:#1F4E79;">${fmtVal(p.value)}</span>
+              <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:${st.bg};color:${st.cor};">${st.label}</span>
+              ${linkBoleto}${linkPix}${(p.status === 'PENDING' || p.status === 'OVERDUE') ? linkPagar : ''}
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      // Falha silenciosa — não exibe o card se der erro
     }
   }
 
