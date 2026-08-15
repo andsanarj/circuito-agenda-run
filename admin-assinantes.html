@@ -107,7 +107,7 @@
 
     <div class="stats" id="statsRow">
       <div class="stat-box"><div class="num" id="statAtivos">—</div><div class="lbl">⭐ Ativos</div></div>
-      <div class="stat-box"><div class="num" id="statInativos">—</div><div class="lbl">Inativos</div></div>
+      <div class="stat-box" style="cursor:pointer;" onclick="window.location='admin-ex-assinantes.html'"><div class="num" id="statInativos" style="color:#888;">—</div><div class="lbl">Ex-assinantes →</div></div>
       <div class="stat-box"><div class="num" id="statMedia">—</div><div class="lbl">Meses médio</div></div>
     </div>
 
@@ -136,11 +136,6 @@
 
     <div class="filtros">
       <input type="text" id="filtroBusca" placeholder="Buscar corredor..." oninput="filtrar()">
-      <select id="filtroStatus" onchange="filtrar()">
-        <option value="">Todos</option>
-        <option value="ativo">Apenas ativos</option>
-        <option value="inativo">Apenas inativos</option>
-      </select>
     </div>
 
     <div id="tabela"><div class="empty">Carregando...</div></div>
@@ -250,7 +245,8 @@
       .select('id, nome, email, telefone, instagram, assinante, assinante_desde, assinante_ate, asaas_subscription_id, admin_controle');
 
     if (error) return;
-    _todos = (data || []).filter(c => c.assinante || c.assinante_desde)
+    // Apenas assinantes ativos nesta página — inativos vão para admin-ex-assinantes.html
+    _todos = (data || []).filter(c => isAtivo(c))
       .sort((a, b) => (a.assinante_desde || '').localeCompare(b.assinante_desde || ''));
 
     // Auto-corrigir: assinante_ate ainda válido mas assinante=false → sincronizar DB
@@ -260,14 +256,17 @@
       c.assinante = true;
     }
 
-    const ativos = _todos.filter(c => isAtivo(c));
-    const inativos = _todos.filter(c => !isAtivo(c));
-    const mrr = ativos.length * 9.99;
+    // Buscar count de ex-assinantes para o card de stats
+    const { count: exCount } = await sb.from('corredores')
+      .select('id', { count: 'exact', head: true })
+      .eq('assinante', false)
+      .not('assinante_desde', 'is', null);
+
     const niveis = _todos.filter(c => c.assinante_desde).map(c => calcularNivel(c.assinante_desde));
     const media = niveis.length ? (niveis.reduce((s, n) => s + n, 0) / niveis.length).toFixed(1) : '—';
 
-    document.getElementById('statAtivos').textContent = ativos.length;
-    document.getElementById('statInativos').textContent = inativos.length;
+    document.getElementById('statAtivos').textContent = _todos.length;
+    document.getElementById('statInativos').textContent = exCount || 0;
     document.getElementById('statMedia').textContent = media + (media !== '—' ? ' meses' : '');
 
     filtrar();
@@ -275,10 +274,8 @@
 
   function filtrar() {
     const busca = document.getElementById('filtroBusca').value.toLowerCase();
-    const status = document.getElementById('filtroStatus').value;
     let lista = _todos.filter(c =>
-      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca)) &&
-      (!status || (status === 'ativo' ? isAtivo(c) : !isAtivo(c)))
+      (!busca || c.nome.toLowerCase().includes(busca) || (c.email || '').toLowerCase().includes(busca))
     );
     renderTabela(lista);
   }
@@ -341,10 +338,7 @@
           <td style="font-size:13px; ${!isAtivo(c) ? 'color:#bbb;' : ''}">${ate}</td>
           <td>${renderSelo(nivel, isAtivo(c))}</td>
           <td id="status-cell-${c.id}">
-            ${isAtivo(c)
-              ? `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${c.id}')">Desativar</button>`
-              : `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${c.id}')">✓ Ativar</button>`
-            }
+            <span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${c.id}')">Desativar</button>
           </td>
           <td>
             <div style="display:flex;align-items:center;">
@@ -386,30 +380,21 @@
     if (cell) cell.innerHTML = `<span class="status-ativo">✅ Ativo</span><button class="btn-desativar" onclick="desativarAssinante('${id}')">Desativar</button>`;
 
     // Atualiza stats
-    const ativos = _todos.filter(c => isAtivo(c)).length;
-    const inativos = _todos.filter(c => !isAtivo(c)).length;
-    document.getElementById('statAtivos').textContent = ativos;
-    document.getElementById('statInativos').textContent = inativos;
-    document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
+    document.getElementById('statAtivos').textContent = _todos.length;
+    filtrar();
   }
 
   async function desativarAssinante(id) {
-    if (!confirm('Desativar esta assinatura manualmente?')) return;
+    if (!confirm('Desativar esta assinatura? O corredor será movido para a página de ex-assinantes.')) return;
 
     const { error } = await sb.from('corredores').update({ assinante: false, assinante_ate: null }).eq('id', id);
     if (error) { alert('Erro: ' + error.message); return; }
 
-    const c = _todos.find(x => x.id === id);
-    if (c) { c.assinante = false; c.assinante_ate = null; }
+    // Remove da lista — inativo vai para admin-ex-assinantes.html
+    _todos = _todos.filter(x => x.id !== id);
 
-    const cell = document.getElementById('status-cell-' + id);
-    if (cell) cell.innerHTML = `<span class="status-inativo">Inativo</span><button class="btn-ativar" onclick="ativarAssinante('${id}')">✓ Ativar</button>`;
-
-    const ativos = _todos.filter(c => isAtivo(c)).length;
-    const inativos = _todos.filter(c => !isAtivo(c)).length;
-    document.getElementById('statAtivos').textContent = ativos;
-    document.getElementById('statInativos').textContent = inativos;
-    document.getElementById('statMRR').textContent = 'R$ ' + (ativos * 9.99).toFixed(2).replace('.', ',');
+    document.getElementById('statAtivos').textContent = _todos.length;
+    filtrar();
   }
 
   // ── Benefícios individuais ──
