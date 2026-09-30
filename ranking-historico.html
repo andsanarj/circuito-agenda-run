@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F2D4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Circuito AR">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking Histórico — Circuito Agenda Run</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3 { font-family: 'Barlow Condensed', sans-serif; }
+    header { background: #0F2D4A; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 3px solid #E8622A; }
+    header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    header .logo img { height: 36px; }
+    header .logo span { color: #fff; font-weight: 700; font-size: 15px; }
+    header nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    header nav a { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; background: rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; }
+    .hero { background: linear-gradient(135deg, #1F4E79, #0d2d4a); color: #fff; padding: 40px 24px 32px; text-align: center; }
+    .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 8px; }
+    .hero p { color: #a8c8e8; font-size: 15px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; flex: 1; }
+
+    /* Seletor de temporada */
+    .sel-card { background: #fff; border-radius: 12px; padding: 24px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .sel-card label { font-size: 13px; font-weight: 700; color: #666; text-transform: uppercase; white-space: nowrap; }
+    .sel-card select { padding: 9px 16px; border: 2px solid #1F4E79; border-radius: 8px; font-size: 14px; font-weight: 700; color: #1F4E79; background: #EBF3FB; cursor: pointer; font-family: inherit; }
+    .sel-card .badge-enc { background: #f0f0f0; color: #888; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-box { background: #fff; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+    .stat-box .num { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; color: #1F4E79; }
+    .stat-box .lbl { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 2px; }
+
+    /* Filtros */
+    .filtros { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filtros input, .filtros select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+    .filtros input { min-width: 200px; }
+
+    /* Tabela ranking */
+    .ranking-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden; }
+    .ranking-card-header { padding: 18px 24px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .ranking-card-header h2 { font-size: 20px; color: #1F4E79; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f7f9fb; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; padding: 10px 16px; text-align: left; }
+    td { padding: 12px 16px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
+    .pos { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; color: #1F4E79; width: 40px; }
+    .pos-1 { color: #FFB800; }
+    .pos-2 { color: #9BA3AE; }
+    .pos-3 { color: #c8a87a; }
+    .medal { font-size: 20px; }
+    .nome strong { display: block; font-size: 14px; color: #1a2a3a; }
+    .nome span { font-size: 11px; color: #aaa; }
+    .pontos { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; color: #E8622A; }
+    .eventos { font-size: 13px; color: #666; text-align: center; }
+    .badge-assinante { background: linear-gradient(135deg, #4CBFCB, #1F4E79); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+    .empty { text-align: center; padding: 48px; color: #bbb; }
+    .empty h3 { font-size: 20px; margin-bottom: 8px; color: #ccc; }
+    footer { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">
+    <img src="logo.png" alt="Agenda Run">
+    <span>Circuito Agenda Run</span>
+  </a>
+  <nav>
+    <a href="ranking.html">🏆 Ranking Atual</a>
+    <a href="eventos.html">🏃 Eventos</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h1>📚 Ranking Histórico</h1>
+  <p>Confira como ficou o ranking nas temporadas encerradas</p>
+</div>
+
+<div class="container">
+
+  <div class="sel-card">
+    <label>🗓️ Temporada:</label>
+    <select id="selTemporada" onchange="carregarRanking()">
+      <option value="">Carregando...</option>
+    </select>
+    <span class="badge-enc">⚫ Encerrada</span>
+  </div>
+
+  <div class="stats" id="stats" style="display:none;">
+    <div class="stat-box"><div class="num" id="statCorredores">—</div><div class="lbl">Corredores</div></div>
+    <div class="stat-box"><div class="num" id="statEventos">—</div><div class="lbl">Participações</div></div>
+    <div class="stat-box"><div class="num" id="statPontos">—</div><div class="lbl">Pontos totais</div></div>
+  </div>
+
+  <div class="filtros">
+    <input type="text" id="filtroBusca" placeholder="🔍 Buscar corredor..." oninput="filtrar()">
+    <select id="filtroSexo" onchange="filtrar()">
+      <option value="">Todos</option>
+      <option value="M">Masculino</option>
+      <option value="F">Feminino</option>
+    </select>
+  </div>
+
+  <div class="ranking-card">
+    <div class="ranking-card-header">
+      <h2 id="tituloRanking">Selecione uma temporada</h2>
+    </div>
+    <div id="tabelaRanking"><div class="empty"><h3>⏳</h3><p>Selecione uma temporada acima</p></div></div>
+  </div>
+
+</div>
+
+<footer>Circuito Agenda Run · Histórico de Temporadas</footer>
+
+<script>
+  const SUPABASE_URL = 'https://tbveeaupcmpltncjwfgt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let _dados = [];
+
+  async function init() {
+    // Busca temporadas encerradas
+    const { data: temporadas } = await client
+      .from('temporadas')
+      .select('id, nome, status, data_inicio, data_fim')
+      .eq('status', 'encerrada')
+      .order('created_at', { ascending: false });
+
+    const sel = document.getElementById('selTemporada');
+
+    if (!temporadas?.length) {
+      sel.innerHTML = '<option value="">Nenhuma temporada encerrada</option>';
+      return;
+    }
+
+    // Mapeia temporadas encerradas — usa o nome como chave de busca nos resultados
+    sel.innerHTML = temporadas.map(t => {
+      const periodo = t.data_inicio && t.data_fim
+        ? ` (${fmt(t.data_inicio)} – ${fmt(t.data_fim)})`
+        : '';
+      return `<option value="${t.nome}">${t.nome}${periodo}</option>`;
+    }).join('');
+
+    await carregarRanking();
+  }
+
+  function fmt(d) {
+    if (!d) return '';
+    const [y, m] = d.split('-');
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${meses[+m-1]}/${y}`;
+  }
+
+  async function carregarRanking() {
+    const temporada = document.getElementById('selTemporada').value;
+    if (!temporada) return;
+
+    document.getElementById('tabelaRanking').innerHTML = '<div class="empty"><p>Carregando...</p></div>';
+    document.getElementById('stats').style.display = 'none';
+
+    // Busca resultados arquivados da temporada selecionada
+    // Temporadas antigas podem ter temporada=null (Temporada 2026 foi a primeira)
+    let query = client.from('resultados')
+      .select('corredor_id, pontos, corredores(nome, cidade, sexo, instagram, assinante)')
+      .eq('status', 'arquivado');
+
+    // Se existem resultados com esse nome de temporada, filtra por ele
+    // Caso contrário (temporada antiga = null), busca os sem temporada
+    const { data: check } = await client.from('resultados')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'arquivado')
+      .eq('temporada', temporada);
+
+    if (check !== null && check.length === 0) {
+      // Nenhum resultado tagueado com esse nome → usa os sem temporada (legado)
+      query = query.is('temporada', null);
+    } else {
+      query = query.eq('temporada', temporada);
+    }
+
+    const { data: resultados } = await query;
+
+    if (!resultados?.length) {
+      document.getElementById('tabelaRanking').innerHTML =
+        '<div class="empty"><h3>📭</h3><p>Nenhum resultado encontrado para esta temporada.</p></div>';
+      return;
+    }
+
+    // Agrupa por corredor
+    const mapa = {};
+    resultados.forEach(r => {
+      if (!r.corredores) return;
+      if (!mapa[r.corredor_id]) {
+        mapa[r.corredor_id] = {
+          id: r.corredor_id,
+          nome: r.corredores.nome,
+          cidade: r.corredores.cidade,
+          sexo: r.corredores.sexo,
+          instagram: r.corredores.instagram,
+          assinante: r.corredores.assinante,
+          total_pontos: 0,
+          eventos: 0,
+        };
+      }
+      mapa[r.corredor_id].total_pontos += (r.pontos || 0);
+      mapa[r.corredor_id].eventos++;
+    });
+
+    _dados = Object.values(mapa).sort((a, b) => b.total_pontos - a.total_pontos);
+
+    // Stats
+    const totalPts = _dados.reduce((s, r) => s + r.total_pontos, 0);
+    const totalEv  = _dados.reduce((s, r) => s + r.eventos, 0);
+    document.getElementById('statCorredores').textContent = _dados.length;
+    document.getElementById('statEventos').textContent = totalEv;
+    document.getElementById('statPontos').textContent = totalPts;
+    document.getElementById('stats').style.display = 'grid';
+    document.getElementById('tituloRanking').textContent = '🏆 ' + temporada;
+
+    filtrar();
+  }
+
+  function filtrar() {
+    const busca = document.getElementById('filtroBusca').value.toLowerCase();
+    const sexo  = document.getElementById('filtroSexo').value;
+    const lista = _dados.filter(r =>
+      (!busca || r.nome.toLowerCase().includes(busca)) &&
+      (!sexo  || r.sexo === sexo)
+    );
+    renderTabela(lista);
+  }
+
+  function renderTabela(lista) {
+    if (!lista.length) {
+      document.getElementById('tabelaRanking').innerHTML =
+        '<div class="empty"><h3>🔍</h3><p>Nenhum corredor encontrado.</p></div>';
+      return;
+    }
+
+    // Calcula posição relativa à lista filtrada
+    let html = `<table>
+      <thead><tr>
+        <th>Pos.</th>
+        <th>Corredor</th>
+        <th style="text-align:center;">Eventos</th>
+        <th style="text-align:right;">Pontos</th>
+      </tr></thead><tbody>`;
+
+    lista.forEach((r, i) => {
+      const pos = i + 1;
+      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
+      const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : '';
+      const insta = r.instagram ? `@${r.instagram}` : (r.cidade || '');
+      html += `<tr>
+        <td class="pos ${posClass}">${medal || pos}</td>
+        <td class="nome">
+          <strong>${r.nome}${r.assinante ? '<span class="badge-assinante">⭐</span>' : ''}</strong>
+          ${insta ? `<span>${insta}</span>` : ''}
+        </td>
+        <td class="eventos">${r.eventos}</td>
+        <td style="text-align:right;"><span class="pontos">${r.total_pontos}</span></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tabelaRanking').innerHTML = html;
+  }
+
+  init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}</script>
+</body>
+</html>
