@@ -181,15 +181,15 @@
       .select('corredor_id, pontos, corredores(nome, cidade, sexo, instagram, assinante)')
       .eq('status', 'arquivado');
 
-    // Se existem resultados com esse nome de temporada, filtra por ele
-    // Caso contrário (temporada antiga = null), busca os sem temporada
+    // Verifica se há resultados tagueados com o nome da temporada
     const { data: check } = await client.from('resultados')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .eq('status', 'arquivado')
-      .eq('temporada', temporada);
+      .eq('temporada', temporada)
+      .limit(1);
 
-    if (check !== null && check.length === 0) {
-      // Nenhum resultado tagueado com esse nome → usa os sem temporada (legado)
+    if (!check || check.length === 0) {
+      // Sem resultados tagueados → usa os sem temporada (legado, ex: Temporada 2026)
       query = query.is('temporada', null);
     } else {
       query = query.eq('temporada', temporada);
