@@ -667,10 +667,6 @@
           <input type="text" id="categoria-${eventoId}" placeholder="Ex: M4044, F3539" value="${r.categoria || ''}">
         </div>
       </div>
-      <label class="checkbox-row" style="margin-top:12px; background:#f0f7ff; border-radius:8px; padding:10px 12px; border:1px solid #c8dff0;">
-        <input type="checkbox" id="kitrun-${eventoId}" ${r.usou_kit_run ? 'checked' : ''}>
-        <span>🎒 Utilizei o serviço de retirada de kit da <strong>Kit Run Express</strong> neste evento</span>
-      </label>
       ${distHtml}
       <div class="form-group" style="margin-top:14px;">
         <label>Link do resultado oficial * <span style="color:#888; font-weight:400;">(OpenResults ou site da corrida)</span></label>
@@ -707,8 +703,7 @@
             <div class="pts-bloco-titulo">Você é assinante — ${tierLabel}</div>
             <div class="pts-bloco-detalhe">
               🏆 Pontuação base: <strong>${labelBase}</strong><br>
-              ✅ Bônus assinante: <strong>+${bonus} pt</strong> já sendo computado!<br>
-              🎒 Kit Run Express: +1 pt se assinante (confirmado na validação)
+              ✅ Bônus assinante: <strong>+${bonus} pt</strong> já sendo computado!
             </div>
             <div class="pts-bloco-total">Total: ${totalFmt} pt${total !== 1 ? 's' : ''} neste evento</div>
           </div>
@@ -720,8 +715,7 @@
           <div class="pts-bloco-info">
             <div class="pts-bloco-titulo">Pontuação deste evento: ${labelBase}</div>
             <div class="pts-bloco-detalhe">
-              🎒 Kit Run Express: +0,5 pt (confirmado na validação)<br>
-              <em style="color:#777;">Pontos salvos agora, contam no ranking após aprovação.</em>
+              <em style="color:#777;">Pontos contam no ranking após aprovação do resultado.</em>
             </div>
             <div class="pts-bloco-cta">
               <div style="font-size:13px; font-weight:600; color:#E8622A; margin-bottom:8px;">
@@ -796,13 +790,31 @@
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
-    // Calcular pontos automaticamente
+    // Regra: só 1 resultado por dia
     const ev = _eventosCache[eventoId];
+    const dataEvento = ev?.data; // "YYYY-MM-DD"
+    if (dataEvento && !resultadoId) {
+      // Busca se já existe resultado (não rejeitado) para outro evento no mesmo dia
+      const { data: mesmoDia } = await client
+        .from('resultados')
+        .select('id, eventos(nome, data)')
+        .eq('corredor_id', corredorIdGlobal)
+        .neq('status', 'rejeitado')
+        .neq('evento_id', eventoId);
+
+      const conflito = (mesmoDia || []).find(r => r.eventos?.data === dataEvento);
+      if (conflito) {
+        msg.textContent = `⚠️ Só é permitido 1 resultado por dia. Você já tem resultado cadastrado para "${conflito.eventos?.nome || 'outro evento'}" nesta data. Cancele um dos dois para continuar.`;
+        msg.className = 'msg-form error';
+        btn.disabled = false;
+        btn.textContent = 'Enviar para validação';
+        return;
+      }
+    }
+
+    // Calcular pontos automaticamente
     const basePts = parseFloat(ev?.pontuacao ?? 1);
     const bonusAssinante = getBonusAssinante();
-    // Verificar se corredor usou Kit Run Express (flag marcada pelo próprio atleta)
-    const usouKitRun = document.getElementById(`kitrun-${eventoId}`)?.checked || false;
-    // Bônus Kit Run NÃO é somado aqui — será confirmado pelo admin na validação
     const pontosCalculados = basePts + bonusAssinante;
 
     const dados = {
@@ -818,7 +830,6 @@
       status: 'pendente',
       motivo_rejeicao: null,
       pontos: pontosCalculados,
-      usou_kit_run: usouKitRun,
       bonus_assinante: bonusAssinante,
     };
 

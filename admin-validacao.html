@@ -130,7 +130,7 @@
     const resumo = Object.entries(porStatus).map(([s, n]) => `${s}: ${n}`).join(' | ');
 
     const { data, error } = await sb.from('resultados')
-      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, usou_kit_run, corredores(nome, email, instagram, assinante, assinante_desde), eventos(nome, data, distancia)')
+      .select('id, numero_peito, distancia, finalizou, tempo, posicao_geral, categoria, url_resultado, status, pontos, created_at, corredores(nome, email, instagram, assinante, assinante_desde), eventos(nome, data, distancia)')
       .eq('status', 'pendente')
       .order('created_at', { ascending: true });
 
@@ -147,11 +147,17 @@
       return;
     }
 
+    // Detectar duplicatas no mesmo dia por corredor
+    const chaveDia = r => `${r.corredor_id}__${r.eventos?.data}`;
+    const contDia = {};
+    pendentes.forEach(r => { const k = chaveDia(r); contDia[k] = (contDia[k] || 0) + 1; });
+
     let html = `<table><thead><tr><th>Corredor</th><th>Evento</th><th>Dados informados</th><th>Ações</th></tr></thead><tbody>`;
     pendentes.forEach(r => {
       const dataEv = r.eventos?.data ? new Date(r.eventos.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const insta = r.corredores?.instagram ? `@${r.corredores.instagram}` : '';
       const enviado = new Date(r.created_at).toLocaleString('pt-BR');
+      const temDuplicata = (contDia[chaveDia(r)] || 0) > 1;
       html += `
         <tr id="row-${r.id}">
           <td class="corredor-info">
@@ -162,6 +168,7 @@
           <td>
             <strong>${r.eventos?.nome || '?'}</strong><br>
             <span style="font-size:11px; color:#888;">${dataEv} · ${r.eventos?.distancia || ''}</span>
+            ${temDuplicata ? `<div style="margin-top:5px;background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #ffc107;">⚠️ Corredor tem 2+ resultados nesta data — só aprovar 1</div>` : ''}
           </td>
           <td class="resultado-detalhe">
             <div class="campo">🏷️ <strong>Peito:</strong> ${r.numero_peito || '—'}</div>
@@ -174,17 +181,12 @@
           </td>
           <td style="min-width:180px;">
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-green btn-sm" id="btn-aprovar-${r.id}" onclick="aprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
-                ✅ Aprovar (<span id="pts-label-${r.id}">${((r.pontos || 0) + (r.usou_kit_run ? calcularBonusKitRun(r.corredores) : 0)).toFixed(1).replace(/\.0$/, '')} pts</span>)
+              <button class="btn btn-green btn-sm" onclick="aprovar('${r.id}', ${r.pontos || 0})">
+                ✅ Aprovar (${(r.pontos || 0)} pts)
               </button>
               <div style="font-size:11px; padding:5px 8px; border-radius:5px; ${r.corredores?.assinante ? 'background:#e6f9f0; color:#1a7a4a;' : 'background:#f5f5f5; color:#aaa;'}; white-space:nowrap;">
                 ${r.corredores?.assinante ? `✅ Assinante (+${calcularBonusAssinante(r.corredores).toString().replace('.', ',')} pt já incluído)` : '⬜ Não é assinante'}
               </div>
-              <label style="display:flex; align-items:center; gap:5px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap;">
-                <input type="checkbox" id="kitrun-${r.id}" ${r.usou_kit_run ? 'checked' : ''} style="width:auto; cursor:pointer;"
-                  onchange="atualizarBtnAprovar('${r.id}', ${r.pontos || 0}, ${calcularBonusKitRun(r.corredores)})">
-                +${calcularBonusKitRun(r.corredores).toString().replace('.', ',')} pt Kit Run Express${r.usou_kit_run ? ' <span style="color:#E8622A;">(atleta declarou uso)</span>' : ''}
-              </label>
               <button class="btn btn-red btn-sm" onclick="toggleRejeicao('${r.id}')">❌ Rejeitar</button>
             </div>
             <div class="rejeicao-form" id="rejeicao-${r.id}">
@@ -207,26 +209,12 @@
     return meses >= 9 ? 1 : 0.5; // ouro/elite ≥ 9 meses = 1 pt, bronze/prata = 0,5 pt
   }
 
-  function calcularBonusKitRun(corredor) {
-    // Assinante (qualquer tier) = 1 pt; não-assinante = 0,5 pt
-    return corredor?.assinante ? 1 : 0.5;
-  }
-
-  function atualizarBtnAprovar(id, pontosBase, bonusKit) {
-    const checked = document.getElementById(`kitrun-${id}`)?.checked;
-    const total = (pontosBase || 0) + (checked ? bonusKit : 0);
-    const label = document.getElementById(`pts-label-${id}`);
-    if (label) label.textContent = parseFloat(total.toFixed(1)).toString().replace('.', ',') + ' pts';
-  }
-
   function toggleRejeicao(id) { document.getElementById(`rejeicao-${id}`).classList.toggle('aberta'); }
 
-  async function aprovar(resultadoId, pontosBase, bonusKitRunValor) {
+  async function aprovar(resultadoId, pontosBase) {
     const msg = document.getElementById('msgValidacao');
-    const isKitRun = document.getElementById(`kitrun-${resultadoId}`)?.checked;
-    const bonusKitRun = isKitRun ? (bonusKitRunValor || 0.5) : 0;
-    const pontos = (pontosBase || 0) + bonusKitRun;
-    const { error } = await sb.from('resultados').update({ status: 'aprovado', pontos, usou_kit_run: isKitRun, validado_em: new Date().toISOString(), motivo_rejeicao: null }).eq('id', resultadoId);
+    const pontos = pontosBase || 0;
+    const { error } = await sb.from('resultados').update({ status: 'aprovado', pontos, validado_em: new Date().toISOString(), motivo_rejeicao: null }).eq('id', resultadoId);
     if (error) { msg.textContent = 'Erro: ' + error.message; msg.className = 'msg error'; }
     else {
       msg.textContent = `✅ Resultado aprovado com ${pontos} pts!`;

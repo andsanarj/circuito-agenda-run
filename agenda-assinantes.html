@@ -149,7 +149,8 @@
       .eq('user_id', session.user.id)
       .single();
 
-    const ativo = corredor?.assinante && corredor?.assinante_ate >= hoje;
+    const isAdmin = session.user.email === 'agendarun1@gmail.com';
+    const ativo = isAdmin || (corredor?.assinante && corredor?.assinante_ate >= hoje);
     if (!ativo) { document.getElementById('telaAcesso').style.display = 'block'; return; }
 
     document.getElementById('conteudo').style.display = 'block';
@@ -194,11 +195,6 @@
         const chipDist = ev.distancias ? `<span class="chip">🏃 ${ev.distancias}</span>` : '';
         const chipCidade = ev.cidade ? `<span class="chip cidade">📍 ${ev.cidade}</span>` : '';
         const chipCupom = ev.cupom_desconto ? `<span class="chip cupom">🏷️ Cupom: <strong>${ev.cupom_desconto}</strong></span>` : '';
-        const chipKit = ev.kit_run
-          ? ev.kit_run_link
-            ? `<a href="${ev.kit_run_link}" target="_blank" class="chip kit" style="text-decoration:none;">📦 Retirada de Kit: ${ev.kit_run} →</a>`
-            : `<span class="chip kit">📦 Retirada de Kit: ${ev.kit_run}</span>`
-          : '';
         const badgeCircuito = isCircuito ? `<div class="badge-circuito">🏅 Circuito Agenda Run</div>` : '';
         const btnLink = ev.link ? `<div class="ev-link"><a href="${ev.link}" target="_blank" class="btn-site">🔗 Ver evento</a></div>` : '';
 
@@ -216,7 +212,7 @@
                 </div>
                 ${btnLink}
               </div>
-              <div class="ev-chips">${chipDist}${chipCidade}${chipCupom}${chipKit}</div>
+              <div class="ev-chips">${chipDist}${chipCidade}${chipCupom}</div>
             </div>
           </div>`;
       });
