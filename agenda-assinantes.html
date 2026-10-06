@@ -162,6 +162,7 @@
     const { data: eventos, error } = await sb
       .from('agenda_eventos')
       .select('*')
+      .gte('data', new Date().toISOString().split('T')[0])
       .order('data', { ascending: true });
 
     if (error || !eventos?.length) {
