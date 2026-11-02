@@ -834,23 +834,45 @@
       }
     }
 
-    // Regra: só 1 resultado por dia
+    // Aviso: verifica se já há outro resultado aprovado/pendente no mesmo fim de semana
     if (dataEvento && !resultadoId) {
-      // Busca se já existe resultado (não rejeitado) para outro evento no mesmo dia
-      const { data: mesmoDia } = await client
-        .from('resultados')
-        .select('id, eventos(nome, data)')
-        .eq('corredor_id', corredorIdGlobal)
-        .neq('status', 'rejeitado')
-        .neq('evento_id', eventoId);
+      const diaSemana = new Date(dataEvento + 'T12:00:00').getDay(); // 0=Dom, 6=Sáb
+      const eFimDeSemana = diaSemana === 0 || diaSemana === 6;
 
-      const conflito = (mesmoDia || []).find(r => r.eventos?.data === dataEvento);
-      if (conflito) {
-        msg.textContent = `⚠️ Só é permitido 1 resultado por dia. Você já tem resultado cadastrado para "${conflito.eventos?.nome || 'outro evento'}" nesta data. Cancele um dos dois para continuar.`;
-        msg.className = 'msg-form error';
-        btn.disabled = false;
-        btn.textContent = 'Enviar para validação';
-        return;
+      if (eFimDeSemana) {
+        const { data: outrosResultados } = await client
+          .from('resultados')
+          .select('id, pontos, eventos(nome, data)')
+          .eq('corredor_id', corredorIdGlobal)
+          .neq('status', 'rejeitado')
+          .neq('evento_id', eventoId);
+
+        // Calcula o início da semana (segunda-feira) para comparar o fim de semana
+        const dataRef = new Date(dataEvento + 'T12:00:00');
+        const diaDaSemana = dataRef.getDay(); // 0=Dom, 6=Sáb
+        const offset = diaDaSemana === 0 ? 6 : diaDaSemana - 1; // dias até segunda
+        const segundaFeira = new Date(dataRef);
+        segundaFeira.setDate(dataRef.getDate() - offset);
+        const fimDeSemanaInicio = new Date(segundaFeira);
+        fimDeSemanaInicio.setDate(segundaFeira.getDate() + 5); // Sábado
+        const fimDeSemanaFim = new Date(segundaFeira);
+        fimDeSemanaFim.setDate(segundaFeira.getDate() + 6); // Domingo
+
+        const toISO = d => d.toISOString().split('T')[0];
+        const conflitos = (outrosResultados || []).filter(r => {
+          const d = r.eventos?.data;
+          return d && d >= toISO(fimDeSemanaInicio) && d <= toISO(fimDeSemanaFim);
+        });
+
+        if (conflitos.length > 0) {
+          const nomes = conflitos.map(r => `"${r.eventos?.nome || 'outro evento'}"`).join(', ');
+          msg.textContent = `ℹ️ Você já tem resultado neste fim de semana (${nomes}). Pode enviar, mas apenas o evento de maior pontuação será contabilizado no ranking.`;
+          msg.className = 'msg-form';
+          msg.style.display = 'block';
+          msg.style.background = '#e8f4fd';
+          msg.style.color = '#1F4E79';
+          // Não bloqueia — apenas avisa e continua
+        }
       }
     }
 
