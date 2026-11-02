@@ -542,6 +542,15 @@
       meuResultados.forEach(r => { if (r.eventos) _eventosCache[r.eventos.id] = r.eventos; });
     }
 
+    // Mapa de data → nome do evento que já tem resultado ativo naquele dia
+    // (ignora rejeitados e o próprio evento)
+    const dataOcupada = {}; // "YYYY-MM-DD" → nome do evento
+    (meuResultados || []).forEach(r => {
+      if (!r.eventos?.data || r.status === 'rejeitado') return;
+      const d = r.eventos.data;
+      if (!dataOcupada[d]) dataOcupada[d] = { nome: r.eventos.nome, eventoId: r.eventos.id };
+    });
+
     const div = document.getElementById('listaEventos');
 
     if (!meuResultados || meuResultados.length === 0) {
@@ -558,13 +567,34 @@
       const dataFmt = ev.data ? new Date(ev.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
       const meta = [dataFmt, ev.distancia, ev.cidade].filter(Boolean).join(' · ');
 
+      // Verifica se outro evento JÁ ocupa este dia
+      const ocupante = ev.data && dataOcupada[ev.data] && dataOcupada[ev.data].eventoId !== ev.id
+        ? dataOcupada[ev.data]
+        : null;
+
       let tagHtml = '';
       let acaoHtml = '';
 
+      const hoje = new Date().toISOString().split('T')[0];
+      const eventoEncerrado = ev.data && ev.data < hoje;
+
       if (r.status === 'na_lista') {
         tagHtml = '<span class="tag tag-nova">📋 Na sua lista</span>';
-        acaoHtml = `<button class="btn-registrar" onclick="abrirForm('${ev.id}', '${r.id}')">Registrar resultado</button>
-                    <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
+        if (eventoEncerrado) {
+          acaoHtml = `<div style="font-size:12px;color:#888;background:#f5f5f5;border-radius:8px;padding:8px 10px;line-height:1.4;">
+            🔒 Evento encerrado — prazo para cadastrar resultado expirou.
+          </div>
+          <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
+        } else if (ocupante) {
+          acaoHtml = `<div style="font-size:12px;color:#b00020;background:#fdecea;border-radius:8px;padding:8px 10px;line-height:1.4;">
+            ⚠️ Você já tem resultado em <strong>${ocupante.nome}</strong> nesta data.<br>
+            <em>Remova aquele evento para registrar este.</em>
+          </div>
+          <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
+        } else {
+          acaoHtml = `<button class="btn-registrar" onclick="abrirForm('${ev.id}', '${r.id}')">Registrar resultado</button>
+                      <button onclick="removerDaLista('${r.id}')" style="background:none; border:none; color:#b00020; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-top:4px; display:block;">✕ Remover da lista</button>`;
+        }
       } else if (r.status === 'pendente') {
         tagHtml = '<span class="tag tag-pendente">⏳ Aguardando validação</span>';
         acaoHtml = `<button class="btn-editar" onclick="abrirForm('${ev.id}', '${r.id}')">✏️ Editar</button>`;
@@ -790,9 +820,21 @@
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
-    // Regra: só 1 resultado por dia
+    // Regra: evento encerrado — não permite cadastrar resultado novo
     const ev = _eventosCache[eventoId];
     const dataEvento = ev?.data; // "YYYY-MM-DD"
+    if (dataEvento && !resultadoId) {
+      const hoje = new Date().toISOString().split('T')[0];
+      if (dataEvento < hoje) {
+        msg.textContent = '⚠️ Este evento já foi encerrado. Não é possível cadastrar resultados para corridas passadas.';
+        msg.className = 'msg-form error';
+        btn.disabled = false;
+        btn.textContent = 'Enviar para validação';
+        return;
+      }
+    }
+
+    // Regra: só 1 resultado por dia
     if (dataEvento && !resultadoId) {
       // Busca se já existe resultado (não rejeitado) para outro evento no mesmo dia
       const { data: mesmoDia } = await client
