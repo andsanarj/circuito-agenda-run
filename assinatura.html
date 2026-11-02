@@ -162,6 +162,43 @@
     .msg-assinar.ok  { background: rgba(255,255,255,0.1); color: #a8e6c0; display: block; }
     .msg-assinar.err { background: rgba(255,255,255,0.1); color: #ffaaaa; display: block; }
 
+    /* ── CONTADOR DE VAGAS ── */
+    .vagas-bar-wrap {
+      display: inline-block; margin: 0 auto 24px; min-width: 280px; max-width: 360px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 14px 20px;
+    }
+    .vagas-bar-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 8px;
+    }
+    .vagas-bar-label strong { color: #fff; font-size: 13px; }
+    .vagas-bar-track {
+      height: 6px; background: rgba(255,255,255,0.12); border-radius: 6px; overflow: hidden;
+    }
+    .vagas-bar-fill {
+      height: 100%; border-radius: 6px; transition: width 0.6s ease;
+      background: linear-gradient(90deg, #4CBFCB, #E8622A);
+    }
+    .vagas-bar-fill.cheia { background: #E8622A; }
+    .vagas-nota { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px; }
+
+    /* ── VAGAS ESGOTADAS ── */
+    .esgotado-box {
+      background: rgba(232,98,42,0.15); border: 1px solid rgba(232,98,42,0.4);
+      border-radius: 12px; padding: 20px 24px; max-width: 420px;
+      margin: 0 auto 8px; text-align: center;
+    }
+    .esgotado-box p { color: #ffcba4; font-size: 14px; line-height: 1.6; margin: 0; }
+    .esgotado-box strong { color: #fff; }
+    .btn-esgotado {
+      display: inline-block; margin-top: 14px;
+      background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+      padding: 10px 24px; border-radius: 20px; font-size: 14px; font-weight: 700;
+      text-decoration: none;
+    }
+    .btn-esgotado:hover { background: rgba(255,255,255,0.2); }
+
     footer { text-align: center; padding: 32px 24px; background: #0F2D4A; color: rgba(255,255,255,0.35); font-size: 13px; }
     footer a { color: rgba(255,255,255,0.5); }
   </style>
@@ -199,10 +236,33 @@
       <span class="periodo">/mês</span>
     </div>
   </div>
-  <div>
+  <!-- Contador de vagas -->
+  <div id="vagasWrap" style="display:none;">
+    <div class="vagas-bar-wrap">
+      <div class="vagas-bar-label">
+        <span>Vagas disponíveis</span>
+        <strong id="vagasTexto">—</strong>
+      </div>
+      <div class="vagas-bar-track">
+        <div class="vagas-bar-fill" id="vagasFill" style="width:0%"></div>
+      </div>
+      <div class="vagas-nota" id="vagasNota"></div>
+    </div>
+  </div>
+
+  <!-- Botão normal ou mensagem de esgotado -->
+  <div id="heroAssinarArea">
     <button class="btn-hero" id="btnHeroAssinar" onclick="irParaAssinar()">⭐ Quero assinar agora</button>
     <div class="msg-assinar" id="msgHero"></div>
   </div>
+  <div id="heroEsgotado" style="display:none;">
+    <div class="esgotado-box">
+      <p>⚠️ As <strong>300 vagas</strong> da temporada atual estão esgotadas.<br>
+      Entre em contato para ser avisado quando uma vaga abrir.</p>
+      <a href="mailto:agendarun@agendarun.com.br" class="btn-esgotado">✉️ Entrar na lista de espera</a>
+    </div>
+  </div>
+
   <p class="hero-note">Cancele quando quiser · Sem taxa de adesão</p>
 </div>
 
@@ -335,8 +395,19 @@
 <div class="cta-section" id="assinar">
   <h2>Pronto para pontuar mais?</h2>
   <p>Assine agora por R$ 9,99/mês e comece a acumular vantagens na sua próxima corrida.</p>
-  <button class="btn-cta" id="btnCtaAssinar" onclick="irParaAssinar()">⭐ Assinar agora — R$ 9,99/mês</button>
-  <div class="msg-assinar" id="msgCta"></div>
+
+  <div id="ctaAssinarArea">
+    <button class="btn-cta" id="btnCtaAssinar" onclick="irParaAssinar()">⭐ Assinar agora — R$ 9,99/mês</button>
+    <div class="msg-assinar" id="msgCta"></div>
+  </div>
+  <div id="ctaEsgotado" style="display:none;">
+    <div class="esgotado-box" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.2);">
+      <p>⚠️ As <strong>300 vagas</strong> da temporada estão esgotadas.<br>
+      Fique na lista de espera e seja avisado quando uma vaga abrir.</p>
+      <a href="mailto:agendarun@agendarun.com.br" class="btn-esgotado">✉️ Lista de espera</a>
+    </div>
+  </div>
+
   <p class="cta-note">Cancele quando quiser · Sem taxa de adesão · Pagamento via PIX ou cartão</p>
 </div>
 
@@ -349,11 +420,56 @@
   const SUPABASE_KEY = 'sb_publishable_z5uS2VpSMnOHFmQV49yEZQ_WZBB0VoD';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  const LIMITE_VAGAS = 300;
+
   let _sessao = null;
   let _corredorAssinante = false;
+  let _vagasEsgotadas = false;
+
+  // ── Carregar contador de vagas (visível para todos) ───────────
+  async function carregarVagas() {
+    const { data: contagem, error } = await sb.rpc('get_contagem_assinantes');
+    if (error || contagem === null) return; // silencioso se falhar
+
+    const ocupadas = contagem;
+    const disponiveis = Math.max(0, LIMITE_VAGAS - ocupadas);
+    const pct = Math.min(100, Math.round((ocupadas / LIMITE_VAGAS) * 100));
+
+    document.getElementById('vagasWrap').style.display = 'block';
+
+    const fill = document.getElementById('vagasFill');
+    fill.style.width = pct + '%';
+    if (pct >= 90) fill.classList.add('cheia');
+
+    if (disponiveis === 0) {
+      _vagasEsgotadas = true;
+      document.getElementById('vagasTexto').textContent = 'Esgotadas';
+      document.getElementById('vagasNota').textContent = `Todas as ${LIMITE_VAGAS} vagas estão ocupadas.`;
+      mostrarEsgotado();
+    } else if (disponiveis <= 20) {
+      document.getElementById('vagasTexto').textContent = `${disponiveis} vagas restantes`;
+      document.getElementById('vagasNota').textContent = `Limite: ${LIMITE_VAGAS} assinantes · Corra antes que acabem!`;
+    } else {
+      document.getElementById('vagasTexto').textContent = `${disponiveis} de ${LIMITE_VAGAS}`;
+      document.getElementById('vagasNota').textContent = `${ocupadas} vagas ocupadas`;
+    }
+  }
+
+  function mostrarEsgotado() {
+    document.getElementById('heroAssinarArea').style.display = 'none';
+    document.getElementById('heroEsgotado').style.display   = 'block';
+    document.getElementById('ctaAssinarArea').style.display = 'none';
+    document.getElementById('ctaEsgotado').style.display    = 'block';
+  }
 
   // ── Verificar sessão ──────────────────────────────────────────
-  sb.auth.getSession().then(async ({ data: { session } }) => {
+  async function init() {
+    // Carrega vagas em paralelo com a sessão
+    const [{ data: { session } }] = await Promise.all([
+      sb.auth.getSession(),
+      carregarVagas(),
+    ]);
+
     _sessao = session;
     if (!session) return;
 
@@ -377,15 +493,31 @@
       document.getElementById('bannerTierNome').textContent = tier;
       document.getElementById('btnNavAssinar').textContent = '⭐ Área exclusiva';
       document.getElementById('btnNavAssinar').href = 'assinantes.html';
-      document.getElementById('btnHeroAssinar').textContent = '⭐ Acessar área exclusiva';
-      document.getElementById('btnHeroAssinar').onclick = () => window.location.href = 'assinantes.html';
-      document.getElementById('btnCtaAssinar').textContent = '⭐ Acessar área exclusiva';
-      document.getElementById('btnCtaAssinar').onclick = () => window.location.href = 'assinantes.html';
+      // Substitui botões pelos de "área exclusiva" mesmo que vagas esgotadas
+      if (document.getElementById('btnHeroAssinar')) {
+        document.getElementById('btnHeroAssinar').textContent = '⭐ Acessar área exclusiva';
+        document.getElementById('btnHeroAssinar').onclick = () => window.location.href = 'assinantes.html';
+      }
+      if (document.getElementById('btnCtaAssinar')) {
+        document.getElementById('btnCtaAssinar').textContent = '⭐ Acessar área exclusiva';
+        document.getElementById('btnCtaAssinar').onclick = () => window.location.href = 'assinantes.html';
+      }
+      // Esconde mensagens de esgotado para quem já é assinante
+      document.getElementById('heroEsgotado').style.display = 'none';
+      document.getElementById('heroAssinarArea').style.display = 'block';
+      document.getElementById('ctaEsgotado').style.display = 'none';
+      document.getElementById('ctaAssinarArea').style.display = 'block';
     }
-  });
+  }
+
+  init();
 
   // ── Botão assinar ─────────────────────────────────────────────
   async function irParaAssinar() {
+    if (_vagasEsgotadas && !_corredorAssinante) {
+      mostrarEsgotado();
+      return;
+    }
     // Não assinante logado: acionar Edge Function
     if (_sessao && !_corredorAssinante) {
       await processarAssinatura();
@@ -406,7 +538,7 @@
     const msgHero = document.getElementById('msgHero');
     const msgCta  = document.getElementById('msgCta');
 
-    [btnHero, btnCta].forEach(b => { b.disabled = true; b.textContent = 'Aguarde...'; });
+    [btnHero, btnCta].forEach(b => { if (b) { b.disabled = true; b.textContent = 'Aguarde...'; } });
 
     try {
       const res = await fetch(
@@ -427,14 +559,21 @@
         msgCta.textContent = '✅ Redirecionando para o pagamento...';
         msgCta.className = 'msg-assinar ok';
         setTimeout(() => window.open(data.paymentUrl, '_blank'), 800);
-        [btnHero, btnCta].forEach(b => { b.disabled = false; b.textContent = '⭐ Assinar agora'; });
+        [btnHero, btnCta].forEach(b => { if (b) { b.disabled = false; b.textContent = '⭐ Assinar agora'; } });
+
+      } else if (data.error === 'limite_atingido') {
+        // Vagas acabaram entre o carregamento e o clique
+        _vagasEsgotadas = true;
+        mostrarEsgotado();
+
       } else {
-        throw new Error(data.error || 'Erro desconhecido');
+        throw new Error(data.message || data.error || 'Erro desconhecido');
       }
     } catch (err) {
-      msgHero.textContent = '❌ ' + err.message; msgHero.className = 'msg-assinar err';
-      msgCta.textContent  = '❌ ' + err.message; msgCta.className  = 'msg-assinar err';
-      [btnHero, btnCta].forEach(b => { b.disabled = false; b.textContent = '⭐ Assinar agora'; });
+      const msg = '❌ ' + err.message;
+      if (msgHero) { msgHero.textContent = msg; msgHero.className = 'msg-assinar err'; }
+      if (msgCta)  { msgCta.textContent  = msg; msgCta.className  = 'msg-assinar err'; }
+      [btnHero, btnCta].forEach(b => { if (b) { b.disabled = false; b.textContent = '⭐ Assinar agora'; } });
     }
   }
 </script>
