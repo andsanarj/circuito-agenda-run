@@ -74,57 +74,110 @@
     .divider { border: none; border-top: 1px solid #e0e7ef; }
 
     /* ── BENEFÍCIOS GRID ── */
-    .beneficios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .beneficios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
     .beneficio-card {
-      background: #fff; border-radius: 14px; padding: 26px 24px;
+      background: #fff; border-radius: 14px; padding: 28px 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1.5px solid transparent;
       transition: border-color 0.15s, transform 0.15s;
     }
     .beneficio-card:hover { border-color: #4CBFCB; transform: translateY(-2px); }
-    .beneficio-icon { font-size: 32px; margin-bottom: 12px; }
-    .beneficio-card h3 { font-size: 20px; color: #1F4E79; margin-bottom: 6px; }
-    .beneficio-card p { font-size: 13px; color: #666; line-height: 1.6; }
+    .beneficio-icon { font-size: 36px; margin-bottom: 14px; }
+    .beneficio-card h3 { font-size: 21px; color: #1F4E79; margin-bottom: 8px; }
+    .beneficio-card p { font-size: 13px; color: #555; line-height: 1.7; }
+    .beneficio-card .beneficio-detalhe {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid #eef2f7;
+      font-size: 12px; color: #888; line-height: 1.7;
+    }
+    .beneficio-card .beneficio-detalhe strong { color: #1F4E79; }
+    .beneficio-card .beneficio-tag {
+      display: inline-block; margin-top: 12px;
+      background: #EBF3FB; color: #1F4E79; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px; letter-spacing: 0.3px;
+    }
     .beneficio-destaque { background: linear-gradient(135deg, #EBF3FB, #dbeeff); border-color: #4CBFCB; }
+    .beneficio-destaque .beneficio-detalhe { border-color: rgba(76,191,203,0.25); }
+
+    /* ── EXEMPLO DE PONTOS ── */
+    .exemplo-box {
+      background: linear-gradient(135deg, #0F2D4A, #1F4E79);
+      border-radius: 16px; padding: 32px 28px; color: #fff; margin-top: 40px;
+    }
+    .exemplo-box h4 { font-size: 20px; margin-bottom: 4px; color: #4CBFCB; }
+    .exemplo-box .exemplo-sub { font-size: 13px; color: #a8c8e8; margin-bottom: 24px; }
+    .exemplo-linha {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+    }
+    .exemplo-linha:last-child { border-bottom: none; }
+    .exemplo-linha .desc { color: #c5ddf0; }
+    .exemplo-linha .pts { font-weight: 700; color: #fff; }
+    .exemplo-linha .pts.bonus { color: #4CBFCB; }
+    .exemplo-total {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 16px; padding-top: 16px; border-top: 2px solid rgba(255,255,255,0.2);
+    }
+    .exemplo-total .label { font-size: 14px; font-weight: 700; color: #a8c8e8; }
+    .exemplo-total .valor { font-size: 28px; font-weight: 900; color: #fff; font-family: 'Barlow Condensed', sans-serif; }
+    .exemplo-total .valor span { font-size: 14px; color: #4CBFCB; margin-left: 6px; }
 
     /* ── COMPARATIVO ── */
     .comparativo { background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden; }
-    .comp-header { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .comp-header { display: grid; grid-template-columns: 1.4fr 1fr 1fr; }
     .comp-col { padding: 20px 16px; text-align: center; }
     .comp-col.assinante { background: linear-gradient(135deg, #1F4E79, #163a5f); color: #fff; }
     .comp-col h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
     .comp-col .sub-col { font-size: 12px; opacity: 0.7; }
-    .comp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid #f0f0f0; }
+    .comp-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; border-top: 1px solid #f0f0f0; }
     .comp-row:last-child { border-bottom: none; }
-    .comp-cell { padding: 14px 16px; font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .comp-cell { padding: 13px 16px; font-size: 13px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .comp-cell.label { text-align: left; justify-content: flex-start; color: #444; font-weight: 600; font-size: 13px; }
+    .comp-cell.sub-label { text-align: left; justify-content: flex-start; color: #999; font-weight: 400; font-size: 12px; padding-left: 28px; background: #fafbfc; }
     .comp-cell.assinante { background: #f5faff; color: #1F4E79; font-weight: 700; }
+    .comp-cell.assinante.sub-label { color: #4CBFCB; font-weight: 600; }
+    .comp-row.group-header { background: #f8fafc; }
+    .comp-row.group-header .comp-cell { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 16px; }
     .check { color: #1a7a4a; font-size: 15px; }
     .cross { color: #ccc; font-size: 15px; }
 
     /* ── NÍVEIS ── */
     .niveis-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    @media(max-width:640px){ .niveis-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:700px){ .niveis-grid { grid-template-columns: 1fr 1fr; } }
     .nivel-card {
-      border-radius: 12px; padding: 22px 18px; text-align: center;
+      border-radius: 14px; padding: 24px 18px; text-align: center;
       border: 2px solid transparent;
     }
     .nivel-bronze { background: linear-gradient(135deg, #fdf6ee, #f5deb3); border-color: #c8a87a; }
     .nivel-prata  { background: linear-gradient(135deg, #f0f5fb, #d8e8f0); border-color: #a0c4d8; }
     .nivel-ouro   { background: linear-gradient(135deg, #fffdf0, #fff3c0); border-color: #e8cc60; }
     .nivel-elite  { background: linear-gradient(135deg, #e8f8ff, #b8f0ff); border-color: #4CBFCB; }
-    .nivel-card .nivel-icon { font-size: 32px; margin-bottom: 8px; }
-    .nivel-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .nivel-card .nivel-icon { font-size: 34px; margin-bottom: 8px; }
+    .nivel-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
     .nivel-bronze h3 { color: #6b4c1e; }
     .nivel-prata  h3 { color: #1F4E79; }
     .nivel-ouro   h3 { color: #7a5800; }
     .nivel-elite  h3 { color: #0a3d47; }
-    .nivel-periodo { font-size: 12px; color: #888; margin-bottom: 12px; }
-    .nivel-bonus { font-size: 13px; font-weight: 700; }
-    .nivel-bronze .nivel-bonus { color: #6b4c1e; }
-    .nivel-prata  .nivel-bonus { color: #1F4E79; }
-    .nivel-ouro   .nivel-bonus { color: #7a5800; }
-    .nivel-elite  .nivel-bonus { color: #0a3d47; }
-    .nivel-extras { font-size: 12px; color: #666; margin-top: 8px; line-height: 1.5; }
+    .nivel-periodo { font-size: 12px; color: #888; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.07); }
+    .nivel-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #555; text-align: left; margin-bottom: 8px; line-height: 1.5; }
+    .nivel-item:last-child { margin-bottom: 0; }
+    .nivel-item .ni-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+    .nivel-bonus-tag {
+      display: inline-block; margin-bottom: 14px;
+      font-size: 13px; font-weight: 800; padding: 5px 14px; border-radius: 20px;
+    }
+    .nivel-bronze .nivel-bonus-tag { background: #f5deb3; color: #6b4c1e; }
+    .nivel-prata  .nivel-bonus-tag { background: #d8e8f0; color: #1F4E79; }
+    .nivel-ouro   .nivel-bonus-tag { background: #fff3c0; color: #7a5800; }
+    .nivel-elite  .nivel-bonus-tag { background: #b8f0ff; color: #0a3d47; }
+
+    /* ── FAQ ── */
+    .faq-lista { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item { background: #fff; border-radius: 12px; border: 1px solid #e8edf2; overflow: hidden; }
+    .faq-pergunta { padding: 18px 20px; font-weight: 700; color: #1F4E79; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .faq-pergunta::after { content: '+'; font-size: 20px; color: #4CBFCB; flex-shrink: 0; transition: transform 0.2s; font-weight: 300; }
+    .faq-item.aberto .faq-pergunta::after { transform: rotate(45deg); }
+    .faq-resposta { display: none; padding: 0 20px 18px; font-size: 13px; color: #555; line-height: 1.7; }
+    .faq-item.aberto .faq-resposta { display: block; }
 
     /* ── CTA FINAL ── */
     .cta-section {
@@ -271,28 +324,86 @@
 <div class="section">
   <div class="section-label">O que você ganha</div>
   <h2>Benefícios exclusivos para assinantes</h2>
-  <p class="sub">Cada mês de assinatura te deixa mais perto do nível Elite, com vantagens cada vez maiores.</p>
+  <p class="sub">Por R$ 9,99/mês você entra para o Circuito com vantagens reais em cada corrida — e quanto mais tempo assina, mais benefícios acumula.</p>
 
   <div class="beneficios-grid">
+
     <div class="beneficio-card beneficio-destaque">
       <div class="beneficio-icon">🏆</div>
       <h3>Bônus de Pontos</h3>
-      <p>Ganhe <strong>+0,5 pt</strong> por corrida nos níveis Bronze e Prata. Evolua para Ouro/Elite e suba para <strong>+1 pt</strong> por evento — sobre a pontuação base de cada corrida.</p>
+      <p>Cada corrida pontuável já vale pontos pela distância. Como assinante, você ganha um <strong>bônus extra em cima disso</strong> — sempre.</p>
+      <div class="beneficio-detalhe">
+        <strong>Pontuação base (igual para todos):</strong><br>
+        5 km = 0,5 pt &nbsp;·&nbsp; 10 km = 1 pt &nbsp;·&nbsp; 21 km+ = 2 pts<br><br>
+        <strong>Bônus assinante:</strong><br>
+        🥉 Bronze / 🥈 Prata → <strong>+0,5 pt</strong> por corrida<br>
+        🥇 Ouro / 💎 Elite → <strong>+1 pt</strong> por corrida<br><br>
+        Exemplo: corrida de 10 km sendo Ouro = 1 pt (base) + 1 pt (bônus) = <strong>2 pts no mesmo evento</strong>
+      </div>
+      <span class="beneficio-tag">Válido em todas as corridas pontuáveis</span>
     </div>
+
     <div class="beneficio-card">
       <div class="beneficio-icon">📦</div>
       <h3>Retirada de Kit Gratuita</h3>
-      <p>Retire seu kit sem pagar nada — 1 vez a cada 3 meses no Bronze, a cada 2 meses no Prata e mensalmente no Ouro/Elite. Demais retiradas com <strong>50% de desconto</strong>.</p>
+      <p>Retire seu kit de corrida <strong>sem pagar nada</strong> na Agenda Run — um benefício concreto que já paga a assinatura.</p>
+      <div class="beneficio-detalhe">
+        <strong>Frequência por nível:</strong><br>
+        🥉 Bronze → 1 gratuita a cada 3 meses<br>
+        🥈 Prata &nbsp;→ 1 gratuita a cada 2 meses<br>
+        🥇 Ouro &nbsp;&nbsp;→ 1 gratuita por mês<br>
+        💎 Elite &nbsp;&nbsp;→ 1 gratuita por mês<br><br>
+        <strong>Demais retiradas:</strong> 50% de desconto, independente do nível.
+      </div>
+      <span class="beneficio-tag">Desconto em todas as retiradas extras</span>
     </div>
+
     <div class="beneficio-card">
       <div class="beneficio-icon">🎰</div>
       <h3>Sorteios Exclusivos</h3>
-      <p>Participe de sorteios exclusivos de cortesias para corridas parceiras e produtos Agenda Run. Nos níveis mais altos, inclui brindes especiais.</p>
+      <p>Apenas assinantes podem participar dos sorteios do Circuito — com cortesias para corridas parceiras e produtos Agenda Run.</p>
+      <div class="beneficio-detalhe">
+        <strong>O que é sorteado:</strong><br>
+        🎟️ Cortesias (inscrições gratuitas) para corridas parceiras da Grande SP<br>
+        👕 Produtos Agenda Run<br>
+        💎 Elite: brindes especiais + boné ou camiseta Agenda Run<br><br>
+        <strong>Como funciona:</strong> novos sorteios são abertos periodicamente. Assinante entra na lista e fica na disputa. Simples assim.
+      </div>
+      <span class="beneficio-tag">Quanto maior o nível, mais sorteios disponíveis</span>
     </div>
+
     <div class="beneficio-card">
       <div class="beneficio-icon">💎</div>
       <h3>Programa de Fidelidade</h3>
-      <p>Quanto mais tempo assinante, maior o seu nível: Bronze, Prata, Ouro e Elite. Cada nível desbloqueia benefícios extras.</p>
+      <p>Cada mês de assinatura ativa conta. Você evolui automaticamente de Bronze até Elite, desbloqueando benefícios maiores no caminho.</p>
+      <div class="beneficio-detalhe">
+        <strong>Os 4 níveis:</strong><br>
+        🥉 Bronze → 1 a 4 meses de assinatura<br>
+        🥈 Prata &nbsp;→ 5 a 8 meses<br>
+        🥇 Ouro &nbsp;&nbsp;→ 9 a 12 meses<br>
+        💎 Elite &nbsp;&nbsp;→ 13+ meses<br><br>
+        O nível sobe automaticamente. Se cancelar e reativar, o contador recomeça do início.
+      </div>
+      <span class="beneficio-tag">Evolução automática mês a mês</span>
+    </div>
+
+  </div>
+
+  <!-- Exemplo prático de pontuação -->
+  <div class="exemplo-box">
+    <h4>📊 Na prática: quanto você pontua?</h4>
+    <p class="exemplo-sub">Exemplo: corredor Ouro correndo 10 km em um evento pontuável</p>
+    <div class="exemplo-linha">
+      <span class="desc">Pontuação base da corrida (10 km)</span>
+      <span class="pts">1 pt</span>
+    </div>
+    <div class="exemplo-linha">
+      <span class="desc">Bônus assinante nível Ouro</span>
+      <span class="pts bonus">+1 pt</span>
+    </div>
+    <div class="exemplo-total">
+      <span class="label">Total neste evento</span>
+      <span class="valor">2 pts <span>vs. 1 pt sem assinatura</span></span>
     </div>
   </div>
 </div>
@@ -311,6 +422,12 @@
       <div class="comp-col"><h4>Sem assinatura</h4><div class="sub-col">Gratuito</div></div>
       <div class="comp-col assinante"><h4>⭐ Assinante</h4><div class="sub-col">R$ 9,99/mês</div></div>
     </div>
+
+    <!-- Ranking -->
+    <div class="comp-row group-header">
+      <div class="comp-cell label" style="color:#aaa; font-size:11px; font-weight:700; text-transform:uppercase;">Ranking</div>
+      <div class="comp-cell"></div><div class="comp-cell assinante"></div>
+    </div>
     <div class="comp-row">
       <div class="comp-cell label">Participar do ranking</div>
       <div class="comp-cell"><span class="check">✓</span> Sim</div>
@@ -326,26 +443,67 @@
       <div class="comp-cell"><span class="cross">—</span> Sem bônus</div>
       <div class="comp-cell assinante">+0,5 ou +1 pt</div>
     </div>
+    <div class="comp-row">
+      <div class="comp-cell sub-label">Bronze / Prata</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante sub-label">+0,5 pt por evento</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell sub-label">Ouro / Elite</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante sub-label">+1 pt por evento</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Pontuação máxima por evento (21 km+)</div>
+      <div class="comp-cell">2 pts</div>
+      <div class="comp-cell assinante">3 pts (Bronze/Prata) · 4 pts (Ouro/Elite)</div>
+    </div>
 
+    <!-- Kit -->
+    <div class="comp-row group-header">
+      <div class="comp-cell label" style="color:#aaa; font-size:11px; font-weight:700; text-transform:uppercase;">Retirada de Kit</div>
+      <div class="comp-cell"></div><div class="comp-cell assinante"></div>
+    </div>
     <div class="comp-row">
       <div class="comp-cell label">Retirada gratuita de kit</div>
       <div class="comp-cell"><span class="cross">—</span> Não incluso</div>
-      <div class="comp-cell assinante">✓ Incluída</div>
+      <div class="comp-cell assinante"><span class="check">✓</span> Incluída</div>
     </div>
     <div class="comp-row">
-      <div class="comp-cell label">Desconto nas demais retiradas</div>
+      <div class="comp-cell sub-label">Bronze → frequência</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante sub-label">1 gratuita a cada 3 meses</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell sub-label">Prata → frequência</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante sub-label">1 gratuita a cada 2 meses</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell sub-label">Ouro / Elite → frequência</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante sub-label">1 gratuita por mês</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-cell label">Desconto em retiradas extras</div>
       <div class="comp-cell"><span class="cross">—</span> Preço cheio</div>
-      <div class="comp-cell assinante">50% off</div>
+      <div class="comp-cell assinante">50% off sempre</div>
+    </div>
+
+    <!-- Sorteios -->
+    <div class="comp-row group-header">
+      <div class="comp-cell label" style="color:#aaa; font-size:11px; font-weight:700; text-transform:uppercase;">Sorteios</div>
+      <div class="comp-cell"></div><div class="comp-cell assinante"></div>
     </div>
     <div class="comp-row">
-      <div class="comp-cell label">Sorteios de cortesias</div>
+      <div class="comp-cell label">Participar de sorteios</div>
       <div class="comp-cell"><span class="cross">—</span> Não participa</div>
-      <div class="comp-cell assinante">✓ Acesso exclusivo</div>
+      <div class="comp-cell assinante"><span class="check">✓</span> Acesso exclusivo</div>
     </div>
     <div class="comp-row">
-      <div class="comp-cell label">Pontuação máxima por evento</div>
-      <div class="comp-cell">2,5 pts</div>
-      <div class="comp-cell assinante">4 pts</div>
+      <div class="comp-cell label">Sorteio de boné ou camiseta Agenda Run</div>
+      <div class="comp-cell"><span class="cross">—</span></div>
+      <div class="comp-cell assinante">💎 Apenas Elite</div>
     </div>
   </div>
 </div>
@@ -356,36 +514,85 @@
 <div class="section">
   <div class="section-label">Programa de fidelidade</div>
   <h2>Evolua com o tempo</h2>
-  <p class="sub">Quanto mais meses de assinatura ativa, maior o seu nível e mais benefícios você acumula.</p>
+  <p class="sub">Cada mês de assinatura ativa conta. Você sobe de nível automaticamente e acumula benefícios cada vez maiores.</p>
 
   <div class="niveis-grid">
     <div class="nivel-card nivel-bronze">
       <div class="nivel-icon">🥉</div>
       <h3>Bronze</h3>
-      <div class="nivel-periodo">1 a 4 meses</div>
-      <div class="nivel-bonus">+0,5 pt por evento</div>
-      <div class="nivel-extras">1 retirada gratuita a cada 3 meses<br>50% off nas demais<br>🎁 Sorteios de cortesias</div>
+      <div class="nivel-periodo">1 a 4 meses de assinatura</div>
+      <div class="nivel-bonus-tag">+0,5 pt por evento</div>
+      <div class="nivel-item"><span class="ni-icon">📦</span><span>1 retirada de kit gratuita a cada <strong>3 meses</strong></span></div>
+      <div class="nivel-item"><span class="ni-icon">🏷️</span><span>50% de desconto em retiradas extras</span></div>
+      <div class="nivel-item"><span class="ni-icon">🎰</span><span>Acesso aos sorteios de cortesias</span></div>
     </div>
     <div class="nivel-card nivel-prata">
       <div class="nivel-icon">🥈</div>
       <h3>Prata</h3>
-      <div class="nivel-periodo">5 a 8 meses</div>
-      <div class="nivel-bonus">+0,5 pt por evento</div>
-      <div class="nivel-extras">1 retirada gratuita a cada 2 meses<br>50% off nas demais<br>🎁 Sorteios de cortesias</div>
+      <div class="nivel-periodo">5 a 8 meses de assinatura</div>
+      <div class="nivel-bonus-tag">+0,5 pt por evento</div>
+      <div class="nivel-item"><span class="ni-icon">📦</span><span>1 retirada de kit gratuita a cada <strong>2 meses</strong></span></div>
+      <div class="nivel-item"><span class="ni-icon">🏷️</span><span>50% de desconto em retiradas extras</span></div>
+      <div class="nivel-item"><span class="ni-icon">🎰</span><span>Acesso aos sorteios de cortesias</span></div>
     </div>
     <div class="nivel-card nivel-ouro">
       <div class="nivel-icon">🥇</div>
       <h3>Ouro</h3>
-      <div class="nivel-periodo">9 a 12 meses</div>
-      <div class="nivel-bonus">+1 pt por evento</div>
-      <div class="nivel-extras">1 retirada gratuita por mês<br>50% off nas demais<br>🎁 Sorteios de cortesias e produtos</div>
+      <div class="nivel-periodo">9 a 12 meses de assinatura</div>
+      <div class="nivel-bonus-tag">+1 pt por evento</div>
+      <div class="nivel-item"><span class="ni-icon">📦</span><span>1 retirada de kit gratuita <strong>por mês</strong></span></div>
+      <div class="nivel-item"><span class="ni-icon">🏷️</span><span>50% de desconto em retiradas extras</span></div>
+      <div class="nivel-item"><span class="ni-icon">🎰</span><span>Sorteios de cortesias e produtos</span></div>
     </div>
     <div class="nivel-card nivel-elite">
       <div class="nivel-icon">💎</div>
       <h3>Elite</h3>
-      <div class="nivel-periodo">13+ meses</div>
-      <div class="nivel-bonus">+1 pt por evento</div>
-      <div class="nivel-extras">1 retirada gratuita por mês<br>50% off nas demais<br>🎁 Sorteios · Boné ou camiseta Agenda Run</div>
+      <div class="nivel-periodo">13+ meses de assinatura</div>
+      <div class="nivel-bonus-tag">+1 pt por evento</div>
+      <div class="nivel-item"><span class="ni-icon">📦</span><span>1 retirada de kit gratuita <strong>por mês</strong></span></div>
+      <div class="nivel-item"><span class="ni-icon">🏷️</span><span>50% de desconto em retiradas extras</span></div>
+      <div class="nivel-item"><span class="ni-icon">🎰</span><span>Sorteios de cortesias, produtos e brindes especiais</span></div>
+      <div class="nivel-item"><span class="ni-icon">👕</span><span>Sorteio de boné ou camiseta <strong>Agenda Run</strong></span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── FAQ ── -->
+<div class="section">
+  <div class="section-label">Dúvidas frequentes</div>
+  <h2>Perguntas e respostas</h2>
+  <p class="sub">Tudo o que você precisa saber antes de assinar.</p>
+
+  <div class="faq-lista">
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Como funciona o pagamento?</div>
+      <div class="faq-resposta">O pagamento é mensal, no valor de R$ 9,99. Você pode pagar via PIX ou cartão de crédito. Após confirmar o pagamento, sua assinatura é ativada automaticamente e os benefícios ficam disponíveis de imediato.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Posso cancelar quando quiser?</div>
+      <div class="faq-resposta">Sim. Não há fidelidade nem taxa de cancelamento. Você pode cancelar a qualquer momento diretamente na área exclusiva do Circuito. O acesso continua ativo até o fim do período já pago.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">O bônus de pontos vale para quais corridas?</div>
+      <div class="faq-resposta">O bônus vale para todas as corridas pontuáveis do Circuito Agenda Run, ou seja, os eventos cadastrados e validados na plataforma. Basta registrar seu resultado normalmente — o bônus é calculado e somado automaticamente.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Como funciona a retirada gratuita de kit?</div>
+      <div class="faq-resposta">A retirada gratuita é um benefício da assinatura que você usa na Agenda Run. A frequência depende do seu nível: Bronze (a cada 3 meses), Prata (a cada 2 meses), Ouro e Elite (mensalmente). Qualquer retirada além da gratuita tem 50% de desconto.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Como funciona o programa de níveis?</div>
+      <div class="faq-resposta">O nível é calculado automaticamente pelo número de meses consecutivos de assinatura ativa: Bronze (1–4 meses), Prata (5–8), Ouro (9–12) e Elite (13+). Se a assinatura for cancelada e reativada posteriormente, o contador recomeça do início.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Como funciona os sorteios?</div>
+      <div class="faq-resposta">Periodicamente abrimos sorteios exclusivos para assinantes — de cortesias para corridas parceiras, produtos e brindes. Você se inscreve na área exclusiva enquanto o sorteio estiver aberto. O resultado é anunciado na plataforma. Ganhadores ficam em período de carência antes de concorrer novamente.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-pergunta" onclick="toggleFaq(this)">Tem limite de vagas?</div>
+      <div class="faq-resposta">Sim. A assinatura está limitada a 200 assinantes ativos. Quando todas as vagas estiverem preenchidas, novas assinaturas só serão aceitas quando algum assinante cancelar. Você pode entrar na lista de espera pelo e-mail agendarun@agendarun.com.br.</div>
     </div>
   </div>
 </div>
@@ -511,6 +718,12 @@
   }
 
   init();
+
+  // ── FAQ ───────────────────────────────────────────────────────
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    item.classList.toggle('aberto');
+  }
 
   // ── Botão assinar ─────────────────────────────────────────────
   async function irParaAssinar() {
