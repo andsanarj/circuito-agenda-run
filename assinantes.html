@@ -258,7 +258,7 @@
 
     const { data: corredor } = await sb
       .from('corredores')
-      .select('id, nome, assinante')
+      .select('id, nome, assinante, carencia_sorteio_ate')
       .eq('user_id', session.user.id)
       .single();
 
@@ -271,7 +271,7 @@
       document.getElementById('conteudo').style.display = 'block';
       carregarProximasCorridas();
       carregarBeneficiosAssinante();
-      carregarSorteios(corredor.id);
+      carregarSorteios(corredor.id, corredor.carencia_sorteio_ate);
       carregarMeusPremios(corredor.id);
     }
   }
@@ -352,7 +352,7 @@
     prata: 'badge-prata', ouro: 'badge-ouro', elite: 'badge-elite'
   };
 
-  async function carregarSorteios(corredorId) {
+  async function carregarSorteios(corredorId, carenciaAte) {
     const div = document.getElementById('listaSorteios');
 
     const [{ data: sorteios }, { data: minhasInscs }] = await Promise.all([
@@ -378,6 +378,12 @@
     const inscrito = new Set((minhasInscs || []).map(i => i.sorteio_id));
     const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
 
+    // Verifica se o assinante está em período de carência
+    _carenciaGlobal = carenciaAte || null;
+    const hoje = new Date().toISOString().split('T')[0];
+    const emCarencia = carenciaAte && carenciaAte >= hoje;
+    const carenciaFmt = emCarencia ? fmt(carenciaAte) : null;
+
     div.innerHTML = sorteios.map(s => {
       const encerrado = s.status === 'encerrado';
       const estaInscrito = inscrito.has(s.id);
@@ -391,6 +397,8 @@
         btnHtml = `<span style="font-size:12px; color:#888; font-weight:600;">Encerrado</span>`;
       } else if (estaInscrito) {
         btnHtml = `<button class="btn-sorteio inscrito" onclick="cancelarSorteio('${s.id}', this)">✓ Quero participar</button>`;
+      } else if (emCarencia) {
+        btnHtml = `<span style="font-size:12px; color:#b07800; font-weight:600; background:#fff8e1; border:1px solid #ffe082; padding:7px 12px; border-radius:8px; display:inline-block;">🔒 Carência até ${carenciaFmt}</span>`;
       } else {
         btnHtml = `<button class="btn-sorteio" onclick="participarSorteio('${s.id}', this)">🎰 Quero participar</button>`;
       }
@@ -415,7 +423,14 @@
     }).join('');
   }
 
+  let _carenciaGlobal = null; // preenchido em carregarSorteios
+
   async function participarSorteio(sorteioId, btn) {
+    const hoje = new Date().toISOString().split('T')[0];
+    if (_carenciaGlobal && _carenciaGlobal >= hoje) {
+      alert('Você está em período de carência e não pode se inscrever em novos sorteios até ' + new Date(_carenciaGlobal + 'T12:00:00').toLocaleDateString('pt-BR') + '.');
+      return;
+    }
     btn.disabled = true;
     btn.textContent = 'Registrando...';
     const { error } = await sb.from('sorteio_inscricoes').insert([{

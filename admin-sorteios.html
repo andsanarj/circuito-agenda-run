@@ -217,9 +217,18 @@
       <div id="sorteioResultado"></div>
 
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-gray" onclick="fecharModalSorteio()">Cancelar</button>
-      <button class="btn btn-orange" id="btnConfirmarSorteio" style="display:none;" onclick="confirmarSorteio()">🏆 Confirmar Ganhadores</button>
+    <div class="modal-footer" style="flex-direction:column; align-items:stretch; gap:14px;">
+      <div id="carenciaArea" style="display:none; background:#fff8e1; border-radius:10px; padding:14px 16px; border:1px solid #ffe082;">
+        <label style="font-size:12px; font-weight:700; color:#7a5800; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:8px; display:block;">
+          🔒 Carência dos ganhadores — até quando não podem participar de novos sorteios?
+        </label>
+        <input type="date" id="sorteioCarenciaAte" style="width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit;">
+        <p style="font-size:11px; color:#999; margin-top:6px;">Deixe em branco para não aplicar carência.</p>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn btn-gray" onclick="fecharModalSorteio()">Cancelar</button>
+        <button class="btn btn-orange" id="btnConfirmarSorteio" style="display:none;" onclick="confirmarSorteio()">🏆 Confirmar Ganhadores</button>
+      </div>
     </div>
   </div>
 </div>
@@ -464,6 +473,8 @@
     sorteioValidos = new Set();
     document.getElementById('sorteioResultado').innerHTML = '';
     document.getElementById('btnConfirmarSorteio').style.display = 'none';
+    document.getElementById('carenciaArea').style.display = 'none';
+    document.getElementById('sorteioCarenciaAte').value = '';
     document.getElementById('modalSorteio').classList.add('aberto');
 
     const { data } = await sb.from('sorteio_inscricoes')
@@ -502,6 +513,7 @@
       sorteioGanhadores = validosAtuais.slice(0, qtd);
       renderResultado();
       document.getElementById('btnConfirmarSorteio').style.display = 'inline-block';
+      document.getElementById('carenciaArea').style.display = 'block';
       return;
     }
 
@@ -519,6 +531,7 @@
 
     renderResultado();
     document.getElementById('btnConfirmarSorteio').style.display = 'inline-block';
+    document.getElementById('carenciaArea').style.display = 'block';
   }
 
   function toggleValido(id) {
@@ -575,7 +588,13 @@
   async function confirmarSorteio() {
     if (!sorteioGanhadores.length) return;
     const nomes = sorteioGanhadores.map(g => g.nome).join(', ');
-    if (!confirm(`Confirmar ${sorteioGanhadores.length > 1 ? 'ganhadores' : 'ganhador'}: ${nomes}?\n\nEsta ação encerrará o sorteio e não poderá ser desfeita.`)) return;
+    const carenciaAte = document.getElementById('sorteioCarenciaAte').value || null;
+
+    const carenciaMsg = carenciaAte
+      ? `\n\nCarência aplicada até: ${fmt(carenciaAte)}`
+      : '\n\nSem carência definida.';
+
+    if (!confirm(`Confirmar ${sorteioGanhadores.length > 1 ? 'ganhadores' : 'ganhador'}: ${nomes}?${carenciaMsg}\n\nEsta ação encerrará o sorteio e não poderá ser desfeita.`)) return;
 
     const { error } = await sb.from('sorteios').update({
       ganhador_id: sorteioGanhadores[0].id,
@@ -584,7 +603,17 @@
       encerrado_em: new Date().toISOString()
     }).eq('id', sorteioModalId);
 
-    if (error) { alert('Erro: ' + error.message); return; }
+    if (error) { alert('Erro ao encerrar sorteio: ' + error.message); return; }
+
+    // Salvar carência em cada ganhador (se definida)
+    if (carenciaAte) {
+      for (const g of sorteioGanhadores) {
+        await sb.from('corredores')
+          .update({ carencia_sorteio_ate: carenciaAte })
+          .eq('id', g.id);
+      }
+    }
+
     fecharModalSorteio();
     carregarSorteios();
   }
