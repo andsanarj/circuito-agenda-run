@@ -135,8 +135,13 @@
       </div>
     </div>
 
-    <div class="filtros">
+    <div class="filtros" style="align-items:center;">
       <input type="text" id="filtroBusca" placeholder="Buscar corredor..." oninput="filtrar()">
+      <button id="btnSincronizar" onclick="sincronizarAssinantes()"
+        style="background:#1F4E79;color:#fff;border:none;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">
+        🔄 Sincronizar com Asaas
+      </button>
+      <div id="msgSincronizar" style="font-size:12px;display:none;"></div>
     </div>
 
     <div id="tabela"><div class="empty">Carregando...</div></div>
@@ -212,6 +217,43 @@
   });
 
   async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+  async function sincronizarAssinantes() {
+    const btn = document.getElementById('btnSincronizar');
+    const msg = document.getElementById('msgSincronizar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sincronizando…';
+    msg.style.display = 'none';
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(
+        'https://tbveeaupcmpltncjwfgt.supabase.co/functions/v1/sincronizar-assinantes',
+        { method: 'POST', headers: { 'Authorization': `Bearer ${session?.access_token}` } }
+      );
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.error || 'Erro desconhecido');
+
+      const c = result.corrigidos || 0;
+      const i = result.inativos || 0;
+      const a = (result.em_atraso_asaas || []).length;
+
+      msg.style.display = 'inline';
+      msg.style.color = c > 0 ? '#1a7a4a' : '#555';
+      msg.textContent = `✅ ${c} corrigido(s), ${i} inativado(s)${a > 0 ? `, ${a} em atraso no Asaas` : ''}.`;
+
+      if (c > 0 || i > 0) await carregar(); // Recarregar lista
+
+    } catch (err) {
+      msg.style.display = 'inline';
+      msg.style.color = '#b00020';
+      msg.textContent = '❌ Erro: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔄 Sincronizar com Asaas';
+    }
+  }
 
   const _hoje = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
 
