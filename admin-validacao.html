@@ -204,9 +204,8 @@
   }
 
   function calcularBonusAssinante(corredor) {
-    if (!corredor?.assinante || !corredor.assinante_desde) return 0;
-    const meses = Math.floor((new Date() - new Date(corredor.assinante_desde + 'T12:00:00')) / (1000 * 60 * 60 * 24 * 30.44)) + 1;
-    return meses >= 9 ? 1 : 0.5; // ouro/elite ≥ 9 meses = 1 pt, bronze/prata = 0,5 pt
+    if (!corredor?.assinante) return 0;
+    return 0.5; // +0,5 pt para todos os assinantes
   }
 
   function toggleRejeicao(id) { document.getElementById(`rejeicao-${id}`).classList.toggle('aberta'); }

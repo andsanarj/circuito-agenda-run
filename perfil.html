@@ -259,6 +259,17 @@
     </div>
   </div>
 
+  <!-- ── AVALIAÇÕES ───────────────────────────────────────────── -->
+  <div style="background:#fff; border-radius:10px; border:0.5px solid #e0e7ef; padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:160px;">
+      <div style="font-size:14px; font-weight:700; color:#1F4E79; margin-bottom:3px;">⭐ Avaliações de Corridas</div>
+      <p style="font-size:13px; color:#555; margin:0;">Avalie corridas que você participou e veja o que a comunidade está falando.</p>
+    </div>
+    <a href="avaliar.html" style="background:#1F4E79; color:#fff; border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; text-decoration:none; display:inline-block;">
+      Ver Avaliações →
+    </a>
+  </div>
+
   <!-- ── ASSINATURA ──────────────────────────────────────────── -->
   <div id="blocoAssinatura" style="background:#fff; border-radius:10px; border:0.5px solid #e0e7ef; padding:16px 20px; margin-bottom:20px;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
@@ -419,8 +430,7 @@
 
   function getBonusAssinante() {
     if (!corredorAssinanteGlobal) return 0;
-    const nivel = calcularNivelAssinante(corredorAssinanteDesdeGlobal);
-    return nivel >= 9 ? 1 : 0.5; // Ouro/Elite = +1, Bronze/Prata = +0.5
+    return 0.5; // +0,5 pt para todos os assinantes
   }
   let _eventosCache = {}; // cache de eventos por ID
 
@@ -667,7 +677,7 @@
       ${motivoHtml}
       <div class="info-pontos-form" id="info-pontos-${eventoId}">
         ${gerarInfoPontos(eventoId)}
-        <br><br>⚠️ <strong>Atenção:</strong> corredores que cancelarem a assinatura antes do encerramento da temporada terão o bônus removido de <strong>todas</strong> as corridas cadastradas. Bônus: +0,5 pt (Bronze/Prata) ou +1 pt (Ouro/Elite) por evento.
+        <br><br>⚠️ <strong>Atenção:</strong> corredores que cancelarem a assinatura antes do encerramento da temporada terão o bônus removido de <strong>todas</strong> as corridas cadastradas. Bônus: +0,5 pt por evento para todos os assinantes.
       </div>
       <div style="background:#fff8e1; border:1px solid #f0d070; border-radius:7px; padding:10px 14px; font-size:12px; color:#7a5800; margin-bottom:14px; line-height:1.6;">
         📋 <strong>Sobre a aprovação de resultados:</strong> os resultados são aprovados em lote pelo administrador. A pontuação registrada pode sofrer alteração caso sejam identificadas irregularidades nas informações cadastradas. Para futuras premiações, é realizada uma <strong>auditoria completa</strong> para validar todos os resultados, garantindo a integridade da competição.
@@ -722,8 +732,6 @@
     const labelBase = base === 0.5 ? 'Comum (0,5 pt)' : base === 2 ? 'Premium (2 pts)' : 'Destaque (1 pt)';
     if (corredorAssinanteGlobal) {
       const bonus = getBonusAssinante();
-      const nivel = calcularNivelAssinante(corredorAssinanteDesdeGlobal);
-      const tierLabel = nivel >= 9 ? 'Ouro / Elite' : 'Bronze / Prata';
       const total = base + bonus;
       const totalFmt = Number.isInteger(total) ? total : total.toFixed(1);
       return `
@@ -1224,14 +1232,13 @@
     if (corredor.assinante) {
       const nivel = calcularNivelAssinante(corredor.assinante_desde);
       const seloHtml = corredor.assinante_desde ? renderSeloAssinante(nivel) : '';
-      const isOuroElite = nivel >= 9;
-      const bonusPts = isOuroElite ? '+1 pt' : '+0,5 pt';
+      const bonusPts = '+0,5 pt';
       status.innerHTML = `⭐ Você é assinante do Circuito! ${seloHtml}`;
       status.style.color = '#1a7a4a';
       const retirada = nivel >= 9 ? '1 retirada gratuita por mês' : nivel >= 5 ? '1 retirada gratuita a cada 2 meses' : '1 retirada gratuita a cada 3 meses';
       const extras = nivel >= 13
         ? '🎁 Sorteios de cortesias e produtos Agenda Run · 1 boné ou 1 camiseta Agenda Run'
-        : isOuroElite
+        : nivel >= 9
           ? '🎁 Sorteios de cortesias e produtos Agenda Run'
           : '🎁 Sorteios de cortesias';
 
@@ -1279,7 +1286,7 @@
     } else {
       status.textContent = '🔓 Você ainda não é assinante';
       status.style.color = '#b07800';
-      texto.textContent = 'Assine por R$ 9,99/mês: +0,5 pt bônus por evento (sobe para +1 pt no nível Ouro), 1 retirada gratuita a cada 2 meses e sorteios exclusivos.';
+      texto.textContent = 'Assine por R$ 9,99/mês: +0,5 pt bônus por evento, 1 retirada gratuita a cada 2 meses e sorteios exclusivos.';
       btnAssinar.style.display = 'inline-block';
     }
   }

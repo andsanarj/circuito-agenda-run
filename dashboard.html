@@ -544,7 +544,7 @@
           </div>
           <div class="ben-item">
             <div class="ben-icon">🏅</div>
-            <div class="ben-txt"><strong>Bônus de pontos</strong>+0,5 a +1 pt por evento — suba mais rápido no ranking</div>
+            <div class="ben-txt"><strong>Bônus de pontos</strong>+0,5 pt por evento — suba mais rápido no ranking</div>
           </div>
           <div class="ben-item">
             <div class="ben-icon">🎰</div>
@@ -701,7 +701,7 @@
         ? Math.max(1, Math.floor((new Date() - new Date(corredor.assinante_desde)) / (1000*60*60*24*30.44)) + 1)
         : 1;
       const tier = nivel >= 13 ? '💎 Elite' : nivel >= 9 ? '🥇 Ouro' : nivel >= 5 ? '🥈 Prata' : '🥉 Bronze';
-      const bonus = nivel >= 9 ? '+1 pt por evento' : '+0,5 pt por evento';
+      const bonus = '+0,5 pt por evento';
       banner.innerHTML = `
         <div class="banner-ass-sim">
           <div class="b-info">
