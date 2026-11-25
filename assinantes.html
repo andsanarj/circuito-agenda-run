@@ -384,6 +384,11 @@
     const emCarencia = carenciaAte && carenciaAte >= hoje;
     const carenciaFmt = emCarencia ? fmt(carenciaAte) : null;
 
+    // Registra quais sorteios ignoram carência
+    _sorteiosIgnoramCarencia = new Set(
+      (sorteios || []).filter(s => s.ignorar_carencia).map(s => s.id)
+    );
+
     div.innerHTML = sorteios.map(s => {
       const encerrado = s.status === 'encerrado';
       const estaInscrito = inscrito.has(s.id);
@@ -391,13 +396,16 @@
       const ganhadorHtml = s.ganhador
         ? `<div class="ganhador-chip">🏆 Ganhador: ${s.ganhador.nome}</div>`
         : '';
+      // Este sorteio libera participação mesmo em carência?
+      const ignoraCarencia = !!s.ignorar_carencia;
+      const bloqueadoPorCarencia = emCarencia && !ignoraCarencia;
 
       let btnHtml;
       if (encerrado) {
         btnHtml = `<span style="font-size:12px; color:#888; font-weight:600;">Encerrado</span>`;
       } else if (estaInscrito) {
         btnHtml = `<button class="btn-sorteio inscrito" onclick="cancelarSorteio('${s.id}', this)">✓ Quero participar</button>`;
-      } else if (emCarencia) {
+      } else if (bloqueadoPorCarencia) {
         btnHtml = `<span style="font-size:12px; color:#b07800; font-weight:600; background:#fff8e1; border:1px solid #ffe082; padding:7px 12px; border-radius:8px; display:inline-block;">🔒 Carência até ${carenciaFmt}</span>`;
       } else {
         btnHtml = `<button class="btn-sorteio" onclick="participarSorteio('${s.id}', this)">🎰 Quero participar</button>`;
@@ -424,10 +432,12 @@
   }
 
   let _carenciaGlobal = null; // preenchido em carregarSorteios
+  let _sorteiosIgnoramCarencia = new Set(); // IDs de sorteios que ignoram carência
 
   async function participarSorteio(sorteioId, btn) {
     const hoje = new Date().toISOString().split('T')[0];
-    if (_carenciaGlobal && _carenciaGlobal >= hoje) {
+    const ignoraCarencia = _sorteiosIgnoramCarencia.has(sorteioId);
+    if (!ignoraCarencia && _carenciaGlobal && _carenciaGlobal >= hoje) {
       alert('Você está em período de carência e não pode se inscrever em novos sorteios até ' + new Date(_carenciaGlobal + 'T12:00:00').toLocaleDateString('pt-BR') + '.');
       return;
     }
